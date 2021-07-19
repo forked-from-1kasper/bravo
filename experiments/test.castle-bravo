@@ -1,0 +1,4 @@
+module test where
+
+def id (A : U) : U := A
+def refl′ (A : U) (a : A) : Path A a a := idp a
