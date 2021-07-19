@@ -19,8 +19,8 @@ idp a ⬝ p     ~> p
  right : Π {α : U} (a b : α), ∂ a b b
 ∂-symm : Π {α : U} {a b x : α}, ∂ a b x → ∂ b a x
 
-∂-symm  left ~> right
-∂-symm right ~> left
+∂-symm  (left a b) ~> right b a
+∂-symm (right a b) ~> left  a b
 
 singl {α : U} (a : α) := Σ (b : α), a = b
 

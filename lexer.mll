@@ -50,7 +50,8 @@ let axiom   = "axiom"|"postulate"
 let rev      = "\xE2\x81\xBB\xC2\xB9" (*  ⁻¹ *)
 let trans    = "\xE2\xAC\x9D"         (*  ⬝  *)
 
-let boundary = "\xE2\x88\x82"
+let boundary = "\xE2\x88\x82"         (*  ∂  *)
+let symm     = boundary "-symm"
 
 let subscript = '\xE2' '\x82' ['\x80'-'\x89']
 let kan       = 'U' subscript*
@@ -75,4 +76,6 @@ rule main = parse
 | rev             { REV }              | trans           { TRANS }
 | "idp"           { IDP }              | pre as s        { PRE (getLevel s) }
 | "?"             { HOLE }             | boundary        { BOUNDARY }
-| ident as s      { IDENT s }          | eof             { EOF }
+| "left"          { LEFT }             | "right"         { RIGHT }
+| symm            { SYMM }             | ident as s      { IDENT s }
+| eof             { EOF }

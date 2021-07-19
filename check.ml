@@ -4,6 +4,8 @@ open Ident
 open Elab
 open Expr
 
+let boundary e a b x = EApp (EApp (EApp (EBoundary e, a), b), x)
+
 let ieq u v : bool = !Prefs.girard || u = v
 let vfst : value -> value = function
   | VPair (u, _) -> u
@@ -34,6 +36,9 @@ let rec eval (e0 : exp) (ctx : ctx) = traceEval e0; match e0 with
   | ERev p             -> rev (eval p ctx)
   | ETrans (p, q)      -> trans (eval p ctx, eval q ctx)
   | EBoundary e        -> VBoundary (eval e ctx)
+  | ELeft e            -> VLeft (eval e ctx)
+  | ERight e           -> VRight (eval e ctx)
+  | ESymm e            -> VSymm (eval e ctx)
 
 and trans : value * value -> value = function
   | VTrans (p, q), r       -> trans (p, trans (q, r))
@@ -59,6 +64,10 @@ and closByVal t x v = let (p, e, ctx) = x in traceClos e p v;
   eval e (upLocal ctx' p t v)
 
 and app : value * value -> value = function
+  | VApp (VApp (VApp (VSymm _, _), _), _),
+    VApp (VApp (VLeft v, a), b) -> VApp (VApp (VRight v, b), a)
+  | VApp (VApp (VApp (VSymm _, _), _), _),
+    VApp (VApp (VRight v, a), b) -> VApp (VApp (VLeft v, b), a)
   | VLam (t, f), v -> closByVal t f v
   | f, x -> VApp (f, x)
 
@@ -105,6 +114,9 @@ and rbV v : exp = traceRbV v; match v with
   | VRev p             -> ERev (rbV p)
   | VTrans (p, q)      -> ETrans (rbV p, rbV q)
   | VBoundary v        -> EBoundary (rbV v)
+  | VLeft v            -> ELeft (rbV v)
+  | VRight v           -> ERight (rbV v)
+  | VSymm v            -> ESymm (rbV v)
 
 and rbVTele ctor t g =
   let (p, _, _) = g in let x = Var (p, t) in
@@ -136,7 +148,8 @@ and conv v1 v2 : bool = traceConv v1 v2;
     | VIdp a, VIdp b -> conv a b
     | VRev p, VRev q -> conv p q
     | VTrans (p1, q1), VTrans (p2, q2) -> conv p1 p2 && conv q1 q2
-    | VBoundary a, VBoundary b -> conv a b
+    | VBoundary a, VBoundary b | VSymm a, VSymm b
+    | VLeft a, VLeft b | VRight a, VRight b -> conv a b
     | _, _ -> false
   end || convProofIrrel v1 v2
 
@@ -200,12 +213,15 @@ and infer ctx e : value = traceInfer e; match e with
   | EPath p -> inferPath ctx p
   | EId e -> let v = eval e ctx in let n = extSet (infer ctx e) in implv v (impl e (EPre n)) ctx
   | ERefl e -> let v = eval e ctx in let t = infer ctx e in VApp (VApp (VId t, v), v)
+  | EJ e -> inferJ ctx e
   | EIdp e -> let v = eval e ctx in let t = infer ctx e in VApp (VApp (VPath t, v), v)
   | ERev p -> let (v, a, b) = extPath (infer ctx p) in path v b a
   | ETrans (p, q) -> let (u, a, x) = extPath (infer ctx p) in let (v, y, c) = extPath (infer ctx q) in
     eqNf u v; eqNf x y; path u a c
   | EBoundary e -> let v = eval e ctx in let n = extSet (infer ctx e) in implv v (impl e (impl e (EPre n))) ctx
-  | EJ e -> inferJ ctx e
+  | ELeft e -> inferLeft ctx e
+  | ERight e -> inferRight ctx e
+  | ESymm e -> inferSymm ctx e
   | e -> raise (InferError e)
 
 and inferTele ctx binop p a b =
@@ -225,6 +241,23 @@ and inferJ ctx e =
         (pi, EPi (e, (x, impl (EApp (EApp (EApp (EVar pi, EVar x), EVar x), ERefl (EVar x)))
           (EPi (e, (y, EPi (id, (p, EApp (EApp (EApp (EVar pi, EVar x), EVar y), EVar p)))))))), ctx))
 
-and inferPath (ctx : ctx) (e : exp) =
+and inferPath ctx e =
   let t = infer ctx e in ignore (extSet t);
   implv (eval e ctx) (impl e (rbV t)) ctx
+
+and inferLeft ctx e =
+  let t = infer ctx e in ignore (extSet t);
+  let a = fresh (name "a") in let b = fresh (name "b") in
+  VPi (eval e ctx, (a, EPi (e, (b, boundary e (EVar a) (EVar b) (EVar a))), ctx))
+
+and inferRight ctx e =
+  let t = infer ctx e in ignore (extSet t);
+  let a = fresh (name "a") in let b = fresh (name "b") in
+  VPi (eval e ctx, (a, EPi (e, (b, boundary e (EVar a) (EVar b) (EVar b))), ctx))
+
+and inferSymm ctx e =
+  let t = infer ctx e in ignore (extSet t);
+  let a = fresh (name "a") in let b = fresh (name "b") in let x = fresh (name "x") in
+  VPi (eval e ctx, (a, EPi (e, (b, EPi (e,
+    (x, impl (boundary e (EVar a) (EVar b) (EVar x))
+            (boundary e (EVar b) (EVar a) (EVar x)))))), ctx))

@@ -30,7 +30,7 @@
 %token SIGMA PI OPTION
 %token ID REFL IDJ
 %token PATH IDP REV TRANS
-%token BOUNDARY
+%token BOUNDARY LEFT RIGHT SYMM
 
 %right ARROW PROD
 %left TRANS
@@ -71,6 +71,9 @@ exp4 :
   | IDJ exp6 { EJ $2 }
   | PATH exp6 { EPath $2 }
   | BOUNDARY exp6 { EBoundary $2 }
+  | LEFT exp6 { ELeft $2 }
+  | RIGHT exp6 { ERight $2 }
+  | SYMM exp6 { ESymm $2 }
   | exp5 { $1 }
 
 exp5:
