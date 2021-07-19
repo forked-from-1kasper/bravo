@@ -1,0 +1,64 @@
+_=_ : Π {α : U}, α → α → U
+ref : Π {α : U} (a : α), a = a
+_⁻¹ : Π {α : U} {a b : α}, a = b → b = a
+_⬝_ : Π {α : U} {a b c : α}, a = b → b = c → a = c
+
+(p ⬝ q) ⬝ r   ~> p ⬝ (q ⬝ r)
+(p ⬝ q)⁻¹     ~> q⁻¹ ⬝ p⁻¹
+p ⬝ (p⁻¹ ⬝ q) ~> q
+p⁻¹ ⬝ (p ⬝ q) ~> q
+p ⬝ p⁻¹       ~> ref a
+p⁻¹ ⬝ p       ~> ref b
+(p⁻¹)⁻¹       ~> p
+(ref x)⁻¹     ~> ref x
+p ⬝ ref b     ~> p
+ref a ⬝ p     ~> p
+
+     T : Π {α : U}, α → α → α → Prop
+  left : Π {α : U} (a b : α), T a b a
+ right : Π {α : U} (a b : α), T a b b
+T-symm : Π {α : U} {a b x : α}, T a b x → T b a x
+
+T-symm  left ~> right
+T-symm right ~> left
+
+singl {α : U} (a : α) := Σ (b : α), a = b
+
+  coe : Π {α β : U} : α = β → α → β
+cong′ : Π {α β : U} {a b : α} (f : Π (x : α), T a b x → β), a = b → f a left = f b right
+ meet : Π {α : U} {a b : α} (p : a = b) (x : α), T a b x → singl a
+ join : Π {α : U} {a b : α} (p : a = b) (x : α), T a b x → singl a
+
+cong f p = cong′ (λ x _, f x) p
+
+meet p a left  ~> (a, ref a)
+meet p b right ~> (b, p)
+
+join p a left  ~> (b, p)
+join p b right ~> (a, ref a)
+
+coe (p ⬝ q) x ~> coe q (coe p x)
+coe (ref α) x ~> x
+
+coe (cong (λ x, Π (a : α[x]), β[x] a) p) φ x ~>
+  coe (cong′ (λ y H, β[x/(meet p⁻¹ y (T-symm H)).1] (coe (cong (λ y′, α[x/y′]) (meet p⁻¹ y (T-symm H)).2) x)) p)
+    (φ (coe (cong (λ y, α[x/y]) p⁻¹) x))
+
+coe (cong (λ x, Σ (a : α[x]), β[x] a) z) ~>
+  (coe (cong′ (λ y, α[x/y]) p) z.1,
+   coe (cong′ (λ y H, β[x/(meet p y H).1] (coe (cong (λ y′, α[x/y′]) (meet p y H).2) z.1)) p) z.2)
+
+apd (f : Π (x : α), β x) p = cong′ (λ y H, coe (cong β (join p y H).2) (f y)) p
+  : coe (cong β (join p a left).2) (f a) = coe (cong β (join p b right).2) (f b)
+ ~>                 coe (cong β b) (f a) = coe (cong β (ref a)) (f b)
+ ~>                 coe (cong β b) (f a) = coe (ref (β x)) (f b)
+ ~>                 coe (cong β b) (f a) = f b
+
+coe (cong (λ x, f[x] = g[x]) p) q ~> (apd (λ y, f[x/y]) p)⁻¹ ⬝ cong (coe (cong β p)) q ⬝ apd (λ y, g[x/y]) p
+
+       cong f p⁻¹ ~> (cong f p)⁻¹
+   cong f (p ⬝ q) ~> cong f p ⬝ cong f q
+cong g (cong f p) ~> cong (g ∘ f) p
+        cong id p ~> p
+  cong (λ _, x) p ~> ref x
+   cong f (ref x) ~> ref (f x)
