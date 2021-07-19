@@ -128,7 +128,7 @@ and conv v1 v2 : bool = traceConv v1 v2;
     | VPre u, VPre v -> ieq u v
     | Var (u, _), Var (v, _) -> u = v
     | VFst x, VFst y | VSnd x, VSnd y -> conv x y
-    | VId u, VId v | VJ u, VJ v -> conv u v
+    | VId u, VId v | VJ u, VJ v | VRefl u, VRefl v -> conv u v
     | VPath a, VPath b -> conv a b
     | VIdp a, VIdp b -> conv a b
     | VRev p, VRev q -> conv p q
