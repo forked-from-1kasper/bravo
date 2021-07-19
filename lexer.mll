@@ -69,7 +69,7 @@ rule main = parse
 | lam             { LAM }              | arrow           { ARROW }
 | prod            { PROD }             | kan as s        { KAN (getLevel s) }
 | "Path"          { PATH }             | "Id"            { ID }
-| "ref"           { REF }              | "idJ"           { IDJ }
+| "refl"          { REFL }             | "idJ"           { IDJ }
 | inv             { INV }              | trans           { TRANS }
 | "idp"           { IDP }              | pre as s        { PRE (getLevel s) }
 | "?"             { HOLE }             | ident as s      { IDENT s }

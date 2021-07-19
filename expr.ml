@@ -5,7 +5,7 @@ type exp =
   | EVar of name | EHole
   | EPi of exp * (name * exp) | ELam of exp * (name * exp) | EApp of exp * exp
   | ESig of exp * (name * exp) | EPair  of exp * exp | EFst of exp | ESnd of exp
-  | EId of exp | ERef of exp | EJ of exp
+  | EId of exp | ERefl of exp | EJ of exp
   | EPath of exp | EIdp of exp | EInv of exp | ETrans of exp * exp
 
 type tele = name * exp
@@ -17,7 +17,7 @@ type value =
   | Var of name * value | VHole
   | VPi of value * clos | VLam of value * clos | VApp of value * value
   | VSig of value * clos | VPair  of value * value | VFst of value | VSnd of value
-  | VId of value | VRef of value | VJ of value
+  | VId of value | VRefl of value | VJ of value
   | VPath of value | VIdp of value | VInv of value | VTrans of value * value
 
 and clos = name * exp * ctx
@@ -62,7 +62,7 @@ let rec ppExp paren e = let x = match e with
   | EPre n -> "V" ^ showSubscript n
   | EPath e -> "Path " ^ ppExp true e
   | EId e -> Printf.sprintf "Id %s" (ppExp true e)
-  | ERef e -> Printf.sprintf "ref %s" (ppExp true e)
+  | ERefl e -> Printf.sprintf "refl %s" (ppExp true e)
   | EJ e -> Printf.sprintf "idJ %s" (ppExp true e)
   | EIdp e -> "idp " ^ ppExp true e
   | EInv e -> ppExp true e ^ "⁻¹"
@@ -93,7 +93,7 @@ let rec ppValue paren v = let x = match v with
   | VPre n -> "V" ^ showSubscript n
   | VPath v -> "Path " ^ ppValue true v
   | VId v -> Printf.sprintf "Id %s" (ppValue true v)
-  | VRef v -> Printf.sprintf "ref %s" (ppValue true v)
+  | VRefl v -> Printf.sprintf "refl %s" (ppValue true v)
   | VJ v -> Printf.sprintf "idJ %s" (ppValue true v)
   | VIdp e -> "idp " ^ ppValue true e
   | VInv e -> ppValue true e ^ "⁻¹"

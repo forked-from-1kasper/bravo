@@ -27,7 +27,7 @@ let rec eval (e0 : exp) (ctx : ctx) = traceEval e0; match e0 with
   | EFst e             -> vfst (eval e ctx)
   | ESnd e             -> vsnd (eval e ctx)
   | EId e              -> VId (eval e ctx)
-  | ERef e             -> VRef (eval e ctx)
+  | ERefl e            -> VRefl (eval e ctx)
   | EJ e               -> VJ (eval e ctx)
   | EPath e            -> VPath (eval e ctx)
   | EIdp e             -> VIdp (eval e ctx)
@@ -60,7 +60,7 @@ and inferV v = traceInferV v; match v with
     | VPi (t, g) -> closByVal t g x
     | v -> raise (ExpectedPi v)
   end
-  | VRef v                   -> VApp (VApp (VId (inferV v), v), v)
+  | VRefl v                  -> VApp (VApp (VId (inferV v), v), v)
   | VIdp v                   -> VApp (VApp (VPath (inferV v), v), v)
   | VPre n                   -> VPre (n + 1)
   | VKan n                   -> VKan (n + 1)
@@ -80,7 +80,7 @@ and rbV v : exp = traceRbV v; match v with
   | VSnd k             -> ESnd (rbV k)
   | VHole              -> EHole
   | VId v              -> EId (rbV v)
-  | VRef v             -> ERef (rbV v)
+  | VRefl v            -> ERefl (rbV v)
   | VJ v               -> EJ (rbV v)
   | VPath v            -> EPath (rbV v)
   | VIdp v             -> EIdp (rbV v)
@@ -170,7 +170,7 @@ and infer ctx e : value = traceInfer e; match e with
   | EPre u -> VPre (u + 1)
   | EPath p -> inferPath ctx p
   | EId e -> let v = eval e ctx in let n = extSet (infer ctx e) in implv v (impl e (EPre n)) ctx
-  | ERef e -> let v = eval e ctx in let t = infer ctx e in VApp (VApp (VId t, v), v)
+  | ERefl e -> let v = eval e ctx in let t = infer ctx e in VApp (VApp (VId t, v), v)
   | EIdp e -> let v = eval e ctx in let t = infer ctx e in VApp (VApp (VPath t, v), v)
   | EJ e -> inferJ ctx e
   | e -> raise (InferError e)
@@ -189,7 +189,7 @@ and inferJ ctx e =
   let n = extSet (infer ctx e) in let x = fresh (name "x") in let y = fresh (name "y") in
   let pi = fresh (name "P") in let p = fresh (name "p") in let id = EApp (EApp (EId e, EVar x), EVar y) in
   VPi (eval (EPi (e, (x, EPi (e, (y, impl id (EPre n)))))) ctx,
-        (pi, EPi (e, (x, impl (EApp (EApp (EApp (EVar pi, EVar x), EVar x), ERef (EVar x)))
+        (pi, EPi (e, (x, impl (EApp (EApp (EApp (EVar pi, EVar x), EVar x), ERefl (EVar x)))
           (EPi (e, (y, EPi (id, (p, EApp (EApp (EApp (EVar pi, EVar x), EVar y), EVar p)))))))), ctx))
 
 and inferPath (ctx : ctx) (e : exp) =

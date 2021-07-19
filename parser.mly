@@ -12,7 +12,7 @@
 %token DEFEQ PROD ARROW FST SND LAM DEF
 %token MODULE WHERE IMPORT AXIOM
 %token SIGMA PI OPTION
-%token ID REF IDJ
+%token ID REFL IDJ
 %token PATH IDP INV TRANS
 
 %right ARROW PROD
@@ -50,7 +50,7 @@ exp3:
 exp4 :
   | exp4 exp6 { EApp ($1, $2) }
   | ID exp6 { EId $2 }
-  | REF exp6 { ERef $2 }
+  | REFL exp6 { ERefl $2 }
   | IDJ exp6 { EJ $2 }
   | PATH exp6 { EPath $2 }
   | exp5 { $1 }
