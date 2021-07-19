@@ -47,8 +47,10 @@ let sigma   = "sigma"  | "\xCE\xA3"     (* Σ *)
 let def     = "definition" | "def" | "theorem" | "lemma" | "corollary" | "proposition"
 let axiom   = "axiom"|"postulate"
 
-let rev     = "\xE2\x81\xBB\xC2\xB9" (*  ⁻¹ *)
-let trans   = "\xE2\xAC\x9D"         (*  ⬝  *)
+let rev      = "\xE2\x81\xBB\xC2\xB9" (*  ⁻¹ *)
+let trans    = "\xE2\xAC\x9D"         (*  ⬝  *)
+
+let boundary = "\xE2\x88\x82"
 
 let subscript = '\xE2' '\x82' ['\x80'-'\x89']
 let kan       = 'U' subscript*
@@ -72,5 +74,5 @@ rule main = parse
 | "refl"          { REFL }             | "idJ"           { IDJ }
 | rev             { REV }              | trans           { TRANS }
 | "idp"           { IDP }              | pre as s        { PRE (getLevel s) }
-| "?"             { HOLE }             | ident as s      { IDENT s }
-| eof             { EOF }
+| "?"             { HOLE }             | boundary        { BOUNDARY }
+| ident as s      { IDENT s }          | eof             { EOF }

@@ -7,3 +7,5 @@ def trans (A : U) (a b c : A) (p : Path A a b) (q : Path A b c) : Path A a c := 
 def symm-symm (A : U) (a b : A) (p : Path A a b) :
   Path (Path A a b) (symm A b a (symm A a b p)) p :=
 idp p
+
+def ∂-irrel (A : U) (a b x : A) (p q : ∂ A a b x) : Path (∂ A a b x) p q := idp p

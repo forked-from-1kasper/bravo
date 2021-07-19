@@ -33,6 +33,7 @@ let rec eval (e0 : exp) (ctx : ctx) = traceEval e0; match e0 with
   | EIdp e             -> VIdp (eval e ctx)
   | ERev p             -> rev (eval p ctx)
   | ETrans (p, q)      -> trans (eval p ctx, eval q ctx)
+  | EBoundary e        -> VBoundary (eval e ctx)
 
 and trans : value * value -> value = function
   | VTrans (p, q), r       -> trans (p, trans (q, r))
@@ -103,6 +104,7 @@ and rbV v : exp = traceRbV v; match v with
   | VIdp v             -> EIdp (rbV v)
   | VRev p             -> ERev (rbV p)
   | VTrans (p, q)      -> ETrans (rbV p, rbV q)
+  | VBoundary v        -> EBoundary (rbV v)
 
 and rbVTele ctor t g =
   let (p, _, _) = g in let x = Var (p, t) in
@@ -134,14 +136,18 @@ and conv v1 v2 : bool = traceConv v1 v2;
     | VIdp a, VIdp b -> conv a b
     | VRev p, VRev q -> conv p q
     | VTrans (p1, q1), VTrans (p2, q2) -> conv p1 p2 && conv q1 q2
+    | VBoundary a, VBoundary b -> conv a b
     | _, _ -> false
-  end || convId v1 v2
+  end || convProofIrrel v1 v2
 
-and convId v1 v2 =
+and convProofIrrel v1 v2 =
   (* Id A a b is proof-irrelevant *)
   try match inferV v1, inferV v2 with
     | VApp (VApp (VId t1, a1), b1), VApp (VApp (VId t2, a2), b2) ->
       conv t1 t2 && conv a1 a2 && conv b1 b2
+    | VApp (VApp (VApp (VBoundary t1, a1), b1), x1),
+      VApp (VApp (VApp (VBoundary t2, a2), b2), x2) ->
+      conv t1 t2 && conv a1 a2 && conv b1 b2 && conv x1 x2
     | _, _ -> false
   with ExpectedNeutral _ -> false
 
@@ -164,7 +170,7 @@ and check ctx (e0 : exp) (t0 : value) =
     ignore (extSet (infer ctx (rbV t)));
     check ctx e1 t; check ctx e2 (closByVal t g (eval e1 ctx))
   | EHole, v -> traceHole v ctx
-  | ERefl e, VApp (VApp (VPath t, a), b) ->
+  | ERefl e, VApp (VApp (VId t, a), b) | EIdp e, VApp (VApp (VPath t, a), b) ->
     check ctx e t; let v = eval e ctx in eqNf v a; eqNf v b
   | ERev p, VApp (VApp (VPath t, a), b) -> check ctx p (path t b a)
   | ETrans (p, q), VApp (VApp (VPath t, a), c) ->
@@ -198,6 +204,7 @@ and infer ctx e : value = traceInfer e; match e with
   | ERev p -> let (v, a, b) = extPath (infer ctx p) in path v b a
   | ETrans (p, q) -> let (u, a, x) = extPath (infer ctx p) in let (v, y, c) = extPath (infer ctx q) in
     eqNf u v; eqNf x y; path u a c
+  | EBoundary e -> let v = eval e ctx in let n = extSet (infer ctx e) in implv v (impl e (impl e (EPre n))) ctx
   | EJ e -> inferJ ctx e
   | e -> raise (InferError e)
 

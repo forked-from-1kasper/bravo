@@ -60,6 +60,7 @@ let rec salt (ns : name Env.t) : exp -> exp = function
   | EIdp e             -> EIdp (salt ns e)
   | ERev p             -> ERev (salt ns p)
   | ETrans (p, q)      -> ETrans (salt ns p, salt ns q)
+  | EBoundary e        -> EBoundary (salt ns e)
 
 and saltTele ctor ns p a b =
   let x = fresh p in ctor x (salt ns a) (salt (Env.add p x ns) b)

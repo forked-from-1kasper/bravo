@@ -16,5 +16,6 @@ let tokenToString : token -> string = function
   | WHERE      -> "WHERE"       | MODULE     -> "MODULE"
   | PATH       -> "PATH"        | IDP        -> "IDP"
   | REV        -> "REV"         | TRANS      -> "TRANS"
+  | BOUNDARY   -> "BOUNDARY"    | IMPORT     -> "IMPORT"
   | ID         -> "ID"          | REFL       -> "REFL"
-  | IDJ        -> "IDJ"         | IMPORT     -> "IMPORT"
+  | IDJ        -> "IDJ"
