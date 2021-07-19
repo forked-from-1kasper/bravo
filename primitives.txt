@@ -20,7 +20,7 @@ idp a ⬝ p     ~> p
 ∂-symm : Π {α : U} {a b x : α}, ∂ a b x → ∂ b a x
 
 ∂-symm  (left a b) ~> right b a
-∂-symm (right a b) ~> left  a b
+∂-symm (right a b) ~> left  b a
 
 singl {α : U} (a : α) := Σ (b : α), a = b
 
