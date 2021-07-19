@@ -29,7 +29,7 @@ cong′ : Π {α β : U} {a b : α} (f : Π (x : α), T a b x → β), a = b →
  meet : Π {α : U} {a b : α} (p : a = b) (x : α), T a b x → singl a
  join : Π {α : U} {a b : α} (p : a = b) (x : α), T a b x → singl a
 
-cong f p = cong′ (λ x _, f x) p
+cong f p := cong′ (λ x _, f x) p
 
 meet p a left  ~> (a, idp a)
 meet p b right ~> (b, p)
@@ -48,7 +48,7 @@ coe (cong (λ x, Σ (a : α[x]), β[x] a) z) ~>
   (coe (cong′ (λ y, α[x/y]) p) z.1,
    coe (cong′ (λ y H, β[x/(meet p y H).1] (coe (cong (λ y′, α[x/y′]) (meet p y H).2) z.1)) p) z.2)
 
-apd (f : Π (x : α), β x) p = cong′ (λ y H, coe (cong β (join p y H).2) (f y)) p
+apd (f : Π (x : α), β x) p := cong′ (λ y H, coe (cong β (join p y H).2) (f y)) p
   : coe (cong β (join p a left).2) (f a) = coe (cong β (join p b right).2) (f b)
  ~>                 coe (cong β b) (f a) = coe (cong β (idp a)) (f b)
  ~>                 coe (cong β b) (f a) = coe (idp (β x)) (f b)
