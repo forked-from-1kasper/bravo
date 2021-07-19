@@ -14,9 +14,10 @@ let extKan : value -> int = function
   | VKan n -> n
   | v      -> raise (ExpectedFibrant v)
 
+let path v a b = VApp (VApp (VPath v, a), b)
 let extPath = function
-  | VApp (VApp (VPath v, u0), u1) -> (v, u0, u1)
-  | v                             -> raise (ExpectedPath v)
+  | VApp (VApp (VPath v, a), b) -> (v, a, b)
+  | v                           -> raise (ExpectedPath v)
 
 let extVar ctx x = match Env.find_opt x ctx with
   | Some (_, _, Value (Var (y, _))) -> y

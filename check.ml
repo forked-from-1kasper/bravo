@@ -62,6 +62,8 @@ and inferV v = traceInferV v; match v with
   end
   | VRefl v                  -> VApp (VApp (VId (inferV v), v), v)
   | VIdp v                   -> VApp (VApp (VPath (inferV v), v), v)
+  | VInv p                   -> let (v, a, b) = extPath (inferV p) in path v b a
+  | VTrans (p, q)            -> let (u, a, _) = extPath (inferV p) in let (_, _, c) = extPath (inferV q) in path u a c
   | VPre n                   -> VPre (n + 1)
   | VKan n                   -> VKan (n + 1)
   | v                        -> raise (ExpectedNeutral v)
@@ -147,6 +149,12 @@ and check ctx (e0 : exp) (t0 : value) =
     ignore (extSet (infer ctx (rbV t)));
     check ctx e1 t; check ctx e2 (closByVal t g (eval e1 ctx))
   | EHole, v -> traceHole v ctx
+  | ERefl e, VApp (VApp (VPath t, a), b) ->
+    check ctx e t; let v = eval e ctx in eqNf v a; eqNf v b
+  | EInv p, VApp (VApp (VPath t, a), b) -> check ctx p (path t b a)
+  | ETrans (p, q), VApp (VApp (VPath t, a), c) ->
+    let (u, x, y1) = extPath (infer ctx p) in let (v, y2, z) = extPath (infer ctx q) in
+    eqNf u t; eqNf v t; eqNf y1 y2; eqNf x a; eqNf z c
   | e, VPre u -> begin
     match infer ctx e with
     | VKan v | VPre v -> if ieq u v then () else raise (Ineq (VPre u, VPre v))
@@ -172,6 +180,9 @@ and infer ctx e : value = traceInfer e; match e with
   | EId e -> let v = eval e ctx in let n = extSet (infer ctx e) in implv v (impl e (EPre n)) ctx
   | ERefl e -> let v = eval e ctx in let t = infer ctx e in VApp (VApp (VId t, v), v)
   | EIdp e -> let v = eval e ctx in let t = infer ctx e in VApp (VApp (VPath t, v), v)
+  | EInv p -> let (v, a, b) = extPath (infer ctx p) in path v b a
+  | ETrans (p, q) -> let (u, a, x) = extPath (infer ctx p) in let (v, y, c) = extPath (infer ctx q) in
+    eqNf u v; eqNf x y; path u a c
   | EJ e -> inferJ ctx e
   | e -> raise (InferError e)
 
