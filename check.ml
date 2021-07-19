@@ -42,6 +42,7 @@ and trans : value * value -> value = function
   | VRev p, q              -> if conv p q then let (_, _, v) = extPath (inferV p) in VIdp v else VTrans (VRev p, q)
   | p, VRev q              -> if conv p q then let (_, v, _) = extPath (inferV p) in VIdp v else VTrans (p, VRev q)
   | p, q                   -> VTrans (p, q)
+
 and rev : value -> value = function
   | VRev p        -> p
   | VIdp v        -> VIdp v
