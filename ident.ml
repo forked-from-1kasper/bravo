@@ -49,19 +49,3 @@ let rec showSubscript x =
   else if x = 0 then "" else showSubscript (x / 10) ^ getDigit (x mod 10)
 
 let freshName x = let n = gen () in Name (x ^ showSubscript n, n)
-
-module Atom = struct
-  type t = name * dir
-  let compare (a, x) (b, y) =
-    if a = b then Dir.compare x y else Name.compare a b
-end
-
-module Conjunction = Set.Make(Atom)
-type conjunction = Conjunction.t
-
-let zeroPrim     = ref "0"
-let onePrim      = ref "1"
-let intervalPrim = ref "I"
-
-exception ExpectedDir of string
-let getDir x = if x = !zeroPrim then Zero else if x = !onePrim then One else raise (ExpectedDir x)

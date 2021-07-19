@@ -21,7 +21,6 @@ exception UnknownOptionValue of string * string
 
 let prettyPrintError : exn -> unit = function
   | Ineq (u, v) -> Printf.printf "Type mismatch:\n  %s\nis not equal to\n  %s\n" (showValue u) (showValue v)
-  | ExpectedDir s -> Printf.printf "“%s” expected to be “%s” or “%s”" s !zeroPrim !onePrim
   | ExpectedPath e -> Printf.printf "“%s” expected to be a path.\n" (showValue e)
   | AlreadyDeclared p -> Printf.printf "“%s” is already declared.\n" p
   | InferError e -> Printf.printf "Cannot infer type of\n  %s\n" (showExp e)
