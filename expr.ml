@@ -6,7 +6,7 @@ type exp =
   | EPi of exp * (name * exp) | ELam of exp * (name * exp) | EApp of exp * exp
   | ESig of exp * (name * exp) | EPair  of exp * exp | EFst of exp | ESnd of exp
   | EId of exp | ERefl of exp | EJ of exp
-  | EPath of exp | EIdp of exp | EInv of exp | ETrans of exp * exp
+  | EPath of exp | EIdp of exp | ERev of exp | ETrans of exp * exp
 
 type tele = name * exp
 
@@ -18,7 +18,7 @@ type value =
   | VPi of value * clos | VLam of value * clos | VApp of value * value
   | VSig of value * clos | VPair  of value * value | VFst of value | VSnd of value
   | VId of value | VRefl of value | VJ of value
-  | VPath of value | VIdp of value | VInv of value | VTrans of value * value
+  | VPath of value | VIdp of value | VRev of value | VTrans of value * value
 
 and clos = name * exp * ctx
 
@@ -65,7 +65,7 @@ let rec ppExp paren e = let x = match e with
   | ERefl e -> Printf.sprintf "refl %s" (ppExp true e)
   | EJ e -> Printf.sprintf "idJ %s" (ppExp true e)
   | EIdp e -> "idp " ^ ppExp true e
-  | EInv e -> ppExp true e ^ "⁻¹"
+  | ERev e -> ppExp true e ^ "⁻¹"
   | ETrans (p, q) -> ppExp true p ^ " ⬝ " ^ ppExp true q
   in match e with
   | EVar _ | EFst _ | ESnd _ | EPre _
@@ -96,7 +96,7 @@ let rec ppValue paren v = let x = match v with
   | VRefl v -> Printf.sprintf "refl %s" (ppValue true v)
   | VJ v -> Printf.sprintf "idJ %s" (ppValue true v)
   | VIdp e -> "idp " ^ ppValue true e
-  | VInv e -> ppValue true e ^ "⁻¹"
+  | VRev e -> ppValue true e ^ "⁻¹"
   | VTrans (p, q) -> ppValue true p ^ " ⬝ " ^ ppValue true q
   in match v with
   | Var _ | VFst _ | VSnd _ | VPre _

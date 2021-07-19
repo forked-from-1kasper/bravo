@@ -15,6 +15,6 @@ let tokenToString : token -> string = function
   | COLON      -> "COLON"       | ARROW      -> "ARROW"
   | WHERE      -> "WHERE"       | MODULE     -> "MODULE"
   | PATH       -> "PATH"        | IDP        -> "IDP"
-  | INV        -> "INV"         | TRANS      -> "TRANS"
+  | REV        -> "REV"         | TRANS      -> "TRANS"
   | ID         -> "ID"          | REFL       -> "REFL"
   | IDJ        -> "IDJ"         | IMPORT     -> "IMPORT"

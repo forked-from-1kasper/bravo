@@ -4,3 +4,6 @@ def id (A : U) : U := A
 def refl′ (A : U) (a : A) : Path A a a := idp a
 def symm (A : U) (a b : A) (p : Path A a b) : Path A b a := p ⁻¹
 def trans (A : U) (a b c : A) (p : Path A a b) (q : Path A b c) : Path A a c := p ⬝ q
+def symm-symm (A : U) (a b : A) (p : Path A a b) :
+  Path (Path A a b) (symm A b a (symm A a b p)) p :=
+idp p

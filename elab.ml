@@ -58,7 +58,7 @@ let rec salt (ns : name Env.t) : exp -> exp = function
   | EJ e               -> EJ (salt ns e)
   | EPath e            -> EPath (salt ns e)
   | EIdp e             -> EIdp (salt ns e)
-  | EInv p             -> EInv (salt ns p)
+  | ERev p             -> ERev (salt ns p)
   | ETrans (p, q)      -> ETrans (salt ns p, salt ns q)
 
 and saltTele ctor ns p a b =

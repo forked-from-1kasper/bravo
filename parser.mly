@@ -13,7 +13,7 @@
 %token MODULE WHERE IMPORT AXIOM
 %token SIGMA PI OPTION
 %token ID REFL IDJ
-%token PATH IDP INV TRANS
+%token PATH IDP REV TRANS
 
 %right ARROW PROD
 %left TRANS
@@ -57,7 +57,7 @@ exp4 :
 
 exp5:
   | IDP exp6 { EIdp $2 }
-  | exp6 INV { EInv $1 }
+  | exp6 REV { ERev $1 }
   | exp5 TRANS exp5 { ETrans ($1, $3) }
   | exp6 { $1 }
 
