@@ -47,9 +47,8 @@ let sigma   = "sigma"  | "\xCE\xA3"     (* Σ *)
 let def     = "definition" | "def" | "theorem" | "lemma" | "corollary" | "proposition"
 let axiom   = "axiom"|"postulate"
 
-let negFormula = "-"
-let andFormula = "/\\"|"\xE2\x88\xA7" (* ∧ *)
-let orFormula  = "\\/"|"\xE2\x88\xA8" (* ∨ *)
+let inv     = "^-1" | "\xE2\x81\xBB\xC2\xB9" (* ⁻¹ *)
+let trans   = "*"   | "\xE2\xAC\x9D"         (* ⬝ *)
 
 let subscript = '\xE2' '\x82' ['\x80'-'\x89']
 let kan       = 'U' subscript*
@@ -71,5 +70,7 @@ rule main = parse
 | prod            { PROD }             | kan as s        { KAN (getLevel s) }
 | "Path"          { PATH }             | "Id"            { ID }
 | "ref"           { REF }              | "idJ"           { IDJ }
-| pre as s        { PRE (getLevel s) } | "?"             { HOLE }
-| ident as s      { IDENT s }          | eof             { EOF }
+| inv             { INV }              | trans           { TRANS }
+| "idp"           { IDP }              | pre as s        { PRE (getLevel s) }
+| "?"             { HOLE }             | ident as s      { IDENT s }
+| eof             { EOF }

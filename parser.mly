@@ -12,9 +12,11 @@
 %token DEFEQ PROD ARROW FST SND LAM DEF
 %token MODULE WHERE IMPORT AXIOM
 %token SIGMA PI OPTION
-%token PATH ID REF IDJ
+%token ID REF IDJ
+%token PATH IDP INV TRANS
 
 %right ARROW PROD
+%left TRANS
 
 %start <Module.file> file
 %start <Module.command> repl
@@ -46,19 +48,25 @@ exp3:
   | exp4 { $1 }
 
 exp4 :
-  | exp4 exp5 { EApp ($1, $2) }
-  | ID exp5 { EId $2 }
-  | REF exp5 { ERef $2 }
-  | IDJ exp5 { EJ $2 }
-  | PATH exp5 { EPath $2 }
+  | exp4 exp6 { EApp ($1, $2) }
+  | ID exp6 { EId $2 }
+  | REF exp6 { ERef $2 }
+  | IDJ exp6 { EJ $2 }
+  | PATH exp6 { EPath $2 }
   | exp5 { $1 }
 
 exp5:
+  | IDP exp6 { EIdp $2 }
+  | exp6 INV { EInv $1 }
+  | exp5 TRANS exp5 { ETrans ($1, $3) }
+  | exp6 { $1 }
+
+exp6:
   | HOLE { EHole }
   | PRE { EPre $1 }
   | KAN { EKan $1 }
-  | exp5 FST { EFst $1 }
-  | exp5 SND { ESnd $1 }
+  | exp6 FST { EFst $1 }
+  | exp6 SND { ESnd $1 }
   | LPARENS exp1 RPARENS { $2 }
   | IDENT { decl $1 }
 

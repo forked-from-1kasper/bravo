@@ -30,6 +30,9 @@ let rec eval (e0 : exp) (ctx : ctx) = traceEval e0; match e0 with
   | ERef e             -> VRef (eval e ctx)
   | EJ e               -> VJ (eval e ctx)
   | EPath e            -> VPath (eval e ctx)
+  | EIdp e             -> VIdp (eval e ctx)
+  | EInv p             -> VInv (eval p ctx)
+  | ETrans (p, q)      -> VTrans (eval p ctx, eval q ctx)
 
 and closByVal t x v = let (p, e, ctx) = x in traceClos e p v;
   (* dirty hack to handle free variables introduced by type checker,
@@ -58,6 +61,7 @@ and inferV v = traceInferV v; match v with
     | v -> raise (ExpectedPi v)
   end
   | VRef v                   -> VApp (VApp (VId (inferV v), v), v)
+  | VIdp v                   -> VApp (VApp (VPath (inferV v), v), v)
   | VPre n                   -> VPre (n + 1)
   | VKan n                   -> VKan (n + 1)
   | v                        -> raise (ExpectedNeutral v)
@@ -75,10 +79,13 @@ and rbV v : exp = traceRbV v; match v with
   | VFst k             -> EFst (rbV k)
   | VSnd k             -> ESnd (rbV k)
   | VHole              -> EHole
-  | VPath v            -> EPath (rbV v)
   | VId v              -> EId (rbV v)
   | VRef v             -> ERef (rbV v)
   | VJ v               -> EJ (rbV v)
+  | VPath v            -> EPath (rbV v)
+  | VIdp v             -> EIdp (rbV v)
+  | VInv p             -> EInv (rbV p)
+  | VTrans (p, q)      -> ETrans (rbV p, rbV q)
 
 and rbVTele ctor t g =
   let (p, _, _) = g in let x = Var (p, t) in
@@ -101,11 +108,15 @@ and conv v1 v2 : bool = traceConv v1 v2;
       conv a b && conv (closByVal a g x) (closByVal a h x)
     | VLam (a, (p, e, v)), b | b, VLam (a, (p, e, v)) ->
       let x = Var (p, a) in conv (app (b, x)) (closByVal a (p, e, v) x)
+    | VApp (f, x), VApp (g, y) -> conv f g && conv x y
     | VPre u, VPre v -> ieq u v
     | Var (u, _), Var (v, _) -> u = v
     | VFst x, VFst y | VSnd x, VSnd y -> conv x y
-    | VPath a, VPath b -> conv a b
     | VId u, VId v | VJ u, VJ v -> conv u v
+    | VPath a, VPath b -> conv a b
+    | VIdp a, VIdp b -> conv a b
+    | VInv p, VInv q -> conv p q
+    | VTrans (p1, q1), VTrans (p2, q2) -> conv p1 p2 && conv q1 q2
     | _, _ -> false
   end || convId v1 v2
 
@@ -136,8 +147,6 @@ and check ctx (e0 : exp) (t0 : value) =
     ignore (extSet (infer ctx (rbV t)));
     check ctx e1 t; check ctx e2 (closByVal t g (eval e1 ctx))
   | EHole, v -> traceHole v ctx
-  | e, VApp (VApp (VPath p, u0), u1) ->
-    failwith "not implemented yet"
   | e, VPre u -> begin
     match infer ctx e with
     | VKan v | VPre v -> if ieq u v then () else raise (Ineq (VPre u, VPre v))
@@ -162,6 +171,7 @@ and infer ctx e : value = traceInfer e; match e with
   | EPath p -> inferPath ctx p
   | EId e -> let v = eval e ctx in let n = extSet (infer ctx e) in implv v (impl e (EPre n)) ctx
   | ERef e -> let v = eval e ctx in let t = infer ctx e in VApp (VApp (VId t, v), v)
+  | EIdp e -> let v = eval e ctx in let t = infer ctx e in VApp (VApp (VPath t, v), v)
   | EJ e -> inferJ ctx e
   | e -> raise (InferError e)
 

@@ -56,6 +56,9 @@ let rec salt (ns : name Env.t) : exp -> exp = function
   | ERef e             -> ERef (salt ns e)
   | EJ e               -> EJ (salt ns e)
   | EPath e            -> EPath (salt ns e)
+  | EIdp e             -> EIdp (salt ns e)
+  | EInv p             -> EInv (salt ns p)
+  | ETrans (p, q)      -> ETrans (salt ns p, salt ns q)
 
 and saltTele ctor ns p a b =
   let x = fresh p in ctor x (salt ns a) (salt (Env.add p x ns) b)
