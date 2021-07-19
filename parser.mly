@@ -2,6 +2,22 @@
    open Ident
    open Elab
    open Expr
+
+  let remSuffix suffix x =
+    let n = String.length x in let m = String.length suffix in
+    if m > n then None else begin
+      let b = ref true in
+      for i = 1 to m do
+        b := !b && (suffix.[m - i] = x.[n - i])
+      done;
+      if !b then Some (String.sub x 0 (n - m)) else None
+    end
+
+  let rec getVar x =
+    match remSuffix "⁻¹" x with
+    | Some y -> ERev (getVar y)
+    | None -> decl x
+
 %}
 
 %token <string> IDENT
@@ -68,7 +84,7 @@ exp6:
   | exp6 FST { EFst $1 }
   | exp6 SND { ESnd $1 }
   | LPARENS exp1 RPARENS { $2 }
-  | IDENT { decl $1 }
+  | IDENT { getVar $1 }
 
 declarations:
   | DEF IDENT params COLON exp2 DEFEQ exp2 { Def ($2, Some (telescope ePi $5 $3), telescope eLam $7 $3) }
