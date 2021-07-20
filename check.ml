@@ -241,8 +241,7 @@ and infer ctx e : value = traceInfer e; match e with
   | ERight e -> inferRight ctx e
   | ESymm e -> inferSymm ctx e
   | EMeet e -> inferMeet ctx e
-  | ECoe e -> let n = extKan (infer ctx e) in let beta = fresh (name "β") in
-    VPi (VKan n, (beta, impl (EApp (EApp (EPath (EKan n), e), EVar beta)) (impl e (EVar beta)), ctx))
+  | ECoe p -> let (e, a, b) = extPath (infer ctx p) in ignore (extKan e); implv a (rbV b) ctx
   | ECong (a, b) -> inferCong ctx a b
   | e -> raise (InferError e)
 
