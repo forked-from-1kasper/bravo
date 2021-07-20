@@ -4,7 +4,7 @@ open Ident
 open Elab
 open Expr
 
-let idfun ctx t x = VLam (t, (x, EVar x, ctx))
+let idfun t x = VLam (t, (x, EVar x, Env.empty))
 
 let ieq u v : bool = !Prefs.girard || u = v
 let vfst : value -> value = function
@@ -42,7 +42,7 @@ let rec eval (e0 : exp) (ctx : ctx) = traceEval e0; match e0 with
   | ERight e           -> VRight (eval e ctx)
   | ESymm e            -> symm (eval e ctx)
   | EMeet e            -> VMeet (eval e ctx)
-  | ECoe e             -> coe ctx (eval e ctx)
+  | ECoe e             -> coe (eval e ctx)
   | ECong (a, b)       -> VCong (eval a ctx, eval b ctx)
 
 and trans : value * value -> value = function
@@ -69,30 +69,40 @@ and symm = function
   | VSymm v -> v
   | v -> VSymm v
 
-and coe ctx = function
+and coe = function
   (* coe (idp α) x ~> x *)
-  | VIdp t -> idfun ctx t (freshName "a")
+  | VIdp t -> idfun t (freshName "a")
   | v      -> VCoe v
 
 and closByVal t x v = let (p, e, ctx) = x in traceClos e p v;
-  (* dirty hack to handle free variables introduced by type checker,
-     for example, while checking terms like p : Path P a b *)
+  (* dirty hack to handle free variables introduced by type checker *)
   let ctx' = match v with
   | Var (x, t) -> if Env.mem x ctx then ctx else upLocal ctx x t v
   | _          -> ctx in
   eval e (upLocal ctx' p t v)
 
-and app : value * value -> value = function
+and app (f, x) = match f, x with
   (* meet p a left  ~> (a, idp a) *)
   | VApp (VMeet _, a), VApp (VApp (VLeft _, _), _) -> VPair (a, VIdp a)
   (* meet p b right ~> (b, p) *)
   | VApp (VMeet p, b), VApp (VApp (VRight _, _), _) -> VPair (b, p)
   (* coe q (coe p x) ~> coe (p ⬝ q) x *)
   | VCoe q, VApp (VCoe p, x) -> VApp (VCoe (VTrans (p, q)), x)
+  | VApp (VApp (VCong (alpha, beta), a), b), VLam (t, (p, ELam (k, (q, e)), ctx)) ->
+    let y = Var (p, t) in let ctx' = upLocal ctx p t y in let k' = eval k ctx' in
+    let ctx'' = upLocal ctx' q k' (Var (q, k')) in
+    (* cong id p ~> p *)
+    let v = eval e ctx'' in if conv y v then
+      idfun (pathv alpha a b) (freshName "a")
+    (* cong (λ _, x) p ~> idp *)
+    else if not (mem p v || mem q v) then
+      VLam (pathv alpha a b, (Irrefutable, EIdp e, ctx''))
+    else VApp (f, x)
+
   | VApp (VApp (VApp (VCong (alpha, beta), a), b), f), p -> cong alpha beta a b f p
   (* (λ (x : t), f) v ~> f[x/v] *)
   | VLam (t, f), v -> closByVal t f v
-  | f, x -> VApp (f, x)
+  | _, _ -> VApp (f, x)
 
 and cong alpha beta a b f r = match r with
   (* cong f (idp x) ~> idp (f x) *)
@@ -324,3 +334,13 @@ and inferCong ctx alpha beta =
 
   VPi (eval alpha ctx, (a, EPi (alpha, (b, EPi (func,
     (f, impl (path alpha (EVar a) (EVar b)) (path beta left right))))), ctx))
+
+and mem x = function
+  | Var (y, _) -> x = y
+  | VSig (t, f) | VPi (t, f) | VLam (t, f) ->
+    let (p, _, _) = f in mem x t || mem x (closByVal t f (Var (p, t)))
+  | VKan _ | VPre _ | VHole -> false
+  | VFst e  | VSnd e  | VId e       | VRefl e | VJ e
+  | VPath e | VIdp e  | VRev e      | VLeft e | VRight e
+  | VSymm e | VMeet e | VBoundary e | VCoe e -> mem x e
+  | VPair (a, b) | VApp (a, b) | VCong (a, b) | VTrans (a, b) -> mem x a || mem x b
