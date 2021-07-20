@@ -81,7 +81,7 @@ let rec ppExp paren e = let x = match e with
   | ECong (a, b) -> Printf.sprintf "cong %s %s" (ppExp true a) (ppExp true b)
   in match e with
   | EVar _ | EFst _ | ESnd _ | EPre _
-  | EKan _ | EHole | EPair _ -> x
+  | EKan _ | EHole | EPair _ | ERev _ -> x
   | _ -> parens paren x
 
 and showExp e = ppExp false e
@@ -120,7 +120,7 @@ let rec ppValue paren v = let x = match v with
   | VCong (a, b) -> Printf.sprintf "cong %s %s" (ppValue true a) (ppValue true b)
   in match v with
   | Var _ | VFst _ | VSnd _ | VPre _
-  | VKan _ | VHole | VPair _ -> x
+  | VKan _ | VHole | VPair _ | VRev _ -> x
   | _ -> parens paren x
 
 and showValue v = ppValue false v

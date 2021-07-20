@@ -48,11 +48,13 @@ coe (cong (λ x, Σ (a : α[x]), β[x] a) z) ~>
   (coe (cong′ (λ y, α[x/y]) p) z.1,
    coe (cong′ (λ y H, β[x/(meet p y H).1] (coe (cong (λ y′, α[x/y′]) (meet p y H).2) z.1)) p) z.2)
 
-apd (f : Π (x : α), β x) p := cong′ (λ y H, coe (cong β (join p y H).2) (f y)) p
-  : coe (cong β (join p a left).2) (f a) = coe (cong β (join p b right).2) (f b)
- ~>                 coe (cong β b) (f a) = coe (cong β (idp a)) (f b)
- ~>                 coe (cong β b) (f a) = coe (idp (β x)) (f b)
- ~>                 coe (cong β b) (f a) = f b
+apd (f : Π (x : α), β x) p := cong′ (λ y H, coe (cong β ((meet p⁻¹ y (∂-symm H)).2)⁻¹) (f (meet p⁻¹ y (∂-symm H)).1)) p
+  : coe (cong β ((meet p⁻¹ a (∂-symm left)).2)⁻¹)  (f (meet p⁻¹ a (∂-symm left)).1) =
+    coe (cong β ((meet p⁻¹ b (∂-symm right)).2)⁻¹) (f (meet p⁻¹ b (∂-symm right)).1)
+ ~> coe (cong β (p⁻¹)⁻¹) (f a) = coe (cong β (idp b)⁻¹) (f b)
+ ~>       coe (cong β p) (f a) = coe (cong β (idp b)) (f b)
+ ~>       coe (cong β p) (f a) = coe (idp (β b)) (f b)
+ ~>       coe (cong β p) (f a) = f b
 
 coe (cong (λ x, f[x] = g[x]) p) q ~> (apd (λ y, f[x/y]) p)⁻¹ ⬝ cong (coe (cong β p)) q ⬝ apd (λ y, g[x/y]) p
 
