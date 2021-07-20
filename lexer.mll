@@ -77,5 +77,6 @@ rule main = parse
 | "idp"           { IDP }              | pre as s        { PRE (getLevel s) }
 | "?"             { HOLE }             | boundary        { BOUNDARY }
 | "left"          { LEFT }             | "right"         { RIGHT }
+| "meet"          { MEET }             | "join"          { JOIN }
 | symm            { SYMM }             | ident as s      { IDENT s }
 | eof             { EOF }

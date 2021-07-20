@@ -39,6 +39,8 @@ let rec eval (e0 : exp) (ctx : ctx) = traceEval e0; match e0 with
   | ELeft e            -> VLeft (eval e ctx)
   | ERight e           -> VRight (eval e ctx)
   | ESymm e            -> VSymm (eval e ctx)
+  | EMeet e            -> VMeet (eval e ctx)
+  | EJoin e            -> VJoin (eval e ctx)
 
 and trans : value * value -> value = function
   | VTrans (p, q), r       -> trans (p, trans (q, r))
@@ -64,10 +66,25 @@ and closByVal t x v = let (p, e, ctx) = x in traceClos e p v;
   eval e (upLocal ctx' p t v)
 
 and app : value * value -> value = function
+  (* ∂-symm (left a b) ~> right b a *)
   | VApp (VApp (VApp (VSymm _, _), _), _),
     VApp (VApp (VLeft v, a), b) -> VApp (VApp (VRight v, b), a)
+  (* ∂-symm (right a b) ~> left b a *)
   | VApp (VApp (VApp (VSymm _, _), _), _),
     VApp (VApp (VRight v, a), b) -> VApp (VApp (VLeft v, b), a)
+  (* meet p a left  ~> (a, idp a) *)
+  | VApp (VApp (VApp (VApp (VMeet _, a), _), _), _),
+    VApp (VApp (VLeft _, _), _) -> VPair (a, VIdp a)
+  (* meet p b right ~> (b, p) *)
+  | VApp (VApp (VApp (VApp (VMeet _, _), b), p), _),
+    VApp (VApp (VRight _, _), _) -> VPair (b, p)
+  (* join p a left ~> (b, p) *)
+  | VApp (VApp (VApp (VApp (VJoin _, _), b), p), _),
+    VApp (VApp (VLeft _, _), _)  -> VPair (b, p)
+  (* join p b right ~> (a, idp a) *)
+  | VApp (VApp (VApp (VApp (VJoin _, a), _), _), _),
+    VApp (VApp (VRight _, _), _) -> VPair (a, VIdp a)
+  (* (λ (x : t), f) v ~> f[x/v] *)
   | VLam (t, f), v -> closByVal t f v
   | f, x -> VApp (f, x)
 
@@ -117,6 +134,8 @@ and rbV v : exp = traceRbV v; match v with
   | VLeft v            -> ELeft (rbV v)
   | VRight v           -> ERight (rbV v)
   | VSymm v            -> ESymm (rbV v)
+  | VMeet v            -> EMeet (rbV v)
+  | VJoin v            -> EJoin (rbV v)
 
 and rbVTele ctor t g =
   let (p, _, _) = g in let x = Var (p, t) in
@@ -150,6 +169,7 @@ and conv v1 v2 : bool = traceConv v1 v2;
     | VTrans (p1, q1), VTrans (p2, q2) -> conv p1 p2 && conv q1 q2
     | VBoundary a, VBoundary b | VSymm a, VSymm b
     | VLeft a, VLeft b | VRight a, VRight b -> conv a b
+    | VMeet a, VMeet b | VJoin a, VJoin b -> conv a b
     | _, _ -> false
   end || convProofIrrel v1 v2
 
@@ -222,6 +242,7 @@ and infer ctx e : value = traceInfer e; match e with
   | ELeft e -> inferLeft ctx e
   | ERight e -> inferRight ctx e
   | ESymm e -> inferSymm ctx e
+  | EMeet e | EJoin e -> inferMeetJoin ctx e
   | e -> raise (InferError e)
 
 and inferTele ctx binop p a b =
@@ -261,3 +282,12 @@ and inferSymm ctx e =
   VPi (eval e ctx, (a, EPi (e, (b, EPi (e,
     (x, impl (boundary e (EVar a) (EVar b) (EVar x))
             (boundary e (EVar b) (EVar a) (EVar x)))))), ctx))
+
+and singl e a b = ESig (e, (b, EApp (EApp (EPath e, a), EVar b)))
+and inferMeetJoin ctx e =
+  let t = infer ctx e in ignore (extSet t);
+  let a = fresh (name "a") in let b = fresh (name "b") in
+  let x = fresh (name "x") in let z = fresh (name "z") in
+  VPi (eval e ctx, (a, EPi (e, (b, impl (EApp (EApp (EPath e, EVar a), EVar b))
+    (EPi (e, (x, impl (EApp (EApp (EApp (EBoundary e, EVar a), EVar b), EVar x))
+                      (singl e (EVar a) z)))))), ctx))

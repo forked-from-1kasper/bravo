@@ -8,6 +8,7 @@ type exp =
   | EId of exp | ERefl of exp | EJ of exp
   | EPath of exp | EIdp of exp | ERev of exp | ETrans of exp * exp
   | EBoundary of exp | ELeft of exp | ERight of exp | ESymm of exp
+  | EMeet of exp | EJoin of exp
 
 type tele = name * exp
 
@@ -17,10 +18,11 @@ type value =
   | VKan of int | VPre of int
   | Var of name * value | VHole
   | VPi of value * clos | VLam of value * clos | VApp of value * value
-  | VSig of value * clos | VPair  of value * value | VFst of value | VSnd of value
+  | VSig of value * clos | VPair of value * value | VFst of value | VSnd of value
   | VId of value | VRefl of value | VJ of value
   | VPath of value | VIdp of value | VRev of value | VTrans of value * value
   | VBoundary of value | VLeft of value | VRight of value | VSymm of value
+  | VMeet of value | VJoin of value
 
 and clos = name * exp * ctx
 
@@ -73,6 +75,8 @@ let rec ppExp paren e = let x = match e with
   | ELeft e -> "left " ^ ppExp true e
   | ERight e -> "right " ^ ppExp true e
   | ESymm e -> "∂-symm " ^ ppExp true e
+  | EMeet e -> "meet " ^ ppExp true e
+  | EJoin e -> "join " ^ ppExp true e
   in match e with
   | EVar _ | EFst _ | ESnd _ | EPre _
   | EKan _ | EHole | EPair _ -> x
@@ -105,9 +109,11 @@ let rec ppValue paren v = let x = match v with
   | VRev p -> ppValue true p ^ "⁻¹"
   | VTrans (p, q) -> ppValue true p ^ " ⬝ " ^ ppValue true q
   | VBoundary v -> "∂ " ^ ppValue true v
-  | VLeft e -> "left " ^ ppValue true e
-  | VRight e -> "right " ^ ppValue true e
-  | VSymm e -> "∂-symm " ^ ppValue true e
+  | VLeft v -> "left " ^ ppValue true v
+  | VRight v -> "right " ^ ppValue true v
+  | VSymm v -> "∂-symm " ^ ppValue true v
+  | VMeet v -> "meet " ^ ppValue true v
+  | VJoin v -> "join " ^ ppValue true v
   in match v with
   | Var _ | VFst _ | VSnd _ | VPre _
   | VKan _ | VHole | VPair _ -> x
