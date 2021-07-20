@@ -7,6 +7,8 @@ open Expr
 let ieq u v : bool = !Prefs.girard || u = v
 let vfst : value -> value = function
   | VPair (u, _) -> u
+  (* (meet p x H).1 ~> x *)
+  | VApp (VApp (VApp (VApp (VApp (VMeet _, _), _), _), x), _) -> x
   | v            -> VFst v
 
 let vsnd : value -> value = function
