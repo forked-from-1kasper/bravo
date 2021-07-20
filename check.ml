@@ -38,7 +38,6 @@ let rec eval (e0 : exp) (ctx : ctx) = traceEval e0; match e0 with
   | ERight e           -> VRight (eval e ctx)
   | ESymm e            -> VSymm (eval e ctx)
   | EMeet e            -> VMeet (eval e ctx)
-  | EJoin e            -> VJoin (eval e ctx)
   | ECoe e             -> VCoe (eval e ctx)
   | ECong (a, b)       -> VCong (eval a ctx, eval b ctx)
 
@@ -78,12 +77,6 @@ and app : value * value -> value = function
   (* meet p b right ~> (b, p) *)
   | VApp (VApp (VApp (VApp (VMeet _, _), _), p), b),
     VApp (VApp (VRight _, _), _) -> VPair (b, p)
-  (* join p a left ~> (b, p) *)
-  | VApp (VApp (VApp (VApp (VJoin _, _), _), p), b),
-    VApp (VApp (VLeft _, _), _)  -> VPair (b, p)
-  (* join p b right ~> (a, idp a) *)
-  | VApp (VApp (VApp (VApp (VJoin _, _), _), _), a),
-    VApp (VApp (VRight _, _), _) -> VPair (a, VIdp a)
   (* (λ (x : t), f) v ~> f[x/v] *)
   | VLam (t, f), v -> closByVal t f v
   | f, x -> VApp (f, x)
@@ -135,7 +128,6 @@ and rbV v : exp = traceRbV v; match v with
   | VRight v           -> ERight (rbV v)
   | VSymm v            -> ESymm (rbV v)
   | VMeet v            -> EMeet (rbV v)
-  | VJoin v            -> EJoin (rbV v)
   | VCoe v             -> ECoe (rbV v)
   | VCong (a, b)       -> ECong (rbV a, rbV b)
 
@@ -171,7 +163,7 @@ and conv v1 v2 : bool = traceConv v1 v2;
     | VTrans (p1, q1), VTrans (p2, q2) -> conv p1 p2 && conv q1 q2
     | VBoundary a, VBoundary b | VSymm a, VSymm b
     | VLeft a, VLeft b | VRight a, VRight b -> conv a b
-    | VMeet a, VMeet b | VJoin a, VJoin b -> conv a b
+    | VMeet a, VMeet b -> conv a b
     | VCoe a, VCoe b -> conv a b
     | VCong (a1, b1), VCong (a2, b2) -> conv a1 a2 && conv b1 b2
     | _, _ -> false
@@ -246,7 +238,7 @@ and infer ctx e : value = traceInfer e; match e with
   | ELeft e -> inferLeft ctx e
   | ERight e -> inferRight ctx e
   | ESymm e -> inferSymm ctx e
-  | EMeet e | EJoin e -> inferMeetJoin ctx e
+  | EMeet e -> inferMeet ctx e
   | ECoe e -> let n = extKan (infer ctx e) in let beta = fresh (name "β") in
     VPi (VKan n, (beta, impl (EApp (EApp (EPath (EKan n), e), EVar beta)) (impl e (EVar beta)), ctx))
   | ECong (a, b) -> inferCong ctx a b
@@ -291,7 +283,7 @@ and inferSymm ctx e =
             (boundary e (EVar b) (EVar a) (EVar x)))))), ctx))
 
 and singl e a b = ESig (e, (b, EApp (EApp (EPath e, a), EVar b)))
-and inferMeetJoin ctx e =
+and inferMeet ctx e =
   let t = infer ctx e in ignore (extSet t);
   let a = fresh (name "a") in let b = fresh (name "b") in
   let x = fresh (name "x") in let z = fresh (name "z") in

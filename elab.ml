@@ -69,7 +69,6 @@ let rec salt (ns : name Env.t) : exp -> exp = function
   | ERight e           -> ERight (salt ns e)
   | ESymm e            -> ESymm (salt ns e)
   | EMeet e            -> EMeet (salt ns e)
-  | EJoin e            -> EJoin (salt ns e)
   | ECoe e             -> ECoe (salt ns e)
   | ECong (a, b)       -> ECong (salt ns a, salt ns b)
 

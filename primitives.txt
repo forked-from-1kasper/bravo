@@ -27,15 +27,11 @@ singl {α : U} (a : α) := Σ (b : α), a = b
   coe : Π {α β : U} : α = β → α → β
 cong′ : Π {α β : U} {a b : α} (f : Π (x : α), ∂ a b x → β), a = b → f a left = f b right
  meet : Π {α : U} {a b : α} (p : a = b) (x : α), ∂ a b x → singl a
- join : Π {α : U} {a b : α} (p : a = b) (x : α), ∂ a b x → singl a
 
 cong f p := cong′ (λ x _, f x) p
 
 meet p a left  ~> (a, idp a)
 meet p b right ~> (b, p)
-
-join p a left  ~> (b, p)
-join p b right ~> (a, idp a)
 
 coe (p ⬝ q) x ~> coe q (coe p x)
 coe (idp α) x ~> x
