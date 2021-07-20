@@ -33,3 +33,9 @@ def coe-cong-Π (Δ : U) (A : Δ → U) (B : Π (x : Δ), A x → U) (α β : Δ
 λ (x : A β), coe (cong Δ U α β (λ (y : Δ) (H : ∂ Δ α β y),
     B y (coe (cong Δ U β y (λ (z : Δ) (H : ∂ Δ β y z), A z) (meet p⁻¹ y (∂-symm H)).2) x)) p)
   (φ (coe (cong Δ U β α (λ (y : Δ) (H : ∂ Δ β α y), A y) p⁻¹) x))
+
+def coe-cong-Σ (Δ : U) (A : Δ → U) (B : Π (x : Δ), A x → U) (α β : Δ) (p : Path Δ α β)
+  (z : Σ (a : A α), B α a) : Σ (b : A β), B β b :=
+(coe (cong Δ U α β (λ (y : Δ) (H : ∂ Δ α β y), A y) p) z.1,
+ coe (cong Δ U α β (λ (y : Δ) (H : ∂ Δ α β y),
+   B y (coe (cong Δ U α y (λ (y′ : Δ) (H : ∂ Δ α y y′), A y′) (meet p y H).2) z.1)) p) z.2)
