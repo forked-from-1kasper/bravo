@@ -4,8 +4,6 @@ open Ident
 open Elab
 open Expr
 
-let boundary e a b x = EApp (EApp (EApp (EBoundary e, a), b), x)
-
 let ieq u v : bool = !Prefs.girard || u = v
 let vfst : value -> value = function
   | VPair (u, _) -> u
@@ -42,6 +40,7 @@ let rec eval (e0 : exp) (ctx : ctx) = traceEval e0; match e0 with
   | EMeet e            -> VMeet (eval e ctx)
   | EJoin e            -> VJoin (eval e ctx)
   | ECoe e             -> VCoe (eval e ctx)
+  | ECong e            -> VCong (eval e ctx)
 
 and trans : value * value -> value = function
   | VTrans (p, q), r       -> trans (p, trans (q, r))
@@ -105,8 +104,8 @@ and inferV v = traceInferV v; match v with
   end
   | VRefl v                  -> VApp (VApp (VId (inferV v), v), v)
   | VIdp v                   -> VApp (VApp (VPath (inferV v), v), v)
-  | VRev p                   -> let (v, a, b) = extPath (inferV p) in path v b a
-  | VTrans (p, q)            -> let (u, a, _) = extPath (inferV p) in let (_, _, c) = extPath (inferV q) in path u a c
+  | VRev p                   -> let (v, a, b) = extPath (inferV p) in pathv v b a
+  | VTrans (p, q)            -> let (u, a, _) = extPath (inferV p) in let (_, _, c) = extPath (inferV q) in pathv u a c
   | VPre n                   -> VPre (n + 1)
   | VKan n                   -> VKan (n + 1)
   | v                        -> raise (ExpectedNeutral v)
@@ -138,6 +137,7 @@ and rbV v : exp = traceRbV v; match v with
   | VMeet v            -> EMeet (rbV v)
   | VJoin v            -> EJoin (rbV v)
   | VCoe v             -> ECoe (rbV v)
+  | VCong v            -> ECong (rbV v)
 
 and rbVTele ctor t g =
   let (p, _, _) = g in let x = Var (p, t) in
@@ -172,7 +172,7 @@ and conv v1 v2 : bool = traceConv v1 v2;
     | VBoundary a, VBoundary b | VSymm a, VSymm b
     | VLeft a, VLeft b | VRight a, VRight b -> conv a b
     | VMeet a, VMeet b | VJoin a, VJoin b -> conv a b
-    | VCoe a, VCoe b -> conv a b
+    | VCoe a, VCoe b | VCong a, VCong b -> conv a b
     | _, _ -> false
   end || convProofIrrel v1 v2
 
@@ -208,7 +208,7 @@ and check ctx (e0 : exp) (t0 : value) =
   | EHole, v -> traceHole v ctx
   | ERefl e, VApp (VApp (VId t, a), b) | EIdp e, VApp (VApp (VPath t, a), b) ->
     check ctx e t; let v = eval e ctx in eqNf v a; eqNf v b
-  | ERev p, VApp (VApp (VPath t, a), b) -> check ctx p (path t b a)
+  | ERev p, VApp (VApp (VPath t, a), b) -> check ctx p (pathv t b a)
   | ETrans (p, q), VApp (VApp (VPath t, a), c) ->
     let (u, x, y1) = extPath (infer ctx p) in let (v, y2, z) = extPath (infer ctx q) in
     eqNf u t; eqNf v t; eqNf y1 y2; eqNf x a; eqNf z c
@@ -238,9 +238,9 @@ and infer ctx e : value = traceInfer e; match e with
   | ERefl e -> let v = eval e ctx in let t = infer ctx e in VApp (VApp (VId t, v), v)
   | EJ e -> inferJ ctx e
   | EIdp e -> let v = eval e ctx in let t = infer ctx e in VApp (VApp (VPath t, v), v)
-  | ERev p -> let (v, a, b) = extPath (infer ctx p) in path v b a
+  | ERev p -> let (v, a, b) = extPath (infer ctx p) in pathv v b a
   | ETrans (p, q) -> let (u, a, x) = extPath (infer ctx p) in let (v, y, c) = extPath (infer ctx q) in
-    eqNf u v; eqNf x y; path u a c
+    eqNf u v; eqNf x y; pathv u a c
   | EBoundary e -> let v = eval e ctx in let n = extSet (infer ctx e) in implv v (impl e (impl e (EPre n))) ctx
   | ELeft e -> inferLeft ctx e
   | ERight e -> inferRight ctx e
@@ -248,6 +248,7 @@ and infer ctx e : value = traceInfer e; match e with
   | EMeet e | EJoin e -> inferMeetJoin ctx e
   | ECoe e -> let n = extKan (infer ctx e) in let beta = fresh (name "β") in
     VPi (VKan n, (beta, impl (EApp (EApp (EPath (EKan n), e), EVar beta)) (impl e (EVar beta)), ctx))
+  | ECong e -> inferCong ctx e
   | e -> raise (InferError e)
 
 and inferTele ctx binop p a b =
@@ -293,6 +294,17 @@ and inferMeetJoin ctx e =
   let t = infer ctx e in ignore (extSet t);
   let a = fresh (name "a") in let b = fresh (name "b") in
   let x = fresh (name "x") in let z = fresh (name "z") in
-  VPi (eval e ctx, (a, EPi (e, (b, impl (EApp (EApp (EPath e, EVar a), EVar b))
-    (EPi (e, (x, impl (EApp (EApp (EApp (EBoundary e, EVar a), EVar b), EVar x))
+  VPi (eval e ctx, (a, EPi (e, (b, impl (path e (EVar a) (EVar b))
+    (EPi (e, (x, impl (boundary e (EVar a) (EVar b) (EVar x))
                       (singl e (EVar a) z)))))), ctx))
+
+and inferCong ctx e =
+  let n = extKan (infer ctx e) in let beta = fresh (name "β") in
+  let a = fresh (name "a") in let b = fresh (name "b") in let f = fresh (name "f") in
+  let x = fresh (name "x") in let func = EPi (e, (x, impl (boundary e (EVar a) (EVar b) (EVar x)) (EVar beta))) in
+
+  let left = EApp (EApp (EVar f, EVar a), EApp (EApp (ELeft e, EVar a), EVar b)) in
+  let right = EApp (EApp (EVar f, EVar b), EApp (EApp (ERight e, EVar a), EVar b)) in
+
+  VPi (VKan n, (beta, EPi (e, (a, EPi (e, (b, EPi (func,
+    (f, impl (path e (EVar a) (EVar b)) (path (EVar beta) left right))))))), ctx))

@@ -31,7 +31,7 @@
 %token ID REFL IDJ
 %token PATH IDP REV TRANS
 %token BOUNDARY LEFT RIGHT SYMM
-%token MEET JOIN COE
+%token MEET JOIN COE CONG
 
 %right ARROW PROD
 %left TRANS
@@ -78,6 +78,7 @@ exp4 :
   | MEET exp6 { EMeet $2 }
   | JOIN exp6 { EJoin $2 }
   | COE exp6 { ECoe $2 }
+  | CONG exp6 { ECong $2 }
   | exp5 { $1 }
 
 exp5:

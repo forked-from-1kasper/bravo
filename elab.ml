@@ -14,7 +14,11 @@ let extKan : value -> int = function
   | VKan n -> n
   | v      -> raise (ExpectedFibrant v)
 
-let path v a b = VApp (VApp (VPath v, a), b)
+let pathv v a b = VApp (VApp (VPath v, a), b)
+
+let boundary e a b x = EApp (EApp (EApp (EBoundary e, a), b), x)
+let path e a b = EApp (EApp (EPath e, a), b)
+
 let extPath = function
   | VApp (VApp (VPath v, a), b) -> (v, a, b)
   | v                           -> raise (ExpectedPath v)
@@ -67,6 +71,7 @@ let rec salt (ns : name Env.t) : exp -> exp = function
   | EMeet e            -> EMeet (salt ns e)
   | EJoin e            -> EJoin (salt ns e)
   | ECoe e             -> ECoe (salt ns e)
+  | ECong e            -> ECong (salt ns e)
 
 and saltTele ctor ns p a b =
   let x = fresh p in ctor x (salt ns a) (salt (Env.add p x ns) b)
