@@ -1,0 +1,42 @@
+{
+    "name": "castle-bravo",
+    "fileTypes": [
+        "castle-bravo"
+    ],
+    "patterns": [
+        {
+            "begin": "{-",
+            "end": "-}",
+            "name": "comment.block.castle-bravo"
+        },
+        {
+            "match": "--.*$",
+            "name": "comment.line.double-dash.castle-bravo"
+        },
+        {
+            "match": "(?<=^|[\\s()])(option|axiom|postulate|def|definition|theorem|lemma|corollary|proposition|import|with|module|where)(?=$|[\\s()])",
+            "name": "keyword.other.castle-bravo"
+        },
+        {
+            "match": "(?<=^|[\\s(),])(λ|Σ|Π|Id|refl|idJ|forall|sigma|∂|left|right|∂-symm|Path|idp|meet|coe|cong)(?=$|[\\s(),])",
+            "name": "keyword.control.castle-bravo"
+        },
+        {
+            "match": "(?<=^|[\\s(),])([UV][₀₁₂₃₄₅₆₇₈₉]*)(?=$|[\\s(),])",
+            "name": "keyword.other.castle-bravo"
+        },
+        {
+            "match": "(?<=^|[\\s()])(->|→|\\|->|:=|≔|≜|≝|:|\\*|⁻¹|⬝)(?=$|[\\s()])",
+            "name": "keyword.other.castle-bravo"
+        },
+        {
+            "match": "(?<=^|[\\s()])(-)",
+            "name": "keyword.other.castle-bravo"
+        },
+        {
+            "match": "[><]",
+            "name": "keyword.other.castle-bravo"
+        }
+    ],
+    "scopeName": "source.castle-bravo"
+}

@@ -1,0 +1,31 @@
+{
+    "name": "castle-bravo",
+    "displayName": "Castle Bravo",
+    "version": "0.0.0",
+    "description": "Castle Bravo theorem prover syntax highlighting for Visual Studio Code",
+    "publisher": "siegmentationfault",
+    "categories": [
+        "Programming Languages"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/forked-from-1kasper/castle_bravo"
+    },
+    "engines": {
+        "vscode": "^0.10.10"
+    },
+    "contributes": {
+        "languages": [{
+            "id": "castle-bravo",
+            "extensions": [
+                ".castle-bravo"
+            ],
+            "configuration": "./castle-bravo-configuration.json"
+        }],
+        "grammars": [{
+                "language": "castle-bravo",
+                "scopeName": "source.castle-bravo",
+                "path": "./syntaxes/castle-bravo.tmLanguage.json"
+        }]
+    }
+}
