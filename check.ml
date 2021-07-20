@@ -8,7 +8,7 @@ let ieq u v : bool = !Prefs.girard || u = v
 let vfst : value -> value = function
   | VPair (u, _) -> u
   (* (meet p x H).1 ~> x *)
-  | VApp (VApp (VApp (VApp (VApp (VMeet _, _), _), _), x), _) -> x
+  | VApp (VApp (VMeet _, x), _) -> x
   | v            -> VFst v
 
 let vsnd : value -> value = function
@@ -74,11 +74,9 @@ and app : value * value -> value = function
   | VApp (VApp (VApp (VSymm _, _), _), _),
     VApp (VApp (VRight v, a), b) -> VApp (VApp (VLeft v, b), a)
   (* meet p a left  ~> (a, idp a) *)
-  | VApp (VApp (VApp (VApp (VMeet _, _), _), _), a),
-    VApp (VApp (VLeft _, _), _) -> VPair (a, VIdp a)
+  | VApp (VMeet _, a), VApp (VApp (VLeft _, _), _) -> VPair (a, VIdp a)
   (* meet p b right ~> (b, p) *)
-  | VApp (VApp (VApp (VApp (VMeet _, _), _), p), b),
-    VApp (VApp (VRight _, _), _) -> VPair (b, p)
+  | VApp (VMeet p, b), VApp (VApp (VRight _, _), _) -> VPair (b, p)
   (* (λ (x : t), f) v ~> f[x/v] *)
   | VLam (t, f), v -> closByVal t f v
   | f, x -> VApp (f, x)
@@ -284,13 +282,11 @@ and inferSymm ctx e =
             (boundary e (EVar b) (EVar a) (EVar x)))))), ctx))
 
 and singl e a b = ESig (e, (b, EApp (EApp (EPath e, a), EVar b)))
-and inferMeet ctx e =
-  let t = infer ctx e in ignore (extSet t);
-  let a = fresh (name "a") in let b = fresh (name "b") in
+and inferMeet ctx p =
+  let (e, a, b) = extPath (infer ctx p) in
   let x = fresh (name "x") in let z = fresh (name "z") in
-  VPi (eval e ctx, (a, EPi (e, (b, impl (path e (EVar a) (EVar b))
-    (EPi (e, (x, impl (boundary e (EVar a) (EVar b) (EVar x))
-                      (singl e (EVar a) z)))))), ctx))
+  let v = rbV e in let v0 = rbV a in let v1 = rbV b in
+  VPi (e, (x, impl (boundary v v0 v1 (EVar x)) (singl v v0 z), ctx))
 
 and inferCong ctx alpha beta =
   ignore (extKan (infer ctx alpha)); ignore (extKan (infer ctx alpha));
