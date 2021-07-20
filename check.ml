@@ -38,7 +38,7 @@ let rec eval (e0 : exp) (ctx : ctx) = traceEval e0; match e0 with
   | EBoundary e        -> VBoundary (eval e ctx)
   | ELeft e            -> VLeft (eval e ctx)
   | ERight e           -> VRight (eval e ctx)
-  | ESymm e            -> VSymm (eval e ctx)
+  | ESymm e            -> symm (eval e ctx)
   | EMeet e            -> VMeet (eval e ctx)
   | ECoe e             -> VCoe (eval e ctx)
   | ECong (a, b)       -> VCong (eval a ctx, eval b ctx)
@@ -58,6 +58,15 @@ and rev : value -> value = function
   | VTrans (p, q) -> trans (rev q, rev p)
   | v             -> VRev v
 
+and symm = function
+  (* ∂-symm (left a b) ~> right b a *)
+  | VApp (VApp (VLeft v, a), b) -> VApp (VApp (VRight v, b), a)
+  (* ∂-symm (right a b) ~> left b a *)
+  | VApp (VApp (VRight v, a), b) -> VApp (VApp (VLeft v, b), a)
+  (* ∂-symm (∂-symm H) ~> H *)
+  | VSymm v -> v
+  | v -> VSymm v
+
 and closByVal t x v = let (p, e, ctx) = x in traceClos e p v;
   (* dirty hack to handle free variables introduced by type checker,
      for example, while checking terms like p : Path P a b *)
@@ -67,12 +76,6 @@ and closByVal t x v = let (p, e, ctx) = x in traceClos e p v;
   eval e (upLocal ctx' p t v)
 
 and app : value * value -> value = function
-  (* ∂-symm (left a b) ~> right b a *)
-  | VApp (VApp (VApp (VSymm _, _), _), _),
-    VApp (VApp (VLeft v, a), b) -> VApp (VApp (VRight v, b), a)
-  (* ∂-symm (right a b) ~> left b a *)
-  | VApp (VApp (VApp (VSymm _, _), _), _),
-    VApp (VApp (VRight v, a), b) -> VApp (VApp (VLeft v, b), a)
   (* meet p a left  ~> (a, idp a) *)
   | VApp (VMeet _, a), VApp (VApp (VLeft _, _), _) -> VPair (a, VIdp a)
   (* meet p b right ~> (b, p) *)
@@ -275,11 +278,10 @@ and inferRight ctx e =
   VPi (eval e ctx, (a, EPi (e, (b, boundary e (EVar a) (EVar b) (EVar b))), ctx))
 
 and inferSymm ctx e =
-  let t = infer ctx e in ignore (extSet t);
-  let a = fresh (name "a") in let b = fresh (name "b") in let x = fresh (name "x") in
-  VPi (eval e ctx, (a, EPi (e, (b, EPi (e,
-    (x, impl (boundary e (EVar a) (EVar b) (EVar x))
-            (boundary e (EVar b) (EVar a) (EVar x)))))), ctx))
+  match infer ctx e with
+  | VApp (VApp (VApp (VBoundary t, a), b), x) ->
+    VApp (VApp (VApp (VBoundary t, b), a), x)
+  | v -> raise (ExpectedBoundary v)
 
 and singl e a b = ESig (e, (b, EApp (EApp (EPath e, a), EVar b)))
 and inferMeet ctx p =

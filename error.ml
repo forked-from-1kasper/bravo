@@ -15,13 +15,15 @@ exception ExpectedNeutral of value
 exception ExpectedFibrant of value
 exception UnknownCommand of string
 exception VariableNotFound of name
+exception ExpectedBoundary of value
 exception AlreadyDeclared of string
 exception InvalidModuleName of string * string
 exception UnknownOptionValue of string * string
 
 let prettyPrintError : exn -> unit = function
   | Ineq (u, v) -> Printf.printf "Type mismatch:\n  %s\nis not equal to\n  %s\n" (showValue u) (showValue v)
-  | ExpectedPath e -> Printf.printf "“%s” expected to be a path.\n" (showValue e)
+  | ExpectedBoundary v -> Printf.printf "“%s” expected to be a boundary.\n" (showValue v)
+  | ExpectedPath v -> Printf.printf "“%s” expected to be a path.\n" (showValue v)
   | AlreadyDeclared p -> Printf.printf "“%s” is already declared.\n" p
   | InferError e -> Printf.printf "Cannot infer type of\n  %s\n" (showExp e)
   | VariableNotFound p -> Printf.printf "Variable %s was not found\n" (showName p)

@@ -21,6 +21,7 @@ idp a ⬝ p     ~> p
 
 ∂-symm  (left a b) ~> right b a
 ∂-symm (right a b) ~> left  b a
+ ∂-symm (∂-symm H) ~> H
 
 singl {α : U} (a : α) := Σ (b : α), a = b
 
