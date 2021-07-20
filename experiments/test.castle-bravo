@@ -18,6 +18,7 @@ coe (cong A U a b (λ (x : A) (H : ∂ A a b x), P x) p)
 def ap (A B : U) (f : A -> B) (a b : A) (p : Path A a b) :=
 cong A B a b (λ (x : A) (H : ∂ A a b x), f x) p
 
+-- “apd A (λ (x : A), B)” evaluates to “cong”
 def apd (A : U) (B : A -> U) (a b : A) (f : Π (x : A), ∂ A a b x → B x) (p : Path A a b) :=
 cong A (B b) a b (λ (x : A) (H : ∂ A a b x),
   coe (cong A U x b (λ (y : A) (H : ∂ A x b y), B y)
