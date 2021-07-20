@@ -1,7 +1,7 @@
 module test where
 
 def id (A : U) : U := A
-def ∘ (A B C : U) (f : B -> C) (g : A -> B) : A -> C := λ (x : A), f (g x)
+def ∘ (A B C : U) (f : B → C) (g : A → B) : A → C := λ (x : A), f (g x)
 
 def refl′ (A : U) (a : A) : Path A a a := idp a
 def symm (A : U) (a b : A) (p : Path A a b) : Path A b a := p⁻¹
@@ -12,23 +12,23 @@ idp p
 
 def ∂-irrel (A : U) (a b x : A) (p q : ∂ A a b x) : Path (∂ A a b x) p q := idp p
 
-def subst (A : U) (P : A -> U) (a b : A) (p : Path A a b) : P a -> P b :=
+def subst (A : U) (P : A → U) (a b : A) (p : Path A a b) : P a → P b :=
 coe (cong A U a b (λ (x : A) (H : ∂ A a b x), P x) p)
 
-def ap (A B : U) (f : A -> B) (a b : A) (p : Path A a b) :=
+def ap (A B : U) (f : A → B) (a b : A) (p : Path A a b) :=
 cong A B a b (λ (x : A) (H : ∂ A a b x), f x) p
 
 -- “apd A (λ (x : A), B)” evaluates to “cong”
-def apd (A : U) (B : A -> U) (a b : A) (f : Π (x : A), ∂ A a b x → B x) (p : Path A a b) :=
+def apd (A : U) (B : A → U) (a b : A) (f : Π (x : A), ∂ A a b x → B x) (p : Path A a b) :=
 cong A (B b) a b (λ (x : A) (H : ∂ A a b x),
   coe (cong A U x b (λ (y : A) (H : ∂ A x b y), B y)
     (symm A b x (meet p⁻¹ x (∂-symm H)).2)) (f x H)) p
 
-def J (A : U) (P : Π (a b : A), Path A a b -> U)
+def J (A : U) (P : Π (a b : A), Path A a b → U)
   (a : A) (d : P a a (idp a)) (b : A) (p : Path A a b) : P a b p :=
 coe (cong A U a b (λ (x : A) (H : ∂ A a b x), P a (meet p x H).1 (meet p x H).2) p) d
 
-def coe-cong-Π (Δ : U) (A : Δ -> U) (B : Π (x : Δ), A x → U) (α β : Δ) (p : Path Δ α β)
+def coe-cong-Π (Δ : U) (A : Δ → U) (B : Π (x : Δ), A x → U) (α β : Δ) (p : Path Δ α β)
   (φ : Π (a : A α), B α a) : Π (b : A β), B β b :=
 λ (x : A β), coe (cong Δ U α β (λ (y : Δ) (H : ∂ Δ α β y),
     B y (coe (cong Δ U β y (λ (z : Δ) (H : ∂ Δ β y z), A z) (meet p⁻¹ y (∂-symm H)).2) x)) p)
