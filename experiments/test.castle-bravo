@@ -13,10 +13,10 @@ def ∂-irrel (A : U) (a b x : A) (p q : ∂ A a b x) : Path (∂ A a b x) p q :
 def subst (A : U) (P : A -> U) (a b : A) (p : Path A a b) : P a -> P b :=
 coe (cong A U a b (λ (x : A) (H : ∂ A a b x), P x) p)
 
-def apd (A : U) (B : A -> U) (f : Π (x : A), B x) (a b : A) (p : Path A a b) :=
+def apd (A : U) (B : A -> U) (a b : A) (f : Π (x : A), ∂ A a b x → B x) (p : Path A a b) :=
 cong A (B b) a b (λ (x : A) (H : ∂ A a b x),
   coe (cong A U x b (λ (y : A) (H : ∂ A x b y), B y)
-    (symm A b x (meet p⁻¹ x (∂-symm H)).2)) (f x)) p
+    (symm A b x (meet p⁻¹ x (∂-symm H)).2)) (f x H)) p
 
 def J (A : U) (P : Π (a b : A), Path A a b -> U)
   (a : A) (d : P a a (idp a)) (b : A) (p : Path A a b) : P a b p :=
