@@ -28,6 +28,11 @@ def J (A : U) (P : Π (a b : A), Path A a b → U)
   (a : A) (d : P a a (idp a)) (b : A) (p : Path A a b) : P a b p :=
 coe (cong A U a b (λ (x : A) (H : ∂ A a b x), P a (meet p x H).1 (meet p x H).2) p) d
 
+-- β-rule for J holds definitionally
+def J-β (A : U) (P : Π (a b : A), Path A a b → U) (a : A)
+  (d : P a a (idp a)) : Path (P a a (idp a)) d (J A P a d a (idp a)) :=
+idp d
+
 def coe-cong-Π (Δ : U) (A : Δ → U) (B : Π (x : Δ), A x → U) (α β : Δ) (p : Path Δ α β)
   (φ : Π (a : A α), B α a) : Π (b : A β), B β b :=
 λ (x : A β), coe (cong Δ U α β (λ (y : Δ) (H : ∂ Δ α β y),
@@ -49,6 +54,9 @@ def coe-cong-Path (Δ : U) (A : Δ → U) (f g : Π (x : Δ), A x) (α β : Δ)
 
 def symm′ (A : U) (a b : A) (p : Path A a b) : Path A b a :=
 coe (cong A U a b (λ (x : A) (H : ∂ A a b x), Path A x a) p) (idp a)
+
+def symm″ (A : U) (a b : A) (p : Path A a b) : Path A b a :=
+J A (λ (a b : A) (p : Path A a b), Path A b a) a (idp a) b p
 
 def trans′ (A : U) (a b c : A) (p : Path A a b) (q : Path A b c) : Path A a c :=
 coe (cong A U b c (λ (x : A) (H : ∂ A b c x), Path A a x) q) p
