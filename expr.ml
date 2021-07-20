@@ -8,7 +8,7 @@ type exp =
   | EId of exp | ERefl of exp | EJ of exp
   | EPath of exp | EIdp of exp | ERev of exp | ETrans of exp * exp
   | EBoundary of exp | ELeft of exp | ERight of exp | ESymm of exp
-  | EMeet of exp | EJoin of exp
+  | EMeet of exp | EJoin of exp | ECoe of exp
 
 type tele = name * exp
 
@@ -22,7 +22,7 @@ type value =
   | VId of value | VRefl of value | VJ of value
   | VPath of value | VIdp of value | VRev of value | VTrans of value * value
   | VBoundary of value | VLeft of value | VRight of value | VSymm of value
-  | VMeet of value | VJoin of value
+  | VMeet of value | VJoin of value | VCoe of value
 
 and clos = name * exp * ctx
 
@@ -77,6 +77,7 @@ let rec ppExp paren e = let x = match e with
   | ESymm e -> "∂-symm " ^ ppExp true e
   | EMeet e -> "meet " ^ ppExp true e
   | EJoin e -> "join " ^ ppExp true e
+  | ECoe e -> "coe " ^ ppExp true e
   in match e with
   | EVar _ | EFst _ | ESnd _ | EPre _
   | EKan _ | EHole | EPair _ -> x
@@ -114,6 +115,7 @@ let rec ppValue paren v = let x = match v with
   | VSymm v -> "∂-symm " ^ ppValue true v
   | VMeet v -> "meet " ^ ppValue true v
   | VJoin v -> "join " ^ ppValue true v
+  | VCoe v -> "coe " ^ ppValue true v
   in match v with
   | Var _ | VFst _ | VSnd _ | VPre _
   | VKan _ | VHole | VPair _ -> x

@@ -41,6 +41,7 @@ let rec eval (e0 : exp) (ctx : ctx) = traceEval e0; match e0 with
   | ESymm e            -> VSymm (eval e ctx)
   | EMeet e            -> VMeet (eval e ctx)
   | EJoin e            -> VJoin (eval e ctx)
+  | ECoe e             -> VCoe (eval e ctx)
 
 and trans : value * value -> value = function
   | VTrans (p, q), r       -> trans (p, trans (q, r))
@@ -136,6 +137,7 @@ and rbV v : exp = traceRbV v; match v with
   | VSymm v            -> ESymm (rbV v)
   | VMeet v            -> EMeet (rbV v)
   | VJoin v            -> EJoin (rbV v)
+  | VCoe v             -> ECoe (rbV v)
 
 and rbVTele ctor t g =
   let (p, _, _) = g in let x = Var (p, t) in
@@ -170,6 +172,7 @@ and conv v1 v2 : bool = traceConv v1 v2;
     | VBoundary a, VBoundary b | VSymm a, VSymm b
     | VLeft a, VLeft b | VRight a, VRight b -> conv a b
     | VMeet a, VMeet b | VJoin a, VJoin b -> conv a b
+    | VCoe a, VCoe b -> conv a b
     | _, _ -> false
   end || convProofIrrel v1 v2
 
@@ -243,6 +246,8 @@ and infer ctx e : value = traceInfer e; match e with
   | ERight e -> inferRight ctx e
   | ESymm e -> inferSymm ctx e
   | EMeet e | EJoin e -> inferMeetJoin ctx e
+  | ECoe e -> let n = extKan (infer ctx e) in let beta = fresh (name "β") in
+    VPi (VKan n, (beta, impl (EApp (EApp (EPath (EKan n), e), EVar beta)) (impl e (EVar beta)), ctx))
   | e -> raise (InferError e)
 
 and inferTele ctx binop p a b =

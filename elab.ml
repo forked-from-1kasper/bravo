@@ -66,6 +66,7 @@ let rec salt (ns : name Env.t) : exp -> exp = function
   | ESymm e            -> ESymm (salt ns e)
   | EMeet e            -> EMeet (salt ns e)
   | EJoin e            -> EJoin (salt ns e)
+  | ECoe e             -> ECoe (salt ns e)
 
 and saltTele ctor ns p a b =
   let x = fresh p in ctor x (salt ns a) (salt (Env.add p x ns) b)

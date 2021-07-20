@@ -78,5 +78,6 @@ rule main = parse
 | "?"             { HOLE }             | boundary        { BOUNDARY }
 | "left"          { LEFT }             | "right"         { RIGHT }
 | "meet"          { MEET }             | "join"          { JOIN }
+| "coe"           { COE }
 | symm            { SYMM }             | ident as s      { IDENT s }
 | eof             { EOF }
