@@ -27,3 +27,9 @@ cong A (B b) a b (λ (x : A) (H : ∂ A a b x),
 def J (A : U) (P : Π (a b : A), Path A a b -> U)
   (a : A) (d : P a a (idp a)) (b : A) (p : Path A a b) : P a b p :=
 coe (cong A U a b (λ (x : A) (H : ∂ A a b x), P a (meet p x H).1 (meet p x H).2) p) d
+
+def coe-cong-Π (Δ : U) (A : Δ -> U) (B : Π (x : Δ), A x → U) (α β : Δ) (p : Path Δ α β)
+  (φ : Π (a : A α), B α a) : Π (b : A β), B β b :=
+λ (x : A β), coe (cong Δ U α β (λ (y : Δ) (H : ∂ Δ α β y),
+    B y (coe (cong Δ U β y (λ (z : Δ) (H : ∂ Δ β y z), A z) (meet p⁻¹ y (∂-symm H)).2) x)) p)
+  (φ (coe (cong Δ U β α (λ (y : Δ) (H : ∂ Δ β α y), A y) p⁻¹) x))
