@@ -19,21 +19,6 @@ module Name = struct
 end
 
 module Env = Map.Make(Name)
-type dir   = Zero | One
-type face  = dir Env.t
-
-let negDir : dir -> dir = function
-  | Zero -> One | One -> Zero
-
-module Dir = struct
-  type t = dir
-  let compare a b =
-    match a, b with
-    | One, Zero -> 1
-    | Zero, One -> -1
-    | _, _      -> 0
-end
-
 module Files = Set.Make(String)
 
 let inc : int ref = ref 0

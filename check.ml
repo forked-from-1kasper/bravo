@@ -4,6 +4,8 @@ open Ident
 open Elab
 open Expr
 
+let idfun ctx t x = VLam (t, (x, EVar x, ctx))
+
 let ieq u v : bool = !Prefs.girard || u = v
 let vfst : value -> value = function
   | VPair (u, _) -> u
@@ -40,7 +42,7 @@ let rec eval (e0 : exp) (ctx : ctx) = traceEval e0; match e0 with
   | ERight e           -> VRight (eval e ctx)
   | ESymm e            -> symm (eval e ctx)
   | EMeet e            -> VMeet (eval e ctx)
-  | ECoe e             -> VCoe (eval e ctx)
+  | ECoe e             -> coe ctx (eval e ctx)
   | ECong (a, b)       -> VCong (eval a ctx, eval b ctx)
 
 and trans : value * value -> value = function
@@ -67,6 +69,11 @@ and symm = function
   | VSymm v -> v
   | v -> VSymm v
 
+and coe ctx = function
+  (* coe (idp α) x ~> x *)
+  | VIdp t -> idfun ctx t (freshName "a")
+  | v      -> VCoe v
+
 and closByVal t x v = let (p, e, ctx) = x in traceClos e p v;
   (* dirty hack to handle free variables introduced by type checker,
      for example, while checking terms like p : Path P a b *)
@@ -80,6 +87,8 @@ and app : value * value -> value = function
   | VApp (VMeet _, a), VApp (VApp (VLeft _, _), _) -> VPair (a, VIdp a)
   (* meet p b right ~> (b, p) *)
   | VApp (VMeet p, b), VApp (VApp (VRight _, _), _) -> VPair (b, p)
+  (* coe q (coe p x) ~> coe (p ⬝ q) x *)
+  | VCoe q, VApp (VCoe p, x) -> VApp (VCoe (VTrans (p, q)), x)
   (* (λ (x : t), f) v ~> f[x/v] *)
   | VLam (t, f), v -> closByVal t f v
   | f, x -> VApp (f, x)
@@ -257,8 +266,8 @@ and inferLam ctx p a e =
   let ctx' = upLocal ctx p t x in VPi (t, (p, rbV (infer ctx' e), ctx))
 
 and inferJ ctx e =
-  let n = extSet (infer ctx e) in let x = fresh (name "x") in let y = fresh (name "y") in
-  let pi = fresh (name "P") in let p = fresh (name "p") in let id = EApp (EApp (EId e, EVar x), EVar y) in
+  let n = extSet (infer ctx e) in let x = freshName "x" in let y = freshName "y" in
+  let pi = freshName "P" in let p = freshName "p" in let id = EApp (EApp (EId e, EVar x), EVar y) in
   VPi (eval (EPi (e, (x, EPi (e, (y, impl id (EPre n)))))) ctx,
         (pi, EPi (e, (x, impl (EApp (EApp (EApp (EVar pi, EVar x), EVar x), ERefl (EVar x)))
           (EPi (e, (y, EPi (id, (p, EApp (EApp (EApp (EVar pi, EVar x), EVar y), EVar p)))))))), ctx))
@@ -269,12 +278,12 @@ and inferPath ctx e =
 
 and inferLeft ctx e =
   let t = infer ctx e in ignore (extSet t);
-  let a = fresh (name "a") in let b = fresh (name "b") in
+  let a = freshName "a" in let b = freshName "b" in
   VPi (eval e ctx, (a, EPi (e, (b, boundary e (EVar a) (EVar b) (EVar a))), ctx))
 
 and inferRight ctx e =
   let t = infer ctx e in ignore (extSet t);
-  let a = fresh (name "a") in let b = fresh (name "b") in
+  let a = freshName "a" in let b = freshName "b" in
   VPi (eval e ctx, (a, EPi (e, (b, boundary e (EVar a) (EVar b) (EVar b))), ctx))
 
 and inferSymm ctx e =
@@ -286,14 +295,14 @@ and inferSymm ctx e =
 and singl e a b = ESig (e, (b, EApp (EApp (EPath e, a), EVar b)))
 and inferMeet ctx p =
   let (e, a, b) = extPath (infer ctx p) in
-  let x = fresh (name "x") in let z = fresh (name "z") in
+  let x = freshName "x" in let z = freshName "z" in
   let v = rbV e in let v0 = rbV a in let v1 = rbV b in
   VPi (e, (x, impl (boundary v v0 v1 (EVar x)) (singl v v0 z), ctx))
 
 and inferCong ctx alpha beta =
   ignore (extKan (infer ctx alpha)); ignore (extKan (infer ctx alpha));
-  let a = fresh (name "a") in let b = fresh (name "b") in let f = fresh (name "f") in
-  let x = fresh (name "x") in let func = EPi (alpha, (x, impl (boundary alpha (EVar a) (EVar b) (EVar x)) beta)) in
+  let a = freshName "a" in let b = freshName "b" in let f = freshName "f" in
+  let x = freshName "x" in let func = EPi (alpha, (x, impl (boundary alpha (EVar a) (EVar b) (EVar x)) beta)) in
 
   let left = EApp (EApp (EVar f, EVar a), EApp (EApp (ELeft alpha, EVar a), EVar b)) in
   let right = EApp (EApp (EVar f, EVar b), EApp (EApp (ERight alpha, EVar a), EVar b)) in
