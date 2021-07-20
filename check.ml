@@ -89,9 +89,24 @@ and app : value * value -> value = function
   | VApp (VMeet p, b), VApp (VApp (VRight _, _), _) -> VPair (b, p)
   (* coe q (coe p x) ~> coe (p ⬝ q) x *)
   | VCoe q, VApp (VCoe p, x) -> VApp (VCoe (VTrans (p, q)), x)
+  | VApp (VApp (VApp (VCong (alpha, beta), a), b), f), p -> cong alpha beta a b f p
   (* (λ (x : t), f) v ~> f[x/v] *)
   | VLam (t, f), v -> closByVal t f v
   | f, x -> VApp (f, x)
+
+and cong alpha beta a b f r = match r with
+  (* cong f (idp x) ~> idp (f x) *)
+  | VIdp x -> VIdp (app (f, x))
+  (* cong f p⁻¹ ~> (cong f p)⁻¹ *)
+  | VRev p -> VRev (cong alpha beta a b f p)
+  (* cong f (p ⬝ q) ~> cong f p ⬝ cong f q *)
+  | VTrans (p, q) ->
+    let (_, a1, b1) = extPath (inferV p) in
+    let (_, a2, b2) = extPath (inferV q) in
+    VTrans (cong alpha beta a1 b1 f p, cong alpha beta a2 b2 f q)
+  (* cong g (cong f p) ~> cong (g ∘ f) p *)
+  | VApp (VApp (VApp (VApp (VCong (gamma, alpha), a), b), g), p) -> failwith "not implemented"
+  | _ -> VApp (VApp (VApp (VApp (VCong (alpha, beta), a), b), f), r)
 
 and getRho ctx x = match Env.find_opt x ctx with
   | Some (_, _, Value v) -> v
