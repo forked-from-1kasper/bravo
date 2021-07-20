@@ -73,16 +73,16 @@ and app : value * value -> value = function
   | VApp (VApp (VApp (VSymm _, _), _), _),
     VApp (VApp (VRight v, a), b) -> VApp (VApp (VLeft v, b), a)
   (* meet p a left  ~> (a, idp a) *)
-  | VApp (VApp (VApp (VApp (VMeet _, a), _), _), _),
+  | VApp (VApp (VApp (VApp (VMeet _, _), _), _), a),
     VApp (VApp (VLeft _, _), _) -> VPair (a, VIdp a)
   (* meet p b right ~> (b, p) *)
-  | VApp (VApp (VApp (VApp (VMeet _, _), b), p), _),
+  | VApp (VApp (VApp (VApp (VMeet _, _), _), p), b),
     VApp (VApp (VRight _, _), _) -> VPair (b, p)
   (* join p a left ~> (b, p) *)
-  | VApp (VApp (VApp (VApp (VJoin _, _), b), p), _),
+  | VApp (VApp (VApp (VApp (VJoin _, _), _), p), b),
     VApp (VApp (VLeft _, _), _)  -> VPair (b, p)
   (* join p b right ~> (a, idp a) *)
-  | VApp (VApp (VApp (VApp (VJoin _, a), _), _), _),
+  | VApp (VApp (VApp (VApp (VJoin _, _), _), _), a),
     VApp (VApp (VRight _, _), _) -> VPair (a, VIdp a)
   (* (λ (x : t), f) v ~> f[x/v] *)
   | VLam (t, f), v -> closByVal t f v
