@@ -9,3 +9,11 @@ def symm-symm (A : U) (a b : A) (p : Path A a b) :
 idp p
 
 def ∂-irrel (A : U) (a b x : A) (p q : ∂ A a b x) : Path (∂ A a b x) p q := idp p
+
+def subst (A : U) (P : A -> U) (a b : A) (p : Path A a b) : P a -> P b :=
+coe (P a) (P b) (cong A U a b (λ (x : A) (H : ∂ A a b x), P x) p)
+
+def J (A : U) (P : Π (a b : A), Path A a b -> U)
+  (a : A) (d : P a a (idp a)) (b : A) (p : Path A a b) : P a b p :=
+coe (P a a (idp a)) (P a b p)
+  (cong A U a b (λ (x : A) (H : ∂ A a b x), P a (meet A a b p x H).1 (meet A a b p x H).2) p) d

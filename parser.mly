@@ -78,7 +78,7 @@ exp4 :
   | MEET exp6 { EMeet $2 }
   | JOIN exp6 { EJoin $2 }
   | COE exp6 { ECoe $2 }
-  | CONG exp6 { ECong $2 }
+  | CONG exp6 exp6 { ECong ($2, $3) }
   | exp5 { $1 }
 
 exp5:

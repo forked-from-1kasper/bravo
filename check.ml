@@ -40,7 +40,7 @@ let rec eval (e0 : exp) (ctx : ctx) = traceEval e0; match e0 with
   | EMeet e            -> VMeet (eval e ctx)
   | EJoin e            -> VJoin (eval e ctx)
   | ECoe e             -> VCoe (eval e ctx)
-  | ECong e            -> VCong (eval e ctx)
+  | ECong (a, b)       -> VCong (eval a ctx, eval b ctx)
 
 and trans : value * value -> value = function
   | VTrans (p, q), r       -> trans (p, trans (q, r))
@@ -137,7 +137,7 @@ and rbV v : exp = traceRbV v; match v with
   | VMeet v            -> EMeet (rbV v)
   | VJoin v            -> EJoin (rbV v)
   | VCoe v             -> ECoe (rbV v)
-  | VCong v            -> ECong (rbV v)
+  | VCong (a, b)       -> ECong (rbV a, rbV b)
 
 and rbVTele ctor t g =
   let (p, _, _) = g in let x = Var (p, t) in
@@ -172,7 +172,8 @@ and conv v1 v2 : bool = traceConv v1 v2;
     | VBoundary a, VBoundary b | VSymm a, VSymm b
     | VLeft a, VLeft b | VRight a, VRight b -> conv a b
     | VMeet a, VMeet b | VJoin a, VJoin b -> conv a b
-    | VCoe a, VCoe b | VCong a, VCong b -> conv a b
+    | VCoe a, VCoe b -> conv a b
+    | VCong (a1, b1), VCong (a2, b2) -> conv a1 a2 && conv b1 b2
     | _, _ -> false
   end || convProofIrrel v1 v2
 
@@ -248,7 +249,7 @@ and infer ctx e : value = traceInfer e; match e with
   | EMeet e | EJoin e -> inferMeetJoin ctx e
   | ECoe e -> let n = extKan (infer ctx e) in let beta = fresh (name "β") in
     VPi (VKan n, (beta, impl (EApp (EApp (EPath (EKan n), e), EVar beta)) (impl e (EVar beta)), ctx))
-  | ECong e -> inferCong ctx e
+  | ECong (a, b) -> inferCong ctx a b
   | e -> raise (InferError e)
 
 and inferTele ctx binop p a b =
@@ -298,13 +299,13 @@ and inferMeetJoin ctx e =
     (EPi (e, (x, impl (boundary e (EVar a) (EVar b) (EVar x))
                       (singl e (EVar a) z)))))), ctx))
 
-and inferCong ctx e =
-  let n = extKan (infer ctx e) in let beta = fresh (name "β") in
+and inferCong ctx alpha beta =
+  ignore (extKan (infer ctx alpha)); ignore (extKan (infer ctx alpha));
   let a = fresh (name "a") in let b = fresh (name "b") in let f = fresh (name "f") in
-  let x = fresh (name "x") in let func = EPi (e, (x, impl (boundary e (EVar a) (EVar b) (EVar x)) (EVar beta))) in
+  let x = fresh (name "x") in let func = EPi (alpha, (x, impl (boundary alpha (EVar a) (EVar b) (EVar x)) beta)) in
 
-  let left = EApp (EApp (EVar f, EVar a), EApp (EApp (ELeft e, EVar a), EVar b)) in
-  let right = EApp (EApp (EVar f, EVar b), EApp (EApp (ERight e, EVar a), EVar b)) in
+  let left = EApp (EApp (EVar f, EVar a), EApp (EApp (ELeft alpha, EVar a), EVar b)) in
+  let right = EApp (EApp (EVar f, EVar b), EApp (EApp (ERight alpha, EVar a), EVar b)) in
 
-  VPi (VKan n, (beta, EPi (e, (a, EPi (e, (b, EPi (func,
-    (f, impl (path e (EVar a) (EVar b)) (path (EVar beta) left right))))))), ctx))
+  VPi (eval alpha ctx, (a, EPi (alpha, (b, EPi (func,
+    (f, impl (path alpha (EVar a) (EVar b)) (path beta left right))))), ctx))
