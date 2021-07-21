@@ -61,5 +61,9 @@ coe (cong A U a b (λ (x : A) (H : ∂ A a b x), Path A x a) p) (idp a)
 def symm″ (A : U) (a b : A) (p : Path A a b) : Path A b a :=
 J A (λ (a b : A) (p : Path A a b), Path A b a) a (idp a) b p
 
+def symm‴ (A : U) (a b : A) (p : Path A a b) : Path A b a :=
+coe-cong-Path A a b (λ (x : A) (H : ∂ A a b x), A)
+  (λ (x : A) (H : ∂ A a b x), x) (λ (x : A) (H : ∂ A a b x), a) p (idp a)
+
 def trans′ (A : U) (a b c : A) (p : Path A a b) (q : Path A b c) : Path A a c :=
 coe (cong A U b c (λ (x : A) (H : ∂ A b c x), Path A a x) q) p
