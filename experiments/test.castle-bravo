@@ -34,17 +34,24 @@ def J-β (A : U) (P : Π (a b : A), Path A a b → U) (a : A)
   (d : P a a (idp a)) : Path (P a a (idp a)) d (J A P a d a (idp a)) :=
 idp d
 
-def coe-cong-Π (Δ : U) (A : Δ → U) (B : Π (x : Δ), A x → U) (α β : Δ) (p : Path Δ α β)
-  (φ : Π (a : A α), B α a) : Π (b : A β), B β b :=
-λ (x : A β), coe (cong Δ U α β (λ (y : Δ) (H : ∂ Δ α β y),
-    B y (coe (cong Δ U β y (λ (z : Δ) (H : ∂ Δ β y z), A z) (meet p⁻¹ y (∂-symm H)).2) x)) p)
-  (φ (coe (cong Δ U β α (λ (y : Δ) (H : ∂ Δ β α y), A y) p⁻¹) x))
+def coe-cong-Π (Δ : U) (α β : Δ) (A : Π (x : Δ), ∂ Δ α β x → U)
+  (B : Π (x : Δ) (H : ∂ Δ α β x), A x H → U) (p : Path Δ α β)
+  (φ : Π (a : A α (left Δ α β)),  B α (left Δ α β)  a) :
+       Π (b : A β (right Δ α β)), B β (right Δ α β) b :=
+λ (x : A β (right Δ α β)),
+  coe (cong Δ U α β (λ (y : Δ) (H : ∂ Δ α β y),
+    B y H (coe (cong Δ U β y (λ (z : Δ) (H′ : ∂ Δ β y z), A z (∂-comp H (∂-symm H′)))
+      (meet p⁻¹ y (∂-symm H)).2) x)) p)
+  (φ (coe (cong Δ U β α (λ (x : Δ) (H : ∂ Δ β α x), A x (∂-symm H)) p⁻¹) x))
 
-def coe-cong-Σ (Δ : U) (A : Δ → U) (B : Π (x : Δ), A x → U) (α β : Δ) (p : Path Δ α β)
-  (z : Σ (a : A α), B α a) : Σ (b : A β), B β b :=
-(coe (cong Δ U α β (λ (y : Δ) (H : ∂ Δ α β y), A y) p) z.1,
+def coe-cong-Σ (Δ : U) (α β : Δ) (A : Π (x : Δ), ∂ Δ α β x → U)
+  (B : Π (x : Δ) (H : ∂ Δ α β x), A x H → U) (p : Path Δ α β)
+  (z : Σ (a : A α (left Δ α β)),  B α (left Δ α β)  a) :
+       Σ (b : A β (right Δ α β)), B β (right Δ α β) b :=
+(coe (cong Δ U α β A p) z.1,
  coe (cong Δ U α β (λ (y : Δ) (H : ∂ Δ α β y),
-   B y (coe (cong Δ U α y (λ (y′ : Δ) (H : ∂ Δ α y y′), A y′) (meet p y H).2) z.1)) p) z.2)
+   B y H (coe (cong Δ U α y (λ (y′ : Δ) (H′ : ∂ Δ α y y′),
+     A y′ (∂-symm (∂-comp (∂-symm H) (∂-symm H′)))) (meet p y H).2) z.1)) p) z.2)
 
 def coe-cong-Path (Δ : U) (α β : Δ) (A : Π (x : Δ), ∂ Δ α β x → U)
   (f g : Π (x : Δ) (H : ∂ Δ α β x), A x H) (p : Path Δ α β)
