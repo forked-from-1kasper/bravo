@@ -38,8 +38,12 @@ cong′ : Π {α β : U} {a b : α} (f : Π (x : α), ∂ a b x → β), a = b �
 
 cong f p := cong′ (λ x _, f x) p
 
-meet p a left  ~> (a, idp a)
-meet p b right ~> (b, p)
+M¹) meet p a left  ~> (a, idp a)
+M²) meet p b right ~> (b, p)
+
+There is clash between M¹ and M² when a ≡ b (e.g. for loop : base = base).
+Probably, one of M¹, M² must take priority in this case, otherwise we will get K.
+
 (meet p x H).1 ~> x
 
 coe q (coe p x) ~> coe (p ⬝ q) x
