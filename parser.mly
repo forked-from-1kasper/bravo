@@ -83,7 +83,6 @@ exp4 :
 
 exp5:
   | IDP exp6 { EIdp $2 }
-  | exp6 REV { ERev $1 }
   | exp5 TRANS exp5 { ETrans ($1, $3) }
   | exp6 { $1 }
 
@@ -93,6 +92,7 @@ exp6:
   | KAN { EKan $1 }
   | exp6 FST { EFst $1 }
   | exp6 SND { ESnd $1 }
+  | exp6 REV { ERev $1 }
   | LPARENS exp1 RPARENS { $2 }
   | IDENT { getVar $1 }
 
