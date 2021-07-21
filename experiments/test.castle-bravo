@@ -55,7 +55,7 @@ def coe-cong-Σ (Δ : U) (α β : Δ) (A : Π (x : Δ), ∂ Δ α β x → U)
 
 def coe-cong-Path (Δ : U) (α β : Δ) (A : Π (x : Δ), ∂ Δ α β x → U)
   (f g : Π (x : Δ) (H : ∂ Δ α β x), A x H) (p : Path Δ α β)
-  (q : Path (A α  (left Δ α β)) (f α  (left Δ α β)) (g α  (left Δ α β))) :
+  (q : Path (A α (left Δ α β))  (f α (left Δ α β))  (g α (left Δ α β))) :
        Path (A β (right Δ α β)) (f β (right Δ α β)) (g β (right Δ α β)) :=
   (apd Δ α β A f p)⁻¹
 ⬝ (ap (A α (left Δ α β)) (A β (right Δ α β)) (coe (cong Δ U α β A p))
@@ -74,3 +74,12 @@ coe-cong-Path A a b (λ (x : A) (H : ∂ A a b x), A)
 
 def trans′ (A : U) (a b c : A) (p : Path A a b) (q : Path A b c) : Path A a c :=
 coe (cong A U b c (λ (x : A) (H : ∂ A b c x), Path A a x) q) p
+
+def transport-back-and-forward (A : U) (P : A → U) (a b : A)
+  (p : Path A a b) (u : P b) : Path (P b) (subst A P a b p (subst A P b a p⁻¹ u)) u :=
+idp u
+
+def subst-comp (A : U) (P : A → U) (a b c : A)
+  (p : Path A a b) (q : Path A b c) (x : P a) :
+  Path (P c) (subst A P a c (p ⬝ q) x) (subst A P b c q (subst A P a b p x)) :=
+?
