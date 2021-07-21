@@ -19,9 +19,10 @@ def ap (A B : U) (f : A → B) (a b : A) (p : Path A a b) :=
 cong A B a b (λ (x : A) (H : ∂ A a b x), f x) p
 
 -- “apd A (λ (x : A), B)” evaluates to “cong”
-def apd (A : U) (B : A → U) (a b : A) (f : Π (x : A), ∂ A a b x → B x) (p : Path A a b) :=
-cong A (B b) a b (λ (x : A) (H : ∂ A a b x),
-  coe (cong A U x b (λ (y : A) (H : ∂ A x b y), B y)
+def apd (A : U) (a b : A) (B : Π (x : A), ∂ A a b x → U)
+  (f : Π (x : A) (H : ∂ A a b x), B x H) (p : Path A a b) :=
+cong A (B b (right A a b)) a b (λ (x : A) (H : ∂ A a b x),
+  coe (cong A U x b (λ (y : A) (H′ : ∂ A x b y), B y (∂-comp H H′))
     (symm A b x (meet p⁻¹ x (∂-symm H)).2)) (f x H)) p
 
 def J (A : U) (P : Π (a b : A), Path A a b → U)
@@ -45,12 +46,14 @@ def coe-cong-Σ (Δ : U) (A : Δ → U) (B : Π (x : Δ), A x → U) (α β : Δ
  coe (cong Δ U α β (λ (y : Δ) (H : ∂ Δ α β y),
    B y (coe (cong Δ U α y (λ (y′ : Δ) (H : ∂ Δ α y y′), A y′) (meet p y H).2) z.1)) p) z.2)
 
-def coe-cong-Path (Δ : U) (A : Δ → U) (f g : Π (x : Δ), A x) (α β : Δ)
-  (p : Path Δ α β) (q : Path (A α) (f α) (g α)) : Path (A β) (f β) (g β) :=
-  (apd Δ A α β (λ (x : Δ) (H : ∂ Δ α β x), f x) p)⁻¹
-⬝ (cong (A α) (A β) (f α) (g α) (λ (a : A α) (H : ∂ (A α) (f α) (g α) a),
-    coe (cong Δ U α β (λ (x : Δ) (H : ∂ Δ α β x), A x) p) a) q)
-⬝ (apd Δ A α β (λ (x : Δ) (H : ∂ Δ α β x), g x) p)
+def coe-cong-Path (Δ : U) (α β : Δ) (A : Π (x : Δ), ∂ Δ α β x → U)
+  (f g : Π (x : Δ) (H : ∂ Δ α β x), A x H) (p : Path Δ α β)
+  (q : Path (A α  (left Δ α β)) (f α  (left Δ α β)) (g α  (left Δ α β))) :
+       Path (A β (right Δ α β)) (f β (right Δ α β)) (g β (right Δ α β)) :=
+  (apd Δ α β A f p)⁻¹
+⬝ (ap (A α (left Δ α β)) (A β (right Δ α β)) (coe (cong Δ U α β A p))
+    (f α (left Δ α β)) (g α (left Δ α β)) q)
+⬝ (apd Δ α β A g p)
 
 def symm′ (A : U) (a b : A) (p : Path A a b) : Path A b a :=
 coe (cong A U a b (λ (x : A) (H : ∂ A a b x), Path A x a) p) (idp a)

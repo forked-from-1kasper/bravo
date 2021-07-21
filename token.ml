@@ -18,7 +18,7 @@ let tokenToString : token -> string = function
   | REV        -> "REV"         | TRANS      -> "TRANS"
   | BOUNDARY   -> "BOUNDARY"    | SYMM       -> "SYMM"
   | LEFT       -> "LEFT"        | RIGHT      -> "RIGHT"
+  | MEET       -> "MEET"        | COMP       -> "COMP"
   | COE        -> "COE"         | CONG       -> "CONG"
   | ID         -> "ID"          | REFL       -> "REFL"
   | IDJ        -> "IDJ"         | IMPORT     -> "IMPORT"
-  | MEET       -> "MEET"

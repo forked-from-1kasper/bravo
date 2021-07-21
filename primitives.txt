@@ -18,10 +18,17 @@ idp a ⬝ p     ~> p
   left : Π {α : U} (a b : α), ∂ a b a
  right : Π {α : U} (a b : α), ∂ a b b
 ∂-symm : Π {α : U} {a b x : α}, ∂ a b x → ∂ b a x
+∂-comp : Π {a : U} {a b x y : α}, ∂ a b x → ∂ x b y → ∂ a b y
+
+Maybe these rules for ∂-symm and ∂-comp are not necessary
+due to proof-irrelevance, but they should improve efficiency.
 
 ∂-symm  (left a b) ~> right b a
 ∂-symm (right a b) ~> left  b a
  ∂-symm (∂-symm H) ~> H
+
+∂-comp (left a b) H ~> H
+∂-comp H (left x b) ~> H
 
 singl {α : U} (a : α) := Σ (b : α), a = b
 

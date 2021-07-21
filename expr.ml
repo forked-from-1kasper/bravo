@@ -7,7 +7,7 @@ type exp =
   | ESig of exp * (name * exp) | EPair  of exp * exp | EFst of exp | ESnd of exp
   | EId of exp | ERefl of exp | EJ of exp
   | EPath of exp | EIdp of exp | ERev of exp | ETrans of exp * exp
-  | EBoundary of exp | ELeft of exp | ERight of exp | ESymm of exp
+  | EBoundary of exp | ELeft of exp | ERight of exp | ESymm of exp | EComp of exp * exp
   | EMeet of exp | ECoe of exp | ECong of exp * exp
 
 type tele = name * exp
@@ -21,7 +21,7 @@ type value =
   | VSig of value * clos | VPair of value * value | VFst of value | VSnd of value
   | VId of value | VRefl of value | VJ of value
   | VPath of value | VIdp of value | VRev of value | VTrans of value * value
-  | VBoundary of value | VLeft of value | VRight of value | VSymm of value
+  | VBoundary of value | VLeft of value | VRight of value | VSymm of value | VComp of value * value
   | VMeet of value | VCoe of value | VCong of value * value
 
 and clos = name * exp * ctx
@@ -75,6 +75,7 @@ let rec ppExp paren e = let x = match e with
   | ELeft e -> "left " ^ ppExp true e
   | ERight e -> "right " ^ ppExp true e
   | ESymm e -> "∂-symm " ^ ppExp true e
+  | EComp (a, b) -> Printf.sprintf "∂-comp %s %s" (ppExp true a) (ppExp true b)
   | EMeet e -> "meet " ^ ppExp true e
   | ECoe e -> "coe " ^ ppExp true e
   | ECong (a, b) -> Printf.sprintf "cong %s %s" (ppExp true a) (ppExp true b)
@@ -113,6 +114,7 @@ let rec ppValue paren v = let x = match v with
   | VLeft v -> "left " ^ ppValue true v
   | VRight v -> "right " ^ ppValue true v
   | VSymm v -> "∂-symm " ^ ppValue true v
+  | VComp (a, b) -> Printf.sprintf "∂-comp %s %s" (ppValue true a) (ppValue true b)
   | VMeet v -> "meet " ^ ppValue true v
   | VCoe v -> "coe " ^ ppValue true v
   | VCong (a, b) -> Printf.sprintf "cong %s %s" (ppValue true a) (ppValue true b)

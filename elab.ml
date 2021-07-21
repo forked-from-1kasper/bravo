@@ -14,6 +14,7 @@ let extKan : value -> int = function
   | VKan n -> n
   | v      -> raise (ExpectedFibrant v)
 
+let vboundary t a b x = VApp (VApp (VApp (VBoundary t, a), b), x)
 let pathv v a b = VApp (VApp (VPath v, a), b)
 
 let boundary e a b x = EApp (EApp (EApp (EBoundary e, a), b), x)
@@ -21,7 +22,11 @@ let path e a b = EApp (EApp (EPath e, a), b)
 
 let extPath = function
   | VApp (VApp (VPath v, a), b) -> (v, a, b)
-  | v                           -> raise (ExpectedPath v)
+  | v -> raise (ExpectedPath v)
+
+let extBoundary = function
+  | VApp (VApp (VApp (VBoundary t, a), b), x) -> (t, a, b, x)
+  | v -> raise (ExpectedBoundary v)
 
 let extVar ctx x = match Env.find_opt x ctx with
   | Some (_, _, Value (Var (y, _))) -> y
@@ -68,6 +73,7 @@ let rec salt (ns : name Env.t) : exp -> exp = function
   | ELeft e            -> ELeft (salt ns e)
   | ERight e           -> ERight (salt ns e)
   | ESymm e            -> ESymm (salt ns e)
+  | EComp (a, b)       -> EComp (salt ns a, salt ns b)
   | EMeet e            -> EMeet (salt ns e)
   | ECoe e             -> ECoe (salt ns e)
   | ECong (a, b)       -> ECong (salt ns a, salt ns b)

@@ -30,7 +30,7 @@
 %token SIGMA PI OPTION
 %token ID REFL IDJ
 %token PATH IDP REV TRANS
-%token BOUNDARY LEFT RIGHT SYMM
+%token BOUNDARY LEFT RIGHT SYMM COMP
 %token MEET COE CONG
 
 %right ARROW PROD
@@ -75,6 +75,7 @@ exp4 :
   | LEFT exp6 { ELeft $2 }
   | RIGHT exp6 { ERight $2 }
   | SYMM exp6 { ESymm $2 }
+  | COMP exp6 exp6 { EComp ($2, $3) }
   | MEET exp6 { EMeet $2 }
   | COE exp6 { ECoe $2 }
   | CONG exp6 exp6 { ECong ($2, $3) }
