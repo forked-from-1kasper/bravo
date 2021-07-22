@@ -73,6 +73,7 @@ let rec salt (ns : name Env.t) : exp -> exp = function
   | ESymm e             -> ESymm (salt ns e)
   | EBLeft (e, p)       -> EBLeft (salt ns e, salt ns p)
   | EBRight (e, p)      -> EBRight (salt ns e, salt ns p)
+  | EBCong (f, x, e)    -> EBCong (salt ns f, salt ns x, salt ns e)
   | EComp (a, b)        -> EComp (salt ns a, salt ns b)
   | EMeet (p, x, e)     -> EMeet (salt ns p, salt ns x, salt ns e)
   | ECoe (p, x)         -> ECoe (salt ns p, salt ns x)

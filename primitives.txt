@@ -21,6 +21,8 @@ idp a ⬝ p     ~> p
  ∂-comp : Π {α : U} {a b x y : α}, ∂ a b x → ∂ x b y → ∂ a b y
  ∂-left : Π {α : U} {a b c x : α}, ∂ a b x → a = c → ∂ c b x
 ∂-right : Π {α : U} {a b c x : α}, ∂ a b x → b = c → ∂ a c x
+ ∂-cong : Π {α β : U} {a b : α} (f : Π (x : α), ∂ a b x → β)
+            (x : α) (H : ∂ a b x), ∂ (f a (left a b)) (f b (right a b)) (f x H)
 
 Maybe these rules for ∂-symm and ∂-comp are not necessary
 due to proof-irrelevance, but they should improve efficiency.
@@ -29,7 +31,11 @@ due to proof-irrelevance, but they should improve efficiency.
 ∂-symm (right a b) ~> left  b a
  ∂-symm (∂-symm H) ~> H
 
-“∂-comp u v : ∂ a b x” should evaluate to “left a b” when a ≡ x and to “right a b” when b ≡ x.
+ ∂-cong f a (left a b) ~> left (f a (left a b)) (f b (right a b))
+∂-cong f b (right a b) ~> right (f a (left a b)) (f b (right a b))
+
+“∂-comp u v, ∂-left H p, ∂-right right : ∂ a b x” should evaluate to “left a b”
+when a ≡ x and to “right a b” when b ≡ x.
 
 singl {α : U} (a : α) := Σ (b : α), a = b
 

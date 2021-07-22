@@ -85,11 +85,20 @@ def cong-comp (A B : U) (a b c : A) (p : Path A a b) (q : Path A b c)
 (cong (λ (x : A) (H : ∂ a b x), f x (∂-right H q)) p) ⬝
 (cong (λ (x : A) (H : ∂ b c x), f x (∂-left H p⁻¹)) q)
 
-def ap-comp (A B : U) (f : A → B) (a b c : A) (p : Path A a b) (q : Path A b c) :
+def ap-trans (A B : U) (f : A → B) (a b c : A) (p : Path A a b) (q : Path A b c) :
   Path (Path B (f a) (f c)) (ap A B f a c (p ⬝ q)) ((ap A B f a b p) ⬝ (ap A B f b c q)) :=
 idp (ap A B f a c (p ⬝ q))
 
-def subst-comp (A : U) (P : A → U) (a b c : A)
+def subst-trans (A : U) (P : A → U) (a b c : A)
   (p : Path A a b) (q : Path A b c) (x : P a) :
   Path (P c) (subst A P a c (p ⬝ q) x) (subst A P b c q (subst A P a b p x)) :=
 idp (subst A P a c (p ⬝ q) x)
+
+def cong-composition (A B C : U) (a b : A) (p : Path A a b) (g : Π (x : A), ∂ a b x → B)
+  (f : Π (x : B), ∂ (g a (left a b)) (g b (right a b)) x → C) :=
+cong (λ (x : A) (H : ∂ a b x), f (g x H) (∂-cong g x H)) p
+
+def ap-comp (A B C : U) (f : A → B) (g : B → C) (a b : A) (p : Path A a b) :
+  Path (Path C (g (f a)) (g (f b))) (ap B C g (f a) (f b) (ap A B f a b p))
+    (ap A C (λ (x : A), g (f x)) a b p) :=
+idp (ap A C (λ (x : A), g (f x)) a b p)

@@ -55,6 +55,7 @@ let symm     = boundary "-symm"
 let comp     = boundary "-comp"
 let bleft    = boundary "-left"
 let bright   = boundary "-right"
+let bcong    = boundary "-cong"
 
 let subscript = '\xE2' '\x82' ['\x80'-'\x89']
 let kan       = 'U' subscript*
@@ -83,5 +84,5 @@ rule main = parse
 | "meet"          { MEET }             | "coe"           { COE }
 | "cong"          { CONG }             | symm            { SYMM }
 | bleft           { BLEFT }            | bright          { BRIGHT }
-| comp            { COMP }             | ident as s      { IDENT s }
-| eof             { EOF }
+| bcong           { BCONG }            | comp            { COMP }
+| ident as s      { IDENT s }          | eof             { EOF }
