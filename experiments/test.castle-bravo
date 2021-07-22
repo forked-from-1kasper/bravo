@@ -85,7 +85,11 @@ def cong-comp (A B : U) (a b c : A) (p : Path A a b) (q : Path A b c)
 (cong (λ (x : A) (H : ∂ a b x), f x (∂-right H q)) p) ⬝
 (cong (λ (x : A) (H : ∂ b c x), f x (∂-left H p⁻¹)) q)
 
-def subst-comp (A : U) (P : A → U) (a b c : A)
-  (p : Path A a b) (q : Path A b c) (x : P a) :
-  Path (P c) (subst A P a c (p ⬝ q) x) (subst A P b c q (subst A P a b p x)) :=
-?
+def ap-comp (A B : U) (f : A → B) (a b c : A) (p : Path A a b) (q : Path A b c) :
+  Path (Path B (f a) (f c)) (ap A B f a c (p ⬝ q)) ((ap A B f a b p) ⬝ (ap A B f b c q)) :=
+idp (ap A B f a c (p ⬝ q))
+
+--def subst-comp (A : U) (P : A → U) (a b c : A)
+--  (p : Path A a b) (q : Path A b c) (x : P a) :
+--  Path (P c) (subst A P a c (p ⬝ q) x) (subst A P b c q (subst A P a b p x)) :=
+--?

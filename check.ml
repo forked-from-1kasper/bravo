@@ -4,8 +4,6 @@ open Ident
 open Elab
 open Expr
 
-let idfun t x = VLam (t, (x, EVar x, Env.empty))
-
 let ieq u v : bool = !Prefs.girard || u = v
 let vfst : value -> value = function
   | VPair (u, _) -> u
@@ -102,32 +100,55 @@ and meet p x v =
   else if conv b y then VPair (x, p)
   else VMeet (p, x, v)
 
+and extCongLam t =
+  let (dom, f) = extPi t in let (x, _, _) = f in
+  let (n, g) = extPi (closByVal dom f (Var (x, dom))) in
+  let (y, _, _) = g in let cod = closByVal n g (Var (y, n)) in
+  (dom, cod, x, y, extBoundary n)
+
+and congLamType dom cod a b alpha beta tau =
+  let ctx = upLocal (upLocal (upLocal Env.empty alpha dom a) beta dom b) tau (inferV cod) cod in
+  let x = freshName "x" in VPi (dom, (x, impl (EBoundary (EVar alpha, EVar beta, EVar x)) (EVar tau), ctx))
+
 and cong f p =
   match f, p with
   (* cong f (idp x) ~> idp (f x) *)
   | _, VIdp x -> VIdp (app (f, x))
   (* cong f p⁻¹ ~> (cong f p)⁻¹ *)
   | _, VRev p ->
-    let (alpha, g) = extPi (inferV f) in let (y, _, _) = g in
-    let (b, h) = extPi (closByVal alpha g (Var (y, alpha))) in
-    let (z, _, _) = h in let beta = closByVal b h (Var (z, b)) in
-    let (a, b, _) = extBoundary b in
+    let (dom, cod, _, _, _) = extCongLam (inferV f) in
+    let (_, b, a) = extPath (inferV p) in
 
     let x = freshName "x" in let phi = freshName "φ" in let sigma = freshName "σ" in
-    let left = freshName "α" in let right = freshName "β" in let cod = freshName "δ" in
-    let t = VPi (alpha, (x, impl (EBoundary (EVar left, EVar right, EVar x)) (EVar cod),
-      upLocal (upLocal (upLocal Env.empty left alpha a) right alpha b) cod (inferV beta) beta)) in
+    let alpha = freshName "α" in let beta = freshName "β" in let tau = freshName "τ" in
 
-    let g = VLam (alpha, (x, ELam (EBoundary (EVar right, EVar left, EVar x),
+    let t = congLamType dom cod a b alpha beta tau in
+    let g = VLam (dom, (x, ELam (EBoundary (EVar beta, EVar alpha, EVar x),
       (sigma, EApp (EApp (EVar phi, EVar x), ESymm (EVar sigma)))),
-      upLocal (upLocal (upLocal Env.empty phi t f) left alpha a) right alpha b)) in
+      upLocal (upLocal (upLocal Env.empty phi t f) alpha dom a) beta dom b)) in
     VRev (cong g p)
   (* cong f (p ⬝ q) ~> cong f p ⬝ cong f q *)
   | _, VTrans (p, q) ->
+    let (dom, cod, _, _, _) = extCongLam (inferV f) in
     let (_, a1, b1) = extPath (inferV p) in
     let (_, a2, b2) = extPath (inferV q) in
-    (* this is incorrect *)
-    trans (cong f p, cong f q)
+
+    let ro = freshName "ρ" in let x = freshName "x" in let phi = freshName "φ" in
+    let sigma = freshName "σ" in let alpha = freshName "α" in
+    let beta = freshName "β" in let tau = freshName "τ" in
+
+    let t1 = congLamType dom cod a1 b1 alpha beta tau in
+    let t2 = congLamType dom cod a2 b2 alpha beta tau in
+
+    let f1 = VLam (dom, (x, ELam (EBoundary (EVar alpha, EVar beta, EVar x),
+      (sigma, EApp (EApp (EVar phi, EVar x), EBRight (EVar sigma, EVar ro)))),
+      upLocal (upLocal (upLocal (upLocal Env.empty phi t1 f) alpha dom a1) beta dom b1) ro (VPath (dom, a2, b2)) q)) in
+
+    let f2 = VLam (dom, (x, ELam (EBoundary (EVar alpha, EVar beta, EVar x),
+      (sigma, EApp (EApp (EVar phi, EVar x), EBLeft (EVar sigma, ERev (EVar ro))))),
+      upLocal (upLocal (upLocal (upLocal Env.empty phi t2 f) alpha dom a2) beta dom b2) ro (VPath (dom, a1, b1)) p)) in
+
+    trans (cong f1 p, cong f2 q)
   (* cong f (cong g p) ~> cong (f ∘ g) p *)
   | _, VCong (g, p) -> failwith "not implemented"
   | VLam (t, (y, ELam (k, (z, e)), ctx)), _ ->
@@ -375,11 +396,7 @@ and inferMeet ctx p x e =
 
 and inferCong ctx f p =
   let (t, a, b) = extPath (infer ctx p) in
-
-  let (t', g) = extPi (infer ctx f) in let (x, _, _) = g in
-  let (n, h) = extPi (closByVal t' g (Var (x, t'))) in
-  let (y, _, _) = h in let k = closByVal n h (Var (y, n)) in
-  let (a', b', x') = extBoundary n in
+  let (t', k, x, y, (a', b', x')) = extCongLam (infer ctx f) in
 
   ignore (extKan (inferV t')); ignore (extKan (inferV k));
   eqNf t t'; eqNf (Var (x, t')) x'; eqNf a a'; eqNf b b';
