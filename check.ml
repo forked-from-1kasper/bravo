@@ -140,15 +140,12 @@ and cong f p =
     let t1 = congLamType dom cod a1 b1 alpha beta tau in
     let t2 = congLamType dom cod a2 b2 alpha beta tau in
 
-    let f1 = VLam (dom, (x, ELam (EBoundary (EVar alpha, EVar beta, EVar x),
-      (sigma, EApp (EApp (EVar phi, EVar x), EBRight (EVar sigma, EVar ro)))),
-      upLocal (upLocal (upLocal (upLocal Env.empty phi t1 f) alpha dom a1) beta dom b1) ro (VPath (dom, a2, b2)) q)) in
+    let g t a b a' b' p k =
+    VLam (dom, (x, ELam (EBoundary (EVar alpha, EVar beta, EVar x), (sigma, EApp (EApp (EVar phi, EVar x), k))),
+      upLocal (upLocal (upLocal (upLocal Env.empty phi t f) alpha dom a) beta dom b) ro (VPath (dom, a', b')) p)) in
 
-    let f2 = VLam (dom, (x, ELam (EBoundary (EVar alpha, EVar beta, EVar x),
-      (sigma, EApp (EApp (EVar phi, EVar x), EBLeft (EVar sigma, ERev (EVar ro))))),
-      upLocal (upLocal (upLocal (upLocal Env.empty phi t2 f) alpha dom a2) beta dom b2) ro (VPath (dom, a1, b1)) p)) in
-
-    trans (cong f1 p, cong f2 q)
+    trans (cong (g t1 a1 b1 a2 b2 q (EBRight (EVar sigma, EVar ro))) p,
+           cong (g t2 a2 b2 a1 b1 p (EBLeft (EVar sigma, ERev (EVar ro)))) q)
   (* cong f (cong g p) ~> cong (f ∘ g) p *)
   | _, VCong (g, p) -> failwith "not implemented"
   | VLam (t, (y, ELam (k, (z, e)), ctx)), _ ->
