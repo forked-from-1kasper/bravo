@@ -126,7 +126,7 @@ and cong f p =
     let g = VLam (dom, (x, ELam (EBoundary (EVar beta, EVar alpha, EVar x),
       (sigma, EApp (EApp (EVar phi, EVar x), ESymm (EVar sigma)))),
       upLocal (upLocal (upLocal Env.empty phi t f) alpha dom a) beta dom b)) in
-    VRev (cong g p)
+    rev (cong g p)
   (* cong f (p ⬝ q) ~> cong f p ⬝ cong f q *)
   | _, VTrans (p, q) ->
     let (dom, cod, _, _, _) = extCongLam (inferV f) in
@@ -179,6 +179,7 @@ and inferV v = traceInferV v; match v with
   | VFst e -> fst (extSig (inferV e))
   | VSnd e -> let (t, g) = extSig (inferV e) in closByVal t g (VFst e)
   | VCoe (p, _) -> let (_, t, _) = extPath (inferV p) in t
+  | VMeet (p, _, _) -> let (t, a, _) = extPath (inferV p) in singl t a
   | VLeft (a, b) -> VBoundary (a, b, a)
   | VRight (a, b) -> VBoundary (a, b, b)
   | VCong (f, p) ->
