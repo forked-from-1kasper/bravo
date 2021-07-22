@@ -14,11 +14,13 @@ p⁻¹ ⬝ p       ~> idp b
 p ⬝ idp b     ~> p
 idp a ⬝ p     ~> p
 
-     ∂ : Π {α : U}, α → α → α → Prop
-  left : Π {α : U} (a b : α), ∂ a b a
- right : Π {α : U} (a b : α), ∂ a b b
-∂-symm : Π {α : U} {a b x : α}, ∂ a b x → ∂ b a x
-∂-comp : Π {a : U} {a b x y : α}, ∂ a b x → ∂ x b y → ∂ a b y
+      ∂ : Π {α : U}, α → α → α → Prop
+   left : Π {α : U} (a b : α), ∂ a b a
+  right : Π {α : U} (a b : α), ∂ a b b
+ ∂-symm : Π {α : U} {a b x : α}, ∂ a b x → ∂ b a x
+ ∂-comp : Π {α : U} {a b x y : α}, ∂ a b x → ∂ x b y → ∂ a b y
+ ∂-left : Π {α : U} {a b c x : α}, ∂ a b x → a = c → ∂ c b x
+∂-right : Π {α : U} {a b c x : α}, ∂ a b x → b = c → ∂ a c x
 
 Maybe these rules for ∂-symm and ∂-comp are not necessary
 due to proof-irrelevance, but they should improve efficiency.
@@ -27,8 +29,7 @@ due to proof-irrelevance, but they should improve efficiency.
 ∂-symm (right a b) ~> left  b a
  ∂-symm (∂-symm H) ~> H
 
-∂-comp (left a b) H ~> H
-∂-comp H (left x b) ~> H
+“∂-comp u v : ∂ a b x” should evaluate to “left a b” when a ≡ x and to “right a b” when b ≡ x.
 
 singl {α : U} (a : α) := Σ (b : α), a = b
 

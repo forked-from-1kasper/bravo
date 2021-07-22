@@ -10,74 +10,80 @@ def symm-symm (A : U) (a b : A) (p : Path A a b) :
   Path (Path A a b) (symm A b a (symm A a b p)) p :=
 idp p
 
-def ∂-irrel (A : U) (a b x : A) (p q : ∂ A a b x) : Path (∂ A a b x) p q := idp p
+def ∂-irrel (A : U) (a b x : A) (p q : ∂ a b x) : Path (∂ a b x) p q := idp p
 
-def subst (A : U) (P : A → U) (a b : A) (p : Path A a b) : P a → P b :=
-coe (cong A U a b (λ (x : A) (H : ∂ A a b x), P x) p)
+def subst (A : U) (P : A → U) (a b : A) (p : Path A a b) (x : P a) : P b :=
+coe (cong (λ (x : A) (H : ∂ a b x), P x) p) x
 
 def ap (A B : U) (f : A → B) (a b : A) (p : Path A a b) :=
-cong A B a b (λ (x : A) (H : ∂ A a b x), f x) p
+cong (λ (x : A) (H : ∂ a b x), f x) p
 
 -- “apd A (λ (x : A), B)” evaluates to “cong”
-def apd (A : U) (a b : A) (B : Π (x : A), ∂ A a b x → U)
-  (f : Π (x : A) (H : ∂ A a b x), B x H) (p : Path A a b) :=
-cong A (B b (right A a b)) a b (λ (x : A) (H : ∂ A a b x),
-  coe (cong A U x b (λ (y : A) (H′ : ∂ A x b y), B y (∂-comp H H′))
+def apd (A : U) (a b : A) (B : Π (x : A), ∂ a b x → U)
+  (f : Π (x : A) (H : ∂ a b x), B x H) (p : Path A a b) :=
+cong (λ (x : A) (H : ∂ a b x),
+  coe (cong (λ (y : A) (H′ : ∂ x b y), B y (∂-comp H H′))
     ((meet p⁻¹ x (∂-symm H)).2)⁻¹) (f x H)) p
 
 def J (A : U) (P : Π (a b : A), Path A a b → U)
   (a : A) (d : P a a (idp a)) (b : A) (p : Path A a b) : P a b p :=
-coe (cong A U a b (λ (x : A) (H : ∂ A a b x), P a (meet p x H).1 (meet p x H).2) p) d
+coe (cong (λ (x : A) (H : ∂ a b x), P a (meet p x H).1 (meet p x H).2) p) d
 
 -- β-rule for J holds definitionally
 def J-β (A : U) (P : Π (a b : A), Path A a b → U) (a : A)
   (d : P a a (idp a)) : Path (P a a (idp a)) d (J A P a d a (idp a)) :=
 idp d
 
-def coe-cong-Π (Δ : U) (α β : Δ) (A : Π (x : Δ), ∂ Δ α β x → U)
-  (B : Π (x : Δ) (H : ∂ Δ α β x), A x H → U) (p : Path Δ α β)
-  (φ : Π (a : A α (left Δ α β)),  B α (left Δ α β)  a) :
-       Π (b : A β (right Δ α β)), B β (right Δ α β) b :=
-λ (x : A β (right Δ α β)),
-  coe (cong Δ U α β (λ (y : Δ) (H : ∂ Δ α β y),
-    B y H (coe (cong Δ U β y (λ (z : Δ) (H′ : ∂ Δ β y z), A z (∂-comp H (∂-symm H′)))
+def coe-cong-Π (Δ : U) (α β : Δ) (A : Π (x : Δ), ∂ α β x → U)
+  (B : Π (x : Δ) (H : ∂ α β x), A x H → U) (p : Path Δ α β)
+  (φ : Π (a : A α (left α β)),  B α (left α β)  a) :
+       Π (b : A β (right α β)), B β (right α β) b :=
+λ (x : A β (right α β)),
+  coe (cong (λ (y : Δ) (H : ∂ α β y),
+    B y H (coe (cong (λ (z : Δ) (H′ : ∂ β y z), A z (∂-comp H (∂-symm H′)))
       (meet p⁻¹ y (∂-symm H)).2) x)) p)
-  (φ (coe (cong Δ U β α (λ (x : Δ) (H : ∂ Δ β α x), A x (∂-symm H)) p⁻¹) x))
+  (φ (coe (cong (λ (x : Δ) (H : ∂ β α x), A x (∂-symm H)) p⁻¹) x))
 
-def coe-cong-Σ (Δ : U) (α β : Δ) (A : Π (x : Δ), ∂ Δ α β x → U)
-  (B : Π (x : Δ) (H : ∂ Δ α β x), A x H → U) (p : Path Δ α β)
-  (z : Σ (a : A α (left Δ α β)),  B α (left Δ α β)  a) :
-       Σ (b : A β (right Δ α β)), B β (right Δ α β) b :=
-(coe (cong Δ U α β A p) z.1,
- coe (cong Δ U α β (λ (y : Δ) (H : ∂ Δ α β y),
-   B y H (coe (cong Δ U α y (λ (y′ : Δ) (H′ : ∂ Δ α y y′),
+def coe-cong-Σ (Δ : U) (α β : Δ) (A : Π (x : Δ), ∂ α β x → U)
+  (B : Π (x : Δ) (H : ∂ α β x), A x H → U) (p : Path Δ α β)
+  (z : Σ (a : A α (left α β)),  B α (left α β)  a) :
+       Σ (b : A β (right α β)), B β (right α β) b :=
+(coe (cong A p) z.1,
+ coe (cong (λ (y : Δ) (H : ∂ α β y),
+   B y H (coe (cong (λ (y′ : Δ) (H′ : ∂ α y y′),
      A y′ (∂-symm (∂-comp (∂-symm H) (∂-symm H′)))) (meet p y H).2) z.1)) p) z.2)
 
-def coe-cong-Path (Δ : U) (α β : Δ) (A : Π (x : Δ), ∂ Δ α β x → U)
-  (f g : Π (x : Δ) (H : ∂ Δ α β x), A x H) (p : Path Δ α β)
-  (q : Path (A α (left Δ α β))  (f α (left Δ α β))  (g α (left Δ α β))) :
-       Path (A β (right Δ α β)) (f β (right Δ α β)) (g β (right Δ α β)) :=
+def coe-cong-Path (Δ : U) (α β : Δ) (A : Π (x : Δ), ∂ α β x → U)
+  (f g : Π (x : Δ) (H : ∂ α β x), A x H) (p : Path Δ α β)
+  (q : Path (A α (left α β))  (f α (left α β))  (g α (left α β))) :
+       Path (A β (right α β)) (f β (right α β)) (g β (right α β)) :=
   (apd Δ α β A f p)⁻¹
-⬝ (ap (A α (left Δ α β)) (A β (right Δ α β)) (coe (cong Δ U α β A p))
-    (f α (left Δ α β)) (g α (left Δ α β)) q)
+⬝ (ap (A α (left α β)) (A β (right α β))
+    (λ (x : A α (left α β)), coe (cong A p) x)
+    (f α (left α β)) (g α (left α β)) q)
 ⬝ (apd Δ α β A g p)
 
 def symm′ (A : U) (a b : A) (p : Path A a b) : Path A b a :=
-coe (cong A U a b (λ (x : A) (H : ∂ A a b x), Path A x a) p) (idp a)
+coe (cong (λ (x : A) (H : ∂ a b x), Path A x a) p) (idp a)
 
 def symm″ (A : U) (a b : A) (p : Path A a b) : Path A b a :=
 J A (λ (a b : A) (p : Path A a b), Path A b a) a (idp a) b p
 
 def symm‴ (A : U) (a b : A) (p : Path A a b) : Path A b a :=
-coe-cong-Path A a b (λ (x : A) (H : ∂ A a b x), A)
-  (λ (x : A) (H : ∂ A a b x), x) (λ (x : A) (H : ∂ A a b x), a) p (idp a)
+coe-cong-Path A a b (λ (x : A) (H : ∂ a b x), A)
+  (λ (x : A) (H : ∂ a b x), x) (λ (x : A) (H : ∂ a b x), a) p (idp a)
 
 def trans′ (A : U) (a b c : A) (p : Path A a b) (q : Path A b c) : Path A a c :=
-coe (cong A U b c (λ (x : A) (H : ∂ A b c x), Path A a x) q) p
+coe (cong (λ (x : A) (H : ∂ b c x), Path A a x) q) p
 
 def transport-back-and-forward (A : U) (P : A → U) (a b : A)
   (p : Path A a b) (u : P b) : Path (P b) (subst A P a b p (subst A P b a p⁻¹ u)) u :=
 idp u
+
+def cong-comp (A B : U) (a b c : A) (p : Path A a b) (q : Path A b c)
+  (f : Π (x : A), ∂ a c x → B) :=
+(cong (λ (x : A) (H : ∂ a b x), f x (∂-right H q)) p) ⬝
+(cong (λ (x : A) (H : ∂ b c x), f x (∂-left H p⁻¹)) q)
 
 def subst-comp (A : U) (P : A → U) (a b c : A)
   (p : Path A a b) (q : Path A b c) (x : P a) :

@@ -17,11 +17,13 @@ exception UnknownCommand of string
 exception VariableNotFound of name
 exception ExpectedBoundary of value
 exception AlreadyDeclared of string
+exception ExpectedNonDependent of value
 exception InvalidModuleName of string * string
 exception UnknownOptionValue of string * string
 
 let prettyPrintError : exn -> unit = function
   | Ineq (u, v) -> Printf.printf "Type mismatch:\n  %s\nis not equal to\n  %s\n" (showValue u) (showValue v)
+  | ExpectedNonDependent v -> Printf.printf "“%s” expected to be a non-dependent type.\n" (showValue v)
   | ExpectedBoundary v -> Printf.printf "“%s” expected to be a boundary.\n" (showValue v)
   | ExpectedPath v -> Printf.printf "“%s” expected to be a path.\n" (showValue v)
   | AlreadyDeclared p -> Printf.printf "“%s” is already declared.\n" p

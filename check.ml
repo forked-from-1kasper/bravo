@@ -10,7 +10,7 @@ let ieq u v : bool = !Prefs.girard || u = v
 let vfst : value -> value = function
   | VPair (u, _) -> u
   (* (meet p x H).1 ~> x *)
-  | VApp (VApp (VMeet _, x), _) -> x
+  | VMeet (_, x, _) -> x
   | v            -> VFst v
 
 let vsnd : value -> value = function
@@ -19,32 +19,34 @@ let vsnd : value -> value = function
 
 (* Evaluator *)
 let rec eval (e0 : exp) (ctx : ctx) = traceEval e0; match e0 with
-  | EPre u             -> VPre u
-  | EKan u             -> VKan u
-  | EVar x             -> getRho ctx x
-  | EHole              -> VHole
-  | EPi  (a, (p, b))   -> VPi (eval a ctx, (p, b, ctx))
-  | ELam (a, (p, b))   -> VLam (eval a ctx, (p, b, ctx))
-  | EApp (f, x)        -> app (eval f ctx, eval x ctx)
-  | ESig (a, (p, b))   -> VSig (eval a ctx, (p, b, ctx))
-  | EPair (e1, e2)     -> VPair (eval e1 ctx, eval e2 ctx)
-  | EFst e             -> vfst (eval e ctx)
-  | ESnd e             -> vsnd (eval e ctx)
-  | EId e              -> VId (eval e ctx)
-  | ERefl e            -> VRefl (eval e ctx)
-  | EJ e               -> VJ (eval e ctx)
-  | EPath e            -> VPath (eval e ctx)
-  | EIdp e             -> VIdp (eval e ctx)
-  | ERev p             -> rev (eval p ctx)
-  | ETrans (p, q)      -> trans (eval p ctx, eval q ctx)
-  | EBoundary e        -> VBoundary (eval e ctx)
-  | ELeft e            -> VLeft (eval e ctx)
-  | ERight e           -> VRight (eval e ctx)
-  | ESymm e            -> symm (eval e ctx)
-  | EComp (a, b)       -> comp (eval a ctx, eval b ctx)
-  | EMeet e            -> VMeet (eval e ctx)
-  | ECoe e             -> coe (eval e ctx)
-  | ECong (a, b)       -> VCong (eval a ctx, eval b ctx)
+  | EPre u              -> VPre u
+  | EKan u              -> VKan u
+  | EVar x              -> getRho ctx x
+  | EHole               -> VHole
+  | EPi  (a, (p, b))    -> VPi (eval a ctx, (p, b, ctx))
+  | ELam (a, (p, b))    -> VLam (eval a ctx, (p, b, ctx))
+  | EApp (f, x)         -> app (eval f ctx, eval x ctx)
+  | ESig (a, (p, b))    -> VSig (eval a ctx, (p, b, ctx))
+  | EPair (e1, e2)      -> VPair (eval e1 ctx, eval e2 ctx)
+  | EFst e              -> vfst (eval e ctx)
+  | ESnd e              -> vsnd (eval e ctx)
+  | EId e               -> VId (eval e ctx)
+  | ERefl e             -> VRefl (eval e ctx)
+  | EJ e                -> VJ (eval e ctx)
+  | EPath (e, a, b)     -> VPath (eval e ctx, eval a ctx, eval b ctx)
+  | EIdp e              -> VIdp (eval e ctx)
+  | ERev p              -> rev (eval p ctx)
+  | ETrans (p, q)       -> trans (eval p ctx, eval q ctx)
+  | EBoundary (a, b, x) -> VBoundary (eval a ctx, eval b ctx, eval x ctx)
+  | ELeft (a, b)        -> VLeft (eval a ctx, eval b ctx)
+  | ERight (a, b)       -> VRight (eval a ctx, eval b ctx)
+  | ESymm e             -> symm (eval e ctx)
+  | EComp (a, b)        -> reduceBoundary (VComp (eval a ctx, eval b ctx))
+  | EBLeft (e, p)       -> reduceBoundary (VBLeft (eval e ctx, eval p ctx))
+  | EBRight (e, p)      -> reduceBoundary (VBRight (eval e ctx, eval p ctx))
+  | EMeet (p, x, e)     -> meet (eval p ctx) (eval x ctx) (eval e ctx)
+  | ECoe (p, x)         -> coe (eval p ctx) (eval x ctx)
+  | ECong (f, p)        -> cong (eval f ctx) (eval p ctx)
 
 and trans = function
   | VTrans (p, q), r       -> trans (p, trans (q, r))
@@ -63,24 +65,24 @@ and rev : value -> value = function
 
 and symm = function
   (* ∂-symm (left a b) ~> right b a *)
-  | VApp (VApp (VLeft v, a), b) -> VApp (VApp (VRight v, b), a)
+  | VLeft (a, b) -> VRight (b, a)
   (* ∂-symm (right a b) ~> left b a *)
-  | VApp (VApp (VRight v, a), b) -> VApp (VApp (VLeft v, b), a)
+  | VRight (a, b) -> VLeft (b, a)
   (* ∂-symm (∂-symm H) ~> H *)
   | VSymm v -> v
   | v -> VSymm v
 
-and comp = function
-  (* ∂-comp (left a b) H ~> H *)
-  | VApp (VApp (VLeft _, _), _), v -> v
-  (* ∂-comp H (left x b) ~> H *)
-  | u, VApp (VApp (VLeft _, _), _) -> u
-  | u, v -> VComp (u, v)
+and reduceBoundary v =
+  let (a, b, x) = extBoundary (inferV v) in
+  if conv a x then VLeft (a, b)
+  else if conv b x then VRight (a, b) else v
 
-and coe = function
+and coe p x = match p, x with
   (* coe (idp α) x ~> x *)
-  | VIdp t -> idfun t (freshName "a")
-  | v      -> VCoe v
+  | VIdp _, _ -> x
+  (* coe p (coe q y) ~> coe (p ⬝ q) y *)
+  | _, VCoe (q, y) -> coe (trans (p, q)) y
+  | _, _ -> VCoe (p, x)
 
 and closByVal t x v = let (p, e, ctx) = x in traceClos e p v;
   (* dirty hack to handle free variables introduced by type checker *)
@@ -89,59 +91,59 @@ and closByVal t x v = let (p, e, ctx) = x in traceClos e p v;
   | _          -> ctx in
   eval e (upLocal ctx' p t v)
 
-and app (f, x) = match f, x with
-  | VApp (VMeet p, k), v ->
-    (* “∂ A a b x” is proof-irrelevant,
-       so each element of “∂ A a b a” is definitionally equal to “left A a b”,
-       each element of “∂ a b b” — to “right A a b” *)
-    let (_, a, b, y) = extBoundary (inferV v) in
-    (* meet p a left  ~> (a, idp a) *)
-    if conv a y then VPair (k, VIdp k)
-    (* meet p b right ~> (b, p) *)
-    else if conv b y then VPair (k, p)
-    else VApp (f, x)
-  (* coe q (coe p x) ~> coe (p ⬝ q) x *)
-  | VCoe q, VApp (VCoe p, x) -> app (coe (trans (p, q)), x)
-  | VApp (VApp (VCong (alpha, beta), a), b), VLam (t, (p, ELam (k, (q, e)), ctx)) ->
-    let y = Var (p, t) in let ctx' = upLocal ctx p t y in let k' = eval k ctx' in
-    let ctx'' = upLocal ctx' q k' (Var (q, k')) in
-    (* cong id p ~> p *)
-    let v = eval e ctx'' in if conv y v then
-      idfun (pathv alpha a b) (freshName "a")
-    (* cong (λ _, x) p ~> idp *)
-    else if not (mem p v || mem q v) then
-      VLam (pathv alpha a b, (Irrefutable, EIdp e, ctx''))
-    else VApp (f, x)
+and meet p x v =
+  (* “∂ A a b x” is proof-irrelevant,
+     so each element of “∂ a b a” is definitionally equal to “left a b”,
+     each element of “∂ a b b” — to “right a b” *)
+  let (a, b, y) = extBoundary (inferV v) in
+  (* meet p a left  ~> (a, idp a) *)
+  if conv a y then VPair (x, VIdp x)
+  (* meet p b right ~> (b, p) *)
+  else if conv b y then VPair (x, p)
+  else VMeet (p, x, v)
 
-  | VApp (VApp (VApp (VCong (alpha, beta), a), b), f), p -> cong alpha beta a b f p
-  (* (λ (x : t), f) v ~> f[x/v] *)
-  | VLam (t, f), v -> closByVal t f v
-  | _, _ -> VApp (f, x)
-
-and cong alpha beta a b f r = match r with
+and cong f p =
+  match f, p with
   (* cong f (idp x) ~> idp (f x) *)
-  | VIdp x -> VIdp (app (f, x))
+  | _, VIdp x -> VIdp (app (f, x))
   (* cong f p⁻¹ ~> (cong f p)⁻¹ *)
-  | VRev p ->
-    let x = freshName "x" in let phi = freshName "φ" in let sigma = freshName "σ" in
-    let left = freshName "α" in let right = freshName "β" in
-    let dom = freshName "τ" in let cod = freshName "δ" in
-    let t = VPi (alpha, (x, impl (boundary (EVar dom) (EVar left) (EVar right) (EVar x)) (EVar cod),
-      upLocal (upLocal (upLocal (upLocal Env.empty dom (inferV alpha) alpha) left alpha a) right alpha b) cod (inferV beta) beta)) in
+  | _, VRev p ->
+    let (alpha, g) = extPi (inferV f) in let (y, _, _) = g in
+    let (b, h) = extPi (closByVal alpha g (Var (y, alpha))) in
+    let (z, _, _) = h in let beta = closByVal b h (Var (z, b)) in
+    let (a, b, _) = extBoundary b in
 
-    let g = VLam (alpha, (x, ELam (boundary (EVar dom) (EVar right) (EVar left) (EVar x),
+    let x = freshName "x" in let phi = freshName "φ" in let sigma = freshName "σ" in
+    let left = freshName "α" in let right = freshName "β" in let cod = freshName "δ" in
+    let t = VPi (alpha, (x, impl (EBoundary (EVar left, EVar right, EVar x)) (EVar cod),
+      upLocal (upLocal (upLocal Env.empty left alpha a) right alpha b) cod (inferV beta) beta)) in
+
+    let g = VLam (alpha, (x, ELam (EBoundary (EVar right, EVar left, EVar x),
       (sigma, EApp (EApp (EVar phi, EVar x), ESymm (EVar sigma)))),
-      upLocal (upLocal (upLocal (upLocal Env.empty phi t f) dom (inferV alpha) alpha) left alpha a) right alpha b)) in
-    VRev (cong alpha beta b a g p)
+      upLocal (upLocal (upLocal Env.empty phi t f) left alpha a) right alpha b)) in
+    VRev (cong g p)
   (* cong f (p ⬝ q) ~> cong f p ⬝ cong f q *)
-  | VTrans (p, q) ->
+  | _, VTrans (p, q) ->
     let (_, a1, b1) = extPath (inferV p) in
     let (_, a2, b2) = extPath (inferV q) in
     (* this is incorrect *)
-    trans (cong alpha beta a1 b1 f p, cong alpha beta a2 b2 f q)
-  (* cong g (cong f p) ~> cong (g ∘ f) p *)
-  | VApp (VApp (VApp (VApp (VCong (gamma, alpha), a), b), g), p) -> failwith "not implemented"
-  | _ -> VApp (VApp (VApp (VApp (VCong (alpha, beta), a), b), f), r)
+    trans (cong f p, cong f q)
+  (* cong f (cong g p) ~> cong (f ∘ g) p *)
+  | _, VCong (g, p) -> failwith "not implemented"
+  | VLam (t, (y, ELam (k, (z, e)), ctx)), _ ->
+    let y' = Var (y, t) in let ctx' = upLocal ctx y t y' in let k' = eval k ctx' in
+    let ctx'' = upLocal ctx' z k' (Var (z, k')) in
+    (* cong id p ~> p *)
+    let v = eval e ctx'' in if conv y' v then p
+    (* cong (λ _, x) p ~> idp *)
+    else if not (mem y v || mem z v) then VIdp v
+    else VCong (f, p)
+  | _, _ -> VCong (f, p)
+
+and app (f, x) = match f, x with
+  (* (λ (x : t), f) v ~> f[x/v] *)
+  | VLam (t, f), v -> closByVal t f v
+  | _, _ -> VApp (f, x)
 
 and getRho ctx x = match Env.find_opt x ctx with
   | Some (_, _, Value v) -> v
@@ -151,57 +153,71 @@ and getRho ctx x = match Env.find_opt x ctx with
 (* This is part of evaluator, not type checker *)
 and inferV v = traceInferV v; match v with
   | Var (_, t) -> t
-  | VFst e -> fst (extSigG (inferV e))
-  | VSnd e -> let (t, g) = extSigG (inferV e) in closByVal t g (VFst e)
-  | VApp (VApp (VLeft t, a), b)  -> vboundary t a b a
-  | VApp (VApp (VRight t, a), b) -> vboundary t a b b
-  | VApp (VApp (VApp (VApp (VCong (alpha, beta), a), b), f), p) ->
-    let left = VApp (VApp (f, a), VApp (VApp (VLeft alpha, a), b)) in
-    let right = VApp (VApp (f, b), VApp (VApp (VRight alpha, a), b)) in
-    pathv beta left right
-  | VSymm v -> let (t, a, b, x) = extBoundary (inferV v) in vboundary t b a x
-  | VComp (u, v) -> let (t, a, b, _) = extBoundary (inferV u) in
-    let (_, _, _, y) = extBoundary (inferV v) in vboundary t a b y
-  | VApp (f, x)                 -> begin match inferV f with
-    | VPi (t, g) -> closByVal t g x
-    | v -> raise (ExpectedPi v)
-  end
+  | VLam (t, (p, e, ctx)) ->
+    let t' = inferV (eval e (upLocal ctx p t (Var (p, t)))) in
+    let tau = freshName "τ" in VPi (t, (p, EVar tau, upLocal ctx tau (inferV t') t'))
+  | VPi (t, (p, e, ctx)) | VSig (t, (p, e, ctx)) ->
+    let t' = inferV (eval e (upLocal ctx p t (Var (p, t)))) in imax (inferV t) t'
+  | VFst e -> fst (extSig (inferV e))
+  | VSnd e -> let (t, g) = extSig (inferV e) in closByVal t g (VFst e)
+  | VCoe (p, _) -> let (_, t, _) = extPath (inferV p) in t
+  | VLeft (a, b) -> VBoundary (a, b, a)
+  | VRight (a, b) -> VBoundary (a, b, b)
+  | VCong (f, p) ->
+    let (t, g) = extPi (inferV f) in let (x, _, _) = g in
+    let (t', h) = extPi (closByVal t g (Var (x, t))) in
+    let (y, _, _) = h in let k = closByVal t' h (Var (y, t')) in
+
+    let (a, b, _) = extPath (inferV p) in
+    let fa = app (app (f, a), VLeft (a, b)) in
+    let fb = app (app (f, b), VRight (a, b)) in
+    VPath (k, fa, fb)
+  | VSymm v -> let (a, b, x) = extBoundary (inferV v) in VBoundary (b, a, x)
+  | VBLeft (v, p) -> let (_, b, x) = extBoundary (inferV v) in let (_, _, a) = extPath (inferV p) in VBoundary (a, b, x)
+  | VBRight (v, p) -> let (a, _, x) = extBoundary (inferV v) in let (_, _, b) = extPath (inferV p) in VBoundary (a, b, x)
+  | VComp (u, v) -> let (a, b, _) = extBoundary (inferV u) in
+    let (_, _, y) = extBoundary (inferV v) in VBoundary (a, b, y)
+  | VApp (f, x) -> let (t, g) = extPi (inferV f) in closByVal t g x
   | VRefl v  -> VApp (VApp (VId (inferV v), v), v)
-  | VIdp v -> VApp (VApp (VPath (inferV v), v), v)
-  | VRev p -> let (v, a, b) = extPath (inferV p) in pathv v b a
-  | VTrans (p, q) -> let (u, a, _) = extPath (inferV p) in let (_, _, c) = extPath (inferV q) in pathv u a c
+  | VIdp v -> VPath (inferV v, v, v)
+  | VRev p -> let (v, a, b) = extPath (inferV p) in VPath (v, b, a)
+  | VTrans (p, q) -> let (u, a, _) = extPath (inferV p) in let (_, _, c) = extPath (inferV q) in VPath (u, a, c)
   | VPre n -> VPre (n + 1)
   | VKan n -> VKan (n + 1)
+  | VPath (v, _, _) -> inferV v
+  | VBoundary (v, _, _) -> let n = extSet (inferV (inferV v)) in VPre n
   | v -> raise (ExpectedNeutral v)
 
 (* Readback *)
 and rbV v : exp = traceRbV v; match v with
-  | VLam (t, g)        -> rbVTele eLam t g
-  | VPair (u, v)       -> EPair (rbV u, rbV v)
-  | VKan u             -> EKan u
-  | VPi (t, g)         -> rbVTele ePi t g
-  | VSig (t, g)        -> rbVTele eSig t g
-  | VPre u             -> EPre u
-  | Var (x, _)         -> EVar x
-  | VApp (f, x)        -> EApp (rbV f, rbV x)
-  | VFst k             -> EFst (rbV k)
-  | VSnd k             -> ESnd (rbV k)
-  | VHole              -> EHole
-  | VId v              -> EId (rbV v)
-  | VRefl v            -> ERefl (rbV v)
-  | VJ v               -> EJ (rbV v)
-  | VPath v            -> EPath (rbV v)
-  | VIdp v             -> EIdp (rbV v)
-  | VRev p             -> ERev (rbV p)
-  | VTrans (p, q)      -> ETrans (rbV p, rbV q)
-  | VBoundary v        -> EBoundary (rbV v)
-  | VLeft v            -> ELeft (rbV v)
-  | VRight v           -> ERight (rbV v)
-  | VSymm v            -> ESymm (rbV v)
-  | VComp (u, v)       -> EComp (rbV u, rbV v)
-  | VMeet v            -> EMeet (rbV v)
-  | VCoe v             -> ECoe (rbV v)
-  | VCong (a, b)       -> ECong (rbV a, rbV b)
+  | VLam (t, g)         -> rbVTele eLam t g
+  | VPair (u, v)        -> EPair (rbV u, rbV v)
+  | VKan u              -> EKan u
+  | VPi (t, g)          -> rbVTele ePi t g
+  | VSig (t, g)         -> rbVTele eSig t g
+  | VPre u              -> EPre u
+  | Var (x, _)          -> EVar x
+  | VApp (f, x)         -> EApp (rbV f, rbV x)
+  | VFst k              -> EFst (rbV k)
+  | VSnd k              -> ESnd (rbV k)
+  | VHole               -> EHole
+  | VId v               -> EId (rbV v)
+  | VRefl v             -> ERefl (rbV v)
+  | VJ v                -> EJ (rbV v)
+  | VPath (v, a, b)     -> EPath (rbV v, rbV a, rbV b)
+  | VIdp v              -> EIdp (rbV v)
+  | VRev p              -> ERev (rbV p)
+  | VTrans (p, q)       -> ETrans (rbV p, rbV q)
+  | VBoundary (a, b, x) -> EBoundary (rbV a, rbV b, rbV x)
+  | VLeft (a, b)        -> ELeft (rbV a, rbV b)
+  | VRight (a, b)       -> ERight (rbV a, rbV b)
+  | VSymm v             -> ESymm (rbV v)
+  | VBLeft (v, p)       -> EBLeft (rbV v, rbV p)
+  | VBRight (v, p)      -> EBRight (rbV v, rbV p)
+  | VComp (u, v)        -> EComp (rbV u, rbV v)
+  | VMeet (p, x, v)     -> EMeet (rbV p, rbV x, rbV v)
+  | VCoe (p, x)         -> ECoe (rbV p, rbV x)
+  | VCong (f, p)        -> ECong (rbV f, rbV p)
 
 and rbVTele ctor t g =
   let (p, _, _) = g in let x = Var (p, t) in
@@ -229,16 +245,18 @@ and conv v1 v2 : bool = traceConv v1 v2;
     | Var (u, _), Var (v, _) -> u = v
     | VFst x, VFst y | VSnd x, VSnd y -> conv x y
     | VId u, VId v | VJ u, VJ v | VRefl u, VRefl v -> conv u v
-    | VPath a, VPath b -> conv a b
+    | VPath (t1, a1, b1), VPath (t2, a2, b2) -> conv t1 t2 && conv a1 a2 && conv b1 b2
     | VIdp a, VIdp b -> conv a b
     | VRev p, VRev q -> conv p q
     | VTrans (p1, q1), VTrans (p2, q2) -> conv p1 p2 && conv q1 q2
-    | VBoundary a, VBoundary b | VSymm a, VSymm b
-    | VLeft a, VLeft b | VRight a, VRight b -> conv a b
+    | VBoundary (a1, b1, x1), VBoundary (a2, b2, x2) -> conv a1 a2 && conv b1 b2 && conv x1 x2
+    | VSymm a, VSymm b -> conv a b
+    | VLeft (a1, b1), VLeft (a2, b2) | VRight (a1, b1), VRight (a2, b2) -> conv a1 a2 && conv b1 b2
+    | VBLeft (a1, b1), VBLeft (a2, b2) | VBRight (a1, b1), VBRight (a2, b2)
     | VComp (a1, b1), VComp (a2, b2) -> conv a1 a2 && conv b1 b2
-    | VMeet a, VMeet b -> conv a b
-    | VCoe a, VCoe b -> conv a b
-    | VCong (a1, b1), VCong (a2, b2) -> conv a1 a2 && conv b1 b2
+    | VMeet (p1, x1, v1), VMeet (p2, x2, v2) -> conv p1 p2 && conv x1 x2 && conv v1 v2
+    | VCoe (p1, x1), VCoe (p2, x2) -> conv p1 p2 && conv x1 x2
+    | VCong (f1, p1), VCong (f2, p2) -> conv f1 f2 && conv p1 p2
     | _, _ -> false
   end || convProofIrrel v1 v2
 
@@ -247,9 +265,8 @@ and convProofIrrel v1 v2 =
   try match inferV v1, inferV v2 with
     | VApp (VApp (VId t1, a1), b1), VApp (VApp (VId t2, a2), b2) ->
       conv t1 t2 && conv a1 a2 && conv b1 b2
-    | VApp (VApp (VApp (VBoundary t1, a1), b1), x1),
-      VApp (VApp (VApp (VBoundary t2, a2), b2), x2) ->
-      conv t1 t2 && conv a1 a2 && conv b1 b2 && conv x1 x2
+    | VBoundary (a1, b1, x1), VBoundary (a2, b2, x2) ->
+      conv a1 a2 && conv b1 b2 && conv x1 x2
     | _, _ -> false
   with ExpectedNeutral _ -> false
 
@@ -272,10 +289,10 @@ and check ctx (e0 : exp) (t0 : value) =
     ignore (extSet (infer ctx (rbV t)));
     check ctx e1 t; check ctx e2 (closByVal t g (eval e1 ctx))
   | EHole, v -> traceHole v ctx
-  | ERefl e, VApp (VApp (VId t, a), b) | EIdp e, VApp (VApp (VPath t, a), b) ->
+  | ERefl e, VApp (VApp (VId t, a), b) | EIdp e, VPath (t, a, b) ->
     check ctx e t; let v = eval e ctx in eqNf v a; eqNf v b
-  | ERev p, VApp (VApp (VPath t, a), b) -> check ctx p (pathv t b a)
-  | ETrans (p, q), VApp (VApp (VPath t, a), c) ->
+  | ERev p, VPath (t, a, b) -> check ctx p (VPath (t, b, a))
+  | ETrans (p, q), VPath (t, a, c) ->
     let (u, x, y1) = extPath (infer ctx p) in let (v, y2, z) = extPath (infer ctx q) in
     eqNf u t; eqNf v t; eqNf y1 y2; eqNf x a; eqNf z c
   | e, VPre u -> begin
@@ -286,42 +303,46 @@ and check ctx (e0 : exp) (t0 : value) =
   | e, t -> eqNf (infer ctx e) t
   with ex -> Printf.printf "When trying to typecheck\n  %s\nAgainst type\n  %s\n" (showExp e0) (showValue t0); raise ex
 
-and infer ctx e : value = traceInfer e; match e with
+and infer ctx e : value = traceInfer e; try match e with
   | EVar x -> lookup x ctx
   | EKan u -> VKan (u + 1)
-  | ESig (a, (p, b)) -> inferTele ctx imax p a b
-  | EPi (a, (p, b)) -> inferTele ctx univImpl p a b
+  | ESig (a, (p, b)) | EPi (a, (p, b)) -> inferTele ctx p a b
   | ELam (a, (p, b)) -> inferLam ctx p a b
   | EApp (f, x) -> begin match infer ctx f with
     | VPi (t, g) -> check ctx x t; closByVal t g (eval x ctx)
     | v -> raise (ExpectedPi v)
   end
-  | EFst e -> fst (extSigG (infer ctx e))
-  | ESnd e -> let (t, g) = extSigG (infer ctx e) in closByVal t g (vfst (eval e ctx))
+  | EFst e -> fst (extSig (infer ctx e))
+  | ESnd e -> let (t, g) = extSig (infer ctx e) in closByVal t g (vfst (eval e ctx))
   | EPre u -> VPre (u + 1)
-  | EPath p -> inferPath ctx p
+  | EPath (e, a, b) -> let t = eval e ctx in check ctx a t; check ctx b t; infer ctx e
   | EId e -> let v = eval e ctx in let n = extSet (infer ctx e) in implv v (impl e (EPre n)) ctx
   | ERefl e -> let v = eval e ctx in let t = infer ctx e in VApp (VApp (VId t, v), v)
   | EJ e -> inferJ ctx e
-  | EIdp e -> let v = eval e ctx in let t = infer ctx e in VApp (VApp (VPath t, v), v)
-  | ERev p -> let (v, a, b) = extPath (infer ctx p) in pathv v b a
+  | EIdp e -> let v = eval e ctx in let t = infer ctx e in VPath (t, v, v)
+  | ERev p -> let (v, a, b) = extPath (infer ctx p) in VPath (v, b, a)
   | ETrans (p, q) -> let (u, a, x) = extPath (infer ctx p) in let (v, y, c) = extPath (infer ctx q) in
-    eqNf u v; eqNf x y; pathv u a c
-  | EBoundary e -> let v = eval e ctx in let n = extSet (infer ctx e) in implv v (impl e (impl e (EPre n))) ctx
-  | ELeft e -> inferLeft ctx e
-  | ERight e -> inferRight ctx e
+    eqNf u v; eqNf x y; VPath (u, a, c)
+  | EBoundary (a, b, x) -> let t = infer ctx a in check ctx b t; check ctx x t; let n = extSet (inferV t) in VPre n
+  | ELeft (a, b) -> let t = infer ctx a in check ctx b t; let x = eval a ctx in let y = eval b ctx in VBoundary (x, y, x)
+  | ERight (a, b) -> let t = infer ctx a in check ctx b t; let x = eval a ctx in let y = eval b ctx in VBoundary (x, y, y)
   | ESymm e -> inferSymm ctx e
+  | EBLeft (e, p) -> let (a, b, x) = extBoundary (infer ctx e) in
+    let (_, a', c) = extPath (infer ctx p) in eqNf a a'; VBoundary (c, b, x)
+  | EBRight (e, p) -> let (a, b, x) = extBoundary (infer ctx e) in
+    let (_, b', c) = extPath (infer ctx p) in eqNf b b'; VBoundary (a, c, x)
   | EComp (a, b) -> inferComp ctx a b
-  | EMeet e -> inferMeet ctx e
-  | ECoe p -> let (e, a, b) = extPath (infer ctx p) in ignore (extKan e); implv a (rbV b) ctx
-  | ECong (a, b) -> inferCong ctx a b
+  | EMeet (p, x, e) -> inferMeet ctx p x e
+  | ECoe (p, x) -> let (e, a, b) = extPath (infer ctx p) in ignore (extKan e); check ctx x a; b
+  | ECong (f, p) -> inferCong ctx f p
   | e -> raise (InferError e)
+  with ex -> Printf.printf "When trying to infer type of\n  %s\n" (showExp e); raise ex
 
-and inferTele ctx binop p a b =
+and inferTele ctx p a b =
   ignore (extSet (infer ctx a));
   let t = eval a ctx in let x = Var (p, t) in
   let ctx' = upLocal ctx p t x in
-  let v = infer ctx' b in binop (infer ctx a) v
+  let v = infer ctx' b in imax (infer ctx a) v
 
 and inferLam ctx p a e =
   ignore (extSet (infer ctx a)); let t = eval a ctx in let x = Var (p, t) in
@@ -334,55 +355,53 @@ and inferJ ctx e =
         (pi, EPi (e, (x, impl (EApp (EApp (EApp (EVar pi, EVar x), EVar x), ERefl (EVar x)))
           (EPi (e, (y, EPi (id, (p, EApp (EApp (EApp (EVar pi, EVar x), EVar y), EVar p)))))))), ctx))
 
-and inferPath ctx e =
-  let t = infer ctx e in ignore (extSet t);
-  implv (eval e ctx) (impl e (rbV t)) ctx
-
-and inferLeft ctx e =
-  let t = infer ctx e in ignore (extSet t);
-  let a = freshName "a" in let b = freshName "b" in
-  VPi (eval e ctx, (a, EPi (e, (b, boundary e (EVar a) (EVar b) (EVar a))), ctx))
-
-and inferRight ctx e =
-  let t = infer ctx e in ignore (extSet t);
-  let a = freshName "a" in let b = freshName "b" in
-  VPi (eval e ctx, (a, EPi (e, (b, boundary e (EVar a) (EVar b) (EVar b))), ctx))
-
 and inferSymm ctx e =
-  let (t, a, b, x) = extBoundary (infer ctx e) in
-  VApp (VApp (VApp (VBoundary t, b), a), x)
+  let (a, b, x) = extBoundary (infer ctx e) in VBoundary (b, a, x)
 
 and inferComp ctx a b =
-  let (t1, a1, b1, x1) = extBoundary (infer ctx a) in
-  let (t2, a2, b2, x2) = extBoundary (infer ctx b) in
-  eqNf t1 t2; eqNf b1 b2; eqNf x1 a2;
-  VApp (VApp (VApp (VBoundary t1, a1), b1), x2)
+  let (a1, b1, x1) = extBoundary (infer ctx a) in
+  let (a2, b2, x2) = extBoundary (infer ctx b) in
+  eqNf b1 b2; eqNf x1 a2; VBoundary (a1, b1, x2)
 
-and singl e a b = ESig (e, (b, EApp (EApp (EPath e, a), EVar b)))
-and inferMeet ctx p =
-  let (e, a, b) = extPath (infer ctx p) in
-  let x = freshName "x" in let z = freshName "z" in
-  let v = rbV e in let v0 = rbV a in let v1 = rbV b in
-  VPi (e, (x, impl (boundary v v0 v1 (EVar x)) (singl v v0 z), ctx))
+and singl t a =
+  let x = freshName "x" in let y = freshName "y" in let tau = freshName "τ" in
+  let ctx = upLocal (upLocal Env.empty tau (inferV t) t) x t a in
+  VSig (t, (y, EPath (EVar tau, EVar x, EVar y), ctx))
 
-and inferCong ctx alpha beta =
-  ignore (extKan (infer ctx alpha)); ignore (extKan (infer ctx alpha));
-  let a = freshName "a" in let b = freshName "b" in let f = freshName "f" in
-  let x = freshName "x" in let func = EPi (alpha, (x, impl (boundary alpha (EVar a) (EVar b) (EVar x)) beta)) in
+and inferMeet ctx p x e =
+  let (t, a, b) = extPath (infer ctx p) in
+  let (a', b', x') = extBoundary (infer ctx e) in
+  check ctx x t; eqNf a a'; eqNf b b'; eqNf (eval x ctx) x'; singl t a
 
-  let left = EApp (EApp (EVar f, EVar a), EApp (EApp (ELeft alpha, EVar a), EVar b)) in
-  let right = EApp (EApp (EVar f, EVar b), EApp (EApp (ERight alpha, EVar a), EVar b)) in
+and inferCong ctx f p =
+  let (t, a, b) = extPath (infer ctx p) in
 
-  VPi (eval alpha ctx, (a, EPi (alpha, (b, EPi (func,
-    (f, impl (path alpha (EVar a) (EVar b)) (path beta left right))))), ctx))
+  let (t', g) = extPi (infer ctx f) in let (x, _, _) = g in
+  let (n, h) = extPi (closByVal t' g (Var (x, t'))) in
+  let (y, _, _) = h in let k = closByVal n h (Var (y, n)) in
+  let (a', b', x') = extBoundary n in
+
+  ignore (extKan (inferV t')); ignore (extKan (inferV k));
+  eqNf t t'; eqNf (Var (x, t')) x'; eqNf a a'; eqNf b b';
+  if mem x k || mem y k then raise (ExpectedNonDependent k);
+
+  let f' = eval f ctx in
+  let fa = app (app (f', a), VLeft (a, b)) in
+  let fb = app (app (f', b), VRight (a, b)) in
+  VPath (k, fa, fb)
 
 and mem x = function
   | Var (y, _) -> x = y
   | VSig (t, f) | VPi (t, f) | VLam (t, f) ->
     let (p, _, _) = f in mem x t || mem x (closByVal t f (Var (p, t)))
   | VKan _ | VPre _ | VHole -> false
-  | VFst e  | VSnd e  | VId e       | VRefl e | VJ e
-  | VPath e | VIdp e  | VRev e      | VLeft e | VRight e
-  | VSymm e | VMeet e | VBoundary e | VCoe e -> mem x e
-  | VPair (a, b) | VComp (a, b) | VApp (a, b)
-  | VCong (a, b) | VTrans (a, b) -> mem x a || mem x b
+
+  | VFst e  | VSnd e  | VId e   | VRefl e
+  | VJ e    | VIdp e  | VRev e  | VSymm e -> mem x e
+
+  | VPair (a, b)  | VComp (a, b) | VApp (a, b)
+  | VCoe (a, b)   | VCong (a, b) | VTrans (a, b)
+  | VLeft (a, b)  | VRight (a, b)
+  | VBLeft (a, b) | VBRight (a, b) -> mem x a || mem x b
+
+  | VPath (a, b, c) | VBoundary (a, b, c) | VMeet (a, b, c) -> mem x a || mem x b || mem x c

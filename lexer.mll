@@ -53,6 +53,8 @@ let trans    = "\xE2\xAC\x9D"         (*  ⬝  *)
 let boundary = "\xE2\x88\x82"         (*  ∂  *)
 let symm     = boundary "-symm"
 let comp     = boundary "-comp"
+let bleft    = boundary "-left"
+let bright   = boundary "-right"
 
 let subscript = '\xE2' '\x82' ['\x80'-'\x89']
 let kan       = 'U' subscript*
@@ -80,5 +82,6 @@ rule main = parse
 | "left"          { LEFT }             | "right"         { RIGHT }
 | "meet"          { MEET }             | "coe"           { COE }
 | "cong"          { CONG }             | symm            { SYMM }
+| bleft           { BLEFT }            | bright          { BRIGHT }
 | comp            { COMP }             | ident as s      { IDENT s }
 | eof             { EOF }

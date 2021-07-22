@@ -6,9 +6,10 @@ type exp =
   | EPi of exp * (name * exp) | ELam of exp * (name * exp) | EApp of exp * exp
   | ESig of exp * (name * exp) | EPair  of exp * exp | EFst of exp | ESnd of exp
   | EId of exp | ERefl of exp | EJ of exp
-  | EPath of exp | EIdp of exp | ERev of exp | ETrans of exp * exp
-  | EBoundary of exp | ELeft of exp | ERight of exp | ESymm of exp | EComp of exp * exp
-  | EMeet of exp | ECoe of exp | ECong of exp * exp
+  | EPath of exp * exp * exp | EIdp of exp | ERev of exp | ETrans of exp * exp
+  | EBoundary of exp * exp * exp | ELeft of exp * exp | ERight of exp * exp
+  | ESymm of exp | EComp of exp * exp | EBLeft of exp * exp | EBRight of exp * exp
+  | EMeet of exp * exp * exp | ECoe of exp * exp | ECong of exp * exp
 
 type tele = name * exp
 
@@ -20,9 +21,10 @@ type value =
   | VPi of value * clos | VLam of value * clos | VApp of value * value
   | VSig of value * clos | VPair of value * value | VFst of value | VSnd of value
   | VId of value | VRefl of value | VJ of value
-  | VPath of value | VIdp of value | VRev of value | VTrans of value * value
-  | VBoundary of value | VLeft of value | VRight of value | VSymm of value | VComp of value * value
-  | VMeet of value | VCoe of value | VCong of value * value
+  | VPath of value * value * value | VIdp of value | VRev of value | VTrans of value * value
+  | VBoundary of value * value * value | VLeft of value * value | VRight of value * value
+  | VSymm of value | VComp of value * value | VBLeft of value * value | VBRight of value * value
+  | VMeet of value * value * value | VCoe of value * value | VCong of value * value
 
 and clos = name * exp * ctx
 
@@ -64,20 +66,22 @@ let rec ppExp paren e = let x = match e with
   | EVar p -> showName p
   | EHole -> "?"
   | EPre n -> "V" ^ showSubscript n
-  | EPath e -> "Path " ^ ppExp true e
+  | EPath (e, a, b) -> Printf.sprintf "Path %s %s %s" (ppExp true e) (ppExp true a) (ppExp true b)
   | EId e -> Printf.sprintf "Id %s" (ppExp true e)
   | ERefl e -> Printf.sprintf "refl %s" (ppExp true e)
   | EJ e -> Printf.sprintf "idJ %s" (ppExp true e)
   | EIdp e -> "idp " ^ ppExp true e
   | ERev p -> ppExp true p ^ "⁻¹"
   | ETrans (p, q) -> ppExp true p ^ " ⬝ " ^ ppExp true q
-  | EBoundary e -> "∂ " ^ ppExp true e
-  | ELeft e -> "left " ^ ppExp true e
-  | ERight e -> "right " ^ ppExp true e
+  | EBoundary (a, b, x) -> Printf.sprintf "∂ %s %s %s" (ppExp true a) (ppExp true b) (ppExp true x)
+  | ELeft (a, b) -> Printf.sprintf "left %s %s" (ppExp true a) (ppExp true b)
+  | ERight (a, b) -> Printf.sprintf "right %s %s" (ppExp true a) (ppExp true b)
   | ESymm e -> "∂-symm " ^ ppExp true e
   | EComp (a, b) -> Printf.sprintf "∂-comp %s %s" (ppExp true a) (ppExp true b)
-  | EMeet e -> "meet " ^ ppExp true e
-  | ECoe e -> "coe " ^ ppExp true e
+  | EBLeft (a, b) -> Printf.sprintf "∂-left %s %s" (ppExp true a) (ppExp true b)
+  | EBRight (a, b) -> Printf.sprintf "∂-right %s %s" (ppExp true a) (ppExp true b)
+  | EMeet (p, x, e) -> Printf.sprintf "meet %s %s %s" (ppExp true p) (ppExp true x) (ppExp true e)
+  | ECoe (p, x) -> Printf.sprintf "coe %s %s" (ppExp true p) (ppExp true x)
   | ECong (a, b) -> Printf.sprintf "cong %s %s" (ppExp true a) (ppExp true b)
   in match e with
   | EVar _ | EFst _ | ESnd _ | EPre _
@@ -103,20 +107,22 @@ let rec ppValue paren v = let x = match v with
   | Var (p, _) -> showName p
   | VHole -> "?"
   | VPre n -> "V" ^ showSubscript n
-  | VPath v -> "Path " ^ ppValue true v
+  | VPath (e, a, b) -> Printf.sprintf "Path %s %s %s" (ppValue true e) (ppValue true a) (ppValue true b)
   | VId v -> Printf.sprintf "Id %s" (ppValue true v)
   | VRefl v -> Printf.sprintf "refl %s" (ppValue true v)
   | VJ v -> Printf.sprintf "idJ %s" (ppValue true v)
   | VIdp v -> "idp " ^ ppValue true v
   | VRev p -> ppValue true p ^ "⁻¹"
   | VTrans (p, q) -> ppValue true p ^ " ⬝ " ^ ppValue true q
-  | VBoundary v -> "∂ " ^ ppValue true v
-  | VLeft v -> "left " ^ ppValue true v
-  | VRight v -> "right " ^ ppValue true v
+  | VBoundary (a, b, x) -> Printf.sprintf "∂ %s %s %s" (ppValue true a) (ppValue true b) (ppValue true x)
+  | VLeft (a, b) -> Printf.sprintf "left %s %s" (ppValue true a) (ppValue true b)
+  | VRight (a, b) -> Printf.sprintf "right %s %s" (ppValue true a) (ppValue true b)
   | VSymm v -> "∂-symm " ^ ppValue true v
   | VComp (a, b) -> Printf.sprintf "∂-comp %s %s" (ppValue true a) (ppValue true b)
-  | VMeet v -> "meet " ^ ppValue true v
-  | VCoe v -> "coe " ^ ppValue true v
+  | VBLeft (a, b) -> Printf.sprintf "∂-left %s %s" (ppValue true a) (ppValue true b)
+  | VBRight (a, b) -> Printf.sprintf "∂-right %s %s" (ppValue true a) (ppValue true b)
+  | VMeet (p, x, v) -> Printf.sprintf "meet %s %s %s" (ppValue true p) (ppValue true x) (ppValue true v)
+  | VCoe (p, x) -> Printf.sprintf "coe %s %s" (ppValue true p) (ppValue true x)
   | VCong (a, b) -> Printf.sprintf "cong %s %s" (ppValue true a) (ppValue true b)
   in match v with
   | Var _ | VFst _ | VSnd _ | VPre _
