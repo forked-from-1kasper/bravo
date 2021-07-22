@@ -78,8 +78,8 @@ and reduceBoundary v =
 and coe p x = match p, x with
   (* coe (idp α) x ~> x *)
   | VIdp _, _ -> x
-  (* coe p (coe q y) ~> coe (p ⬝ q) y *)
-  | _, VCoe (q, y) -> coe (trans (p, q)) y
+  (* coe p (coe q y) ~> coe (q ⬝ p) y *)
+  | _, VCoe (q, y) -> coe (trans (q, p)) y
   | _, _ -> VCoe (p, x)
 
 and closByVal t x v = let (p, e, ctx) = x in traceClos e p v;

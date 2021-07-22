@@ -89,7 +89,7 @@ def ap-comp (A B : U) (f : A → B) (a b c : A) (p : Path A a b) (q : Path A b c
   Path (Path B (f a) (f c)) (ap A B f a c (p ⬝ q)) ((ap A B f a b p) ⬝ (ap A B f b c q)) :=
 idp (ap A B f a c (p ⬝ q))
 
---def subst-comp (A : U) (P : A → U) (a b c : A)
---  (p : Path A a b) (q : Path A b c) (x : P a) :
---  Path (P c) (subst A P a c (p ⬝ q) x) (subst A P b c q (subst A P a b p x)) :=
---?
+def subst-comp (A : U) (P : A → U) (a b c : A)
+  (p : Path A a b) (q : Path A b c) (x : P a) :
+  Path (P c) (subst A P a c (p ⬝ q) x) (subst A P b c q (subst A P a b p x)) :=
+idp (subst A P a c (p ⬝ q) x)
