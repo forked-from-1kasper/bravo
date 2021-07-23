@@ -26,7 +26,7 @@ type value =
   | VSymm of value | VComp of value * value | VBLeft of value * value | VBRight of value * value | VBCong of value * value * value
   | VMeet of value * value * value | VCoe of value * value | VCong of value * value
 
-and clos = name * exp * ctx
+and clos = name * (value -> value)
 
 and term = Exp of exp | Value of value
 
@@ -98,9 +98,9 @@ and showPiExp a p b = match p with
 
 let rec ppValue paren v = let x = match v with
   | VKan n -> "U" ^ showSubscript n
-  | VLam (x, (p, e, rho)) -> Printf.sprintf "λ %s, %s" (showTele p x rho) (showExp e)
-  | VPi (x, (p, e, rho)) -> showPi x p e rho
-  | VSig (x, (p, e, rho)) -> Printf.sprintf "Σ %s, %s" (showTele p x rho) (showExp e)
+  | VLam (x, (p, clos)) -> Printf.sprintf "λ %s, %s" (showTele p x) (showClos p x clos)
+  | VPi (x, (p, clos)) -> showPi x p clos
+  | VSig (x, (p, clos)) -> Printf.sprintf "Σ %s, %s" (showTele p x) (showClos p x clos)
   | VPair (fst, snd) -> Printf.sprintf "(%s, %s)" (showValue fst) (showValue snd)
   | VFst v -> ppValue true v ^ ".1"
   | VSnd v -> ppValue true v ^ ".2"
@@ -132,20 +132,18 @@ let rec ppValue paren v = let x = match v with
   | _ -> parens paren x
 
 and showValue v = ppValue false v
+and showClos p t clos = showValue (clos (Var (p, t)))
 
-and showTele p x rho : string =
-  if isRhoVisible rho then Printf.sprintf "(%s : %s, %s)" (showName p) (showValue x) (showRho rho)
-  else Printf.sprintf "(%s : %s)" (showName p) (showValue x)
+and showTele p x =
+  Printf.sprintf "(%s : %s)" (showName p) (showValue x)
 
 and showTermBind : name * record -> string option = function
   | p, (Local, _, t) -> Some (Printf.sprintf "%s := %s" (showName p) (showTerm t))
   | _, _             -> None
 
-and showPi x p e rho = match p with
-  | Irrefutable ->
-    if isRhoVisible rho then Printf.sprintf "(%s, %s) → %s" (showValue x) (showRho rho) (showExp e)
-    else Printf.sprintf "%s → %s" (ppValue true x) (showExp e)
-  | _           -> Printf.sprintf "Π %s, %s" (showTele p x rho) (showExp e)
+and showPi x p clos = match p with
+  | Irrefutable -> Printf.sprintf "%s → %s" (ppValue true x) (showClos p x clos)
+  | _           -> Printf.sprintf "Π %s, %s" (showTele p x) (showClos p x clos)
 
 and isRhoVisible = Env.exists (fun _ -> isGlobal)
 

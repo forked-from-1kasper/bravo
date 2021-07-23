@@ -43,7 +43,8 @@ let univImpl a b = match a, b with
   | VKan _, _      | VPre _, _      -> raise (ExpectedVSet b)
   | _, _ -> raise (ExpectedVSet a)
 
-let implv a b ctx = VPi (a, (Irrefutable, b, ctx))
+let idv t x y = VApp (VApp (VId t, x), y)
+let implv a b = VPi (a, (Irrefutable, fun _ -> b))
 
 let impl a b = EPi (a, (Irrefutable, b))
 let prod a b = ESig (a, (Irrefutable, b))
