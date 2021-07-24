@@ -63,6 +63,12 @@ def coe-cong-Path (Δ : U) (α β : Δ) (A : Π (x : Δ), ∂ α β x → U)
     (f α (left α β)) (g α (left α β)) q)
 ⬝ (apd Δ α β A g p)
 
+def coe-cong-Path′ (Δ : U) (α β : Δ) (A : Π (x : Δ), ∂ α β x → U)
+  (f g : Π (x : Δ) (H : ∂ α β x), A x H) (p : Path Δ α β)
+  (q : Path (A α (left α β))  (f α (left α β))  (g α (left α β))) :
+       Path (A β (right α β)) (f β (right α β)) (g β (right α β)) :=
+coe (cong (λ (x : Δ) (H : ∂ α β x), Path (A x H) (f x H) (g x H)) p) q
+
 def symm′ (A : U) (a b : A) (p : Path A a b) : Path A b a :=
 coe (cong (λ (x : A) (H : ∂ a b x), Path A x a) p) (idp a)
 

@@ -39,7 +39,7 @@ let rec eval (e0 : exp) (ctx : ctx) = traceEval e0; match e0 with
   | ELeft (a, b)        -> VLeft (eval a ctx, eval b ctx)
   | ERight (a, b)       -> VRight (eval a ctx, eval b ctx)
   | ESymm e             -> symm (eval e ctx)
-  | EComp (a, b)        -> reduceBoundary (VComp (eval a ctx, eval b ctx))
+  | EComp (a, b)        -> bcomp (eval a ctx) (eval b ctx)
   | EBLeft (e, p)       -> bleft (eval e ctx) (eval p ctx)
   | EBRight (e, p)      -> bright (eval e ctx) (eval p ctx)
   | EBCong (f, x, e)    -> bcong (eval f ctx) (eval x ctx) (eval e ctx)
@@ -47,6 +47,7 @@ let rec eval (e0 : exp) (ctx : ctx) = traceEval e0; match e0 with
   | ECoe (p, x)         -> coe (eval p ctx) (eval x ctx)
   | ECong (f, p)        -> cong (eval f ctx) (eval p ctx)
 
+and bcomp a b = reduceBoundary (VComp (a, b))
 and bleft v p = reduceBoundary (VBLeft (v, p))
 and bright v p = reduceBoundary (VBRight (v, p))
 
@@ -76,9 +77,9 @@ and symm = function
 
 and bcong f x = function
   (* ∂-cong f a (left a b) ~> left (f a (left a b)) (f b (right a b)) *)
-  | VLeft (a, b) -> VLeft (VApp (VApp (f, a), VLeft (a, b)), VApp (VApp (f, b), VRight (a, b)))
+  | VLeft (a, b) -> VLeft (app (app (f, a), VLeft (a, b)), app (app (f, b), VRight (a, b)))
   (* ∂-cong f b (right a b) ~> right (f a (left a b)) (f b (right a b)) *)
-  | VRight (a, b) -> VRight (VApp (VApp (f, a), VLeft (a, b)), VApp (VApp (f, b), VRight (a, b)))
+  | VRight (a, b) -> VRight (app (app (f, a), VLeft (a, b)), app (app (f, b), VRight (a, b)))
   | v -> VBCong (f, x, v)
 
 and reduceBoundary v =
@@ -86,12 +87,52 @@ and reduceBoundary v =
   if conv a x then VLeft (a, b)
   else if conv b x then VRight (a, b) else v
 
+and apd t a b k f p =
+  let x = freshName "x" in
+  let y = freshName "y" in
+  let h1 = freshName "σ" in
+  let h2 = freshName "σ′" in
+  cong (VLam (t, (x, fun x ->
+    VLam (VBoundary (a, b, x), (h1, fun h1 ->
+      coe (cong
+            (VLam (t, (y, fun y ->
+              VLam (VBoundary (x, b, y), (h2, fun h2 -> k y (bcomp h1 h2))))))
+            (rev (vsnd (meet (rev p) x (symm h1)))))
+          (f x h1)))))) p
+
+and ap t f a b p =
+  let x = freshName "x" in
+  let h = freshName "σ" in
+  cong (VLam (t, (x, fun x ->
+    VLam (VBoundary (a, b, x), (h, fun _ -> f x))))) p
+
 and coe p x = match p, x with
   (* coe (idp α) x ~> x *)
   | VIdp _, _ -> x
   (* coe p (coe q y) ~> coe (q ⬝ p) y *)
   | _, VCoe (q, y) -> coe (trans (q, p)) y
-  (*| VCong (f, p), x -> failwith "nip"*)
+  | VCong (VLam (t, (x, f)), r), v ->
+    let g = f (Var (x, t)) in let (k, _) = extPi (inferV g) in
+    let y = freshName "σ" in let y' = Var (y, k) in
+    begin match app (g, y') with
+      | VPath _ ->
+        let (t, a, b) = extPath (inferV r) in
+        let t' x h = let (v, _, _) = extPath (app (f x, h)) in v in
+        let f' x h = let (_, v, _) = extPath (app (f x, h)) in v in
+        let g' x h = let (_, _, v) = extPath (app (f x, h)) in v in
+
+        let p1 = apd t a b t' f' r in
+        let p3 = apd t a b t' g' r in
+
+        let x = freshName "x" in let h = freshName "σ" in
+        let p2 = ap (t' a (VLeft (a, b)))
+          (coe (cong (VLam (t, (x, fun x ->
+            VLam (VBoundary (a, b, x), (h, fun h -> t' x h))))) r))
+          (f' a (VLeft (a, b))) (g' a (VLeft (a, b))) v in
+
+        trans (rev p1, trans (p2, p3))
+      | _ -> VCoe (p, v)
+    end
   | _, _ -> VCoe (p, x)
 
 and closByVal ctx p t e v =
@@ -164,7 +205,7 @@ and cong f p = match f, p with
     let y = freshName "σ" in let y' = Var (y, k) in let v = app (g, y') in
     (* cong id p ~> p *)
     if conv x' v then p
-    (* cong (λ _, x) p ~> idp *)
+    (* cong (λ _, x) p ~> idp x *)
     else if not (mem x v || mem y v) then VIdp v
     else VCong (f, p)
 
