@@ -1,5 +1,10 @@
 module path where
 
+def id (A : U) : U := A
+def idfun (A : U) (a : A) : A := a
+
+def ∘ (A B C : U) (f : B → C) (g : A → B) : A → C := λ (x : A), f (g x)
+
 def is-contr (A: U) : U := Σ (x: A), Π (y: A), Path A x y
 def is-prop (A : U) : U := Π (a b : A), Path A a b
 def is-set (A : U) : U := Π (a b : A), is-prop (Path A a b)
