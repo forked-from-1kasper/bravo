@@ -1,0 +1,7 @@
+module path where
+
+def is-contr (A: U) : U := Σ (x: A), Π (y: A), Path A x y
+def is-prop (A : U) : U := Π (a b : A), Path A a b
+def is-set (A : U) : U := Π (a b : A), is-prop (Path A a b)
+def is-groupoid (A : U) : U := Π (a b : A), is-set (Path A a b)
+def is-2-groupoid (A : U) : U := Π (a b : A), is-groupoid (Path A a b)
