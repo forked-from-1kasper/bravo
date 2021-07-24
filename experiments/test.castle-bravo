@@ -141,3 +141,6 @@ def ap-comp (A B C : U) (f : A → B) (g : B → C) (a b : A) (p : Path A a b) :
   Path (Path C (g (f a)) (g (f b))) (ap B C g (f a) (f b) (ap A B f a b p))
     (ap A C (λ (x : A), g (f x)) a b p) :=
 idp (ap A C (λ (x : A), g (f x)) a b p)
+
+def path-idfun (A : U) (a b : A) (p : Path A a b) :=
+J A (λ (a b : A) (p : Path A a b), Path A a b) a (idp a) b p
