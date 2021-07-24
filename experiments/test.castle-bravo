@@ -1,6 +1,8 @@
 module test where
 
 def id (A : U) : U := A
+def idfun (A : U) (a : A) : A := a
+
 def ∘ (A B C : U) (f : B → C) (g : A → B) : A → C := λ (x : A), f (g x)
 
 def refl′ (A : U) (a : A) : Path A a a := idp a
@@ -28,6 +30,9 @@ cong (λ (x : A) (H : ∂ a b x),
 def J (A : U) (P : Π (a b : A), Path A a b → U)
   (a : A) (d : P a a (idp a)) (b : A) (p : Path A a b) : P a b p :=
 coe (cong (λ (x : A) (H : ∂ a b x), P a (meet p x H).1 (meet p x H).2) p) d
+
+def revsubst (A : U) (P : A → U) (a b : A) (p : Path A a b) : P b → P a :=
+J A (λ (a b : A) (p : Path A a b), P b → P a) a (idfun (P a)) b p
 
 -- β-rule for J holds definitionally
 def J-β (A : U) (P : Π (a b : A), Path A a b → U) (a : A)
