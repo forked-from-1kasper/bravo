@@ -246,7 +246,7 @@ and cong f p = match f, p with
     let g = app (f, x') in let (k, _) = extPi (inferV g) in
     let y = freshName "σ" in let y' = Var (y, k) in let v = app (g, y') in
     (* cong id p ~> p *)
-    if conv x' v then p
+    if x' = v then p
     (* cong (λ _, x) p ~> idp x *)
     else if not (mem x v || mem y v) then VIdp v
     else VCong (f, p)

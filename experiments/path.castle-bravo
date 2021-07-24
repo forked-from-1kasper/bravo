@@ -5,3 +5,13 @@ def is-prop (A : U) : U := Π (a b : A), Path A a b
 def is-set (A : U) : U := Π (a b : A), is-prop (Path A a b)
 def is-groupoid (A : U) : U := Π (a b : A), is-set (Path A a b)
 def is-2-groupoid (A : U) : U := Π (a b : A), is-groupoid (Path A a b)
+
+def J (A : U) (P : Π (a b : A), Path A a b → U)
+  (a : A) (d : P a a (idp a)) (b : A) (p : Path A a b) : P a b p :=
+coe (cong (λ (x : A) (H : ∂ a b x), P a (meet p x H).1 (meet p x H).2) p) d
+
+def singl (A : U) (a : A) := Σ (b : A), Path A a b
+def contr-singl (A : U) (a : A) : is-contr (singl A a) :=
+((a, idp a), λ (z : singl A a),
+  J A (λ (a b : A) (p : Path A a b), Path (singl A a) (a, idp a) (b, p))
+    a (idp (a, idp a)) z.1 z.2)
