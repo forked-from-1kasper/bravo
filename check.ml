@@ -95,10 +95,9 @@ and apd t a b k f p =
   cong (VLam (t, (x, fun x ->
     VLam (VBoundary (a, b, x), (h1, fun h1 ->
       coe (cong
-            (VLam (t, (y, fun y ->
-              VLam (VBoundary (x, b, y), (h2, fun h2 -> k y (bcomp h1 h2))))))
-            (rev (vsnd (meet (rev p) x (symm h1)))))
-          (f x h1)))))) p
+        (VLam (t, (y, fun y ->
+          VLam (VBoundary (x, b, y), (h2, fun h2 -> k y (bcomp h1 h2))))))
+        (rev (vsnd (meet (rev p) x (symm h1))))) (f x h1)))))) p
 
 and ap t f a b p =
   let x = freshName "x" in
