@@ -53,6 +53,19 @@ def coe-cong-Σ (Δ : U) (α β : Δ) (A : Π (x : Δ), ∂ α β x → U)
    B y H (coe (cong (λ (y′ : Δ) (H′ : ∂ α y y′),
      A y′ (∂-symm (∂-comp (∂-symm H) (∂-symm H′)))) (meet p y H).2) z.1)) p) z.2)
 
+def coe-cong-Σ′ (Δ : U) (α β : Δ) (A : Π (x : Δ), ∂ α β x → U)
+  (B : Π (x : Δ) (H : ∂ α β x), A x H → U) (p : Path Δ α β)
+  (z : Σ (a : A α (left α β)),  B α (left α β)  a) :
+       Σ (b : A β (right α β)), B β (right α β) b :=
+coe (cong (λ (x : Δ) (H : ∂ α β x), Σ (a : A x H), B x H a) p) z
+
+def coe-cong-Σ-is-correct (Δ : U) (α β : Δ) (A : Π (x : Δ), ∂ α β x → U)
+  (B : Π (x : Δ) (H : ∂ α β x), A x H → U) (p : Path Δ α β)
+  (z : Σ (a : A α (left α β)),  B α (left α β)  a) :
+  Path (Σ (b : A β (right α β)), B β (right α β) b)
+       (coe-cong-Σ Δ α β A B p z) (coe-cong-Σ′ Δ α β A B p z) :=
+idp (coe-cong-Σ Δ α β A B p z)
+
 def coe-cong-Path (Δ : U) (α β : Δ) (A : Π (x : Δ), ∂ α β x → U)
   (f g : Π (x : Δ) (H : ∂ α β x), A x H) (p : Path Δ α β)
   (q : Path (A α (left α β))  (f α (left α β))  (g α (left α β))) :
@@ -62,6 +75,19 @@ def coe-cong-Path (Δ : U) (α β : Δ) (A : Π (x : Δ), ∂ α β x → U)
     (λ (x : A α (left α β)), coe (cong A p) x)
     (f α (left α β)) (g α (left α β)) q)
 ⬝ (apd Δ α β A g p)
+
+def coe-cong-Π′ (Δ : U) (α β : Δ) (A : Π (x : Δ), ∂ α β x → U)
+  (B : Π (x : Δ) (H : ∂ α β x), A x H → U) (p : Path Δ α β)
+  (φ : Π (a : A α (left α β)),  B α (left α β)  a) :
+       Π (b : A β (right α β)), B β (right α β) b :=
+coe (cong (λ (x : Δ) (H : ∂ α β x), Π (a : A x H), B x H a) p) φ
+
+def coe-cong-Π-is-correct (Δ : U) (α β : Δ) (A : Π (x : Δ), ∂ α β x → U)
+  (B : Π (x : Δ) (H : ∂ α β x), A x H → U) (p : Path Δ α β)
+  (φ : Π (a : A α (left α β)),  B α (left α β)  a) :
+  Path (Π (b : A β (right α β)), B β (right α β) b)
+       (coe-cong-Π Δ α β A B p φ) (coe-cong-Π′ Δ α β A B p φ) :=
+idp (coe-cong-Π Δ α β A B p φ)
 
 def coe-cong-Path′ (Δ : U) (α β : Δ) (A : Π (x : Δ), ∂ α β x → U)
   (f g : Π (x : Δ) (H : ∂ α β x), A x H) (p : Path Δ α β)

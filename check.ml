@@ -131,6 +131,49 @@ and coe p x = match p, x with
           (f' a (VLeft (a, b))) (g' a (VLeft (a, b))) v in
 
         trans (rev p1, trans (p2, p3))
+
+      | VPi _ ->
+        let (t, a, b) = extPath (inferV r) in
+        let t' x h = let (v, _) = extPi (app (f x, h)) in v in
+        let f' x h = let (_, (_, v)) = extPi (app (f x, h)) in v in
+
+        let x = freshName "x" in
+        let y1 = freshName "y" in let y2 = freshName "y′" in
+        let h1 = freshName "σ" in let h2 = freshName "σ′" in
+
+        let phi x =
+          coe (cong (VLam (t, (y1, fun y1 ->
+            VLam (VBoundary (a, b, y1), (h1, fun h1 ->
+              f' y1 h1 (coe (cong (VLam (t, (y2, fun y2 ->
+                VLam (VBoundary (b, y1, y2), (h2, fun h2 ->
+                  t' y2 (bcomp h1 (symm h2)))))))
+                (vsnd (meet (rev r) y1 (symm h1)))) x)))))) r)
+            (app (v, coe (cong
+              (VLam (t, (y1, fun y ->
+                VLam (VBoundary (b, a, y), (h1, fun h ->
+                  t' y (symm h)))))) (rev r)) x)) in
+        VLam (t' b (VRight (a, b)), (x, phi))
+
+      | VSig _ ->
+        let (t, a, b) = extPath (inferV r) in
+        let t' x h = let (v, _) = extSig (app (f x, h)) in v in
+        let f' x h = let (_, (_, v)) = extSig (app (f x, h)) in v in
+
+        let y1 = freshName "y" in let y2 = freshName "y′" in
+        let h1 = freshName "σ" in let h2 = freshName "σ′" in
+
+        let fst = coe (cong (VLam (t, (y1, fun y1 ->
+          VLam (VBoundary (a, b, y1), (h1, fun h1 ->
+            t' y1 h1))))) r) (vfst v) in
+
+        let snd = coe (cong (VLam (t, (y1, fun y1 ->
+        VLam (VBoundary (a, b, y1), (h1, fun h1 ->
+          f' y1 h1 (coe (cong (VLam (t, (y2, fun y2 ->
+            VLam (VBoundary (a, y1, y2), (h2, fun h2 ->
+              t' y2 (symm (bcomp (symm h1) (symm h2))))))))
+              (vsnd (meet r y1 h1))) (vfst v))))))) r) (vsnd v) in
+
+         VPair (fst, snd)
       | _ -> VCoe (p, v)
     end
   | _, _ -> VCoe (p, x)
