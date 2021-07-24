@@ -463,6 +463,7 @@ and inferTele ctx p a b =
 
 and inferLam ctx p a e =
   ignore (extSet (infer ctx a)); let t = eval a ctx in
+  ignore (infer (upLocal ctx p t (Var (p, t))) e);
   VPi (t, (p, fun x -> infer (upLocal ctx p t x) e))
 
 and inferJ ctx e =
