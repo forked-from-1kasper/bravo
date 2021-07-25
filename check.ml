@@ -116,7 +116,7 @@ and rev : value -> value = function
               (app (f, app (h, app (f, x)))) (app (f, x))
               (app (p2, app (f, x))), app (p1, x))))) in
 
-    VUA (VMkEquiv (t1, t2, h, VPair (VPair (f, p2), VPair (f, linvinv))))
+    VUA (VMkEquiv (t2, t1, h, VPair (VPair (f, p2), VPair (f, linvinv))))
   | v             -> VRev v
 
 and symm = function
