@@ -66,8 +66,13 @@ exp3:
   | exp3 PROD exp3 { prod $1 $3 }
   | exp4 { $1 }
 
-exp4 :
-  | exp4 exp6 { EApp ($1, $2) }
+exp4:
+  | IDP exp6 { EIdp $2 }
+  | exp4 TRANS exp4 { ETrans ($1, $3) }
+  | exp5 { $1 }
+
+exp5 :
+  | exp5 exp6 { EApp ($1, $2) }
   | ID exp6 { EId $2 }
   | REFL exp6 { ERefl $2 }
   | IDJ exp6 { EJ $2 }
@@ -86,11 +91,6 @@ exp4 :
   | UA exp6 { EUA $2 }
   | MKEQV exp6 exp6 exp6 exp6 { EMkEquiv ($2, $3, $4, $5) }
   | exp6 EQUIV exp6 { Equiv ($1, $3) }
-  | exp5 { $1 }
-
-exp5:
-  | IDP exp6 { EIdp $2 }
-  | exp5 TRANS exp5 { ETrans ($1, $3) }
   | exp6 { $1 }
 
 exp6:
