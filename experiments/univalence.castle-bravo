@@ -1,0 +1,15 @@
+module univalence where
+import experiments/equiv
+
+def ua′ (A B : U) (e : equiv A B) : Path U A B := ua e
+def ideqv (A B : U) (p : Path U A B) : equiv A B :=
+coe (cong (λ (X : U) (H : ∂ A B X), equiv A X) p) (equiv-id A)
+
+-- it’s surprisingly slow
+def ua-ideqv (A B : U) (p : Path U A B) : Path (Path U A B) (ua (ideqv A B p)) p :=
+coe (cong (λ (X : U) (H : ∂ A B X), Path (Path U A X)
+  (ua (ideqv A X (meet p X H).2)) (meet p X H).2) p)
+  (idp (idp A))
+
+def ideqv-ua (A B : U) (e : equiv A B) : Path (equiv A B) (ideqv A B (ua e)) e :=
+?
