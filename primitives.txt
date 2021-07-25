@@ -80,3 +80,10 @@ cong g (cong f p) ~> cong (g ∘ f) p
         cong id p ~> p
   cong (λ _, x) p ~> idp x
    cong f (idp x) ~> idp (f x)
+
+ua : α ≃ β → α = β
+
+     (ua e)⁻¹ ~> ua e⁻¹
+ua e₁ ⬝ ua e₂ ~> ua (e₂ ∘ e₁)
+ ua (ideqv α) ~> idp α
+ coe (ua e) x ~> e.1 x

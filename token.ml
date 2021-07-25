@@ -23,4 +23,4 @@ let tokenToString : token -> string = function
   | MEET       -> "MEET"        | COE        -> "COE"
   | CONG       -> "CONG"        | ID         -> "ID"
   | REFL       -> "REFL"        | IDJ        -> "IDJ"
-  | IMPORT     -> "IMPORT"
+  | IMPORT     -> "IMPORT"      | UA         -> "UA"

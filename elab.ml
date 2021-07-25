@@ -10,6 +10,10 @@ let extSig : value -> value * clos = function
   | VSig (t, g) -> (t, g)
   | u -> raise (ExpectedSig u)
 
+let extLam : value -> value * clos = function
+  | VLam (t, g) -> (t, g)
+  | u -> raise (ExpectedSig u)
+
 let extSet : value -> int = function
   | VPre n | VKan n -> n
   | v               -> raise (ExpectedVSet v)
@@ -79,8 +83,13 @@ let rec salt (ns : name Env.t) : exp -> exp = function
   | EMeet (p, x, e)     -> EMeet (salt ns p, salt ns x, salt ns e)
   | ECoe (p, x)         -> ECoe (salt ns p, salt ns x)
   | ECong (a, b)        -> ECong (salt ns a, salt ns b)
+  | EUA e               -> EUA (salt ns e)
 
 and saltTele ctor ns p a b =
   let x = fresh p in ctor x (salt ns a) (salt (Env.add p x ns) b)
 
 let freshExp = salt Env.empty
+
+let convVar p = function
+  | Var (q, _) -> p = q
+  | _          -> false

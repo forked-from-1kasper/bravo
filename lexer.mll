@@ -85,4 +85,5 @@ rule main = parse
 | "cong"          { CONG }             | symm            { SYMM }
 | bleft           { BLEFT }            | bright          { BRIGHT }
 | bcong           { BCONG }            | comp            { COMP }
-| ident as s      { IDENT s }          | eof             { EOF }
+| "ua"            { UA }               | ident as s      { IDENT s }
+| eof             { EOF }

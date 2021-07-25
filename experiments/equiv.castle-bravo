@@ -28,6 +28,9 @@ def rinv-inv (A B : U) (f : A → B) (g h : B → A)
   Π (x : B), Path B (f (h x)) x :=
 λ (x : B), (ap B B (∘ B A B f h) (f (g x)) x (G x))⁻¹ ⬝ (ap A B f (h (f (g x))) (g x) (H (g x))) ⬝ (G x)
 
+def equiv-id (A : U) : equiv A A :=
+(idfun A, ((idfun A, λ (x : A), idp x), (idfun A, λ (x : A), idp x)))
+
 def equiv-symm (A B : U) (e : equiv A B) : equiv B A :=
 (e.2.2.1, ((e.1, e.2.2.2), (e.1, linv-inv A B e.1 e.2.2.1 e.2.1.1 e.2.2.2 e.2.1.2)))
 

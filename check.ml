@@ -46,6 +46,7 @@ let rec eval (e0 : exp) (ctx : ctx) = traceEval e0; match e0 with
   | EMeet (p, x, e)     -> meet (eval p ctx) (eval x ctx) (eval e ctx)
   | ECoe (p, x)         -> coe (eval p ctx) (eval x ctx)
   | ECong (f, p)        -> cong (eval f ctx) (eval p ctx)
+  | EUA e               -> ua (eval e ctx)
 
 and bcomp a b = reduceBoundary (VComp (a, b))
 and bleft v p = reduceBoundary (VBLeft (v, p))
@@ -110,6 +111,8 @@ and coe p x = match p, x with
   | VIdp _, _ -> x
   (* coe p (coe q y) ~> coe (q ⬝ p) y *)
   | _, VCoe (q, y) -> coe (trans (q, p)) y
+  (* coe (ua e) x ~> e.1 x *)
+  | VUA e, _ -> app (vfst e, x)
   | VCong (VLam (t, (x, f)), r), v ->
     let g = f (Var (x, t)) in let (k, _) = extPi (inferV g) in
     let y = freshName "σ" in let y' = Var (y, k) in
@@ -246,10 +249,18 @@ and cong f p = match f, p with
     let g = app (f, x') in let (k, _) = extPi (inferV g) in
     let y = freshName "σ" in let y' = Var (y, k) in let v = app (g, y') in
     (* cong id p ~> p *)
-    if x' = v then p
+    if convVar x v then p
     (* cong (λ _, x) p ~> idp x *)
     else if not (mem x v || mem y v) then VIdp v
     else VCong (f, p)
+
+and ua e =
+  match vfst e with
+  | VLam (a, (p, f)) ->
+    (* ua (ideqv α) ~> idp α *)
+    if convVar p (f (Var (p, a)))
+    then VIdp a else VUA e
+  | _ -> VUA e
 
 and app (f, x) = match f, x with
   (* (λ (x : t), f) v ~> f[x/v] *)
@@ -297,6 +308,7 @@ and inferV v = traceInferV v; match v with
   | VKan n -> VKan (n + 1)
   | VPath (v, _, _) -> inferV v
   | VBoundary (v, _, _) -> let n = extSet (inferV (inferV v)) in VPre n
+  | VUA e -> let (a, (p, b')) = extPi (inferV (vfst e)) in VPath (inferV a, a, b' (Var (p, a)))
   | v -> raise (ExpectedNeutral v)
 
 (* Readback *)
@@ -330,6 +342,7 @@ and rbV v : exp = traceRbV v; match v with
   | VMeet (p, x, v)     -> EMeet (rbV p, rbV x, rbV v)
   | VCoe (p, x)         -> ECoe (rbV p, rbV x)
   | VCong (f, p)        -> ECong (rbV f, rbV p)
+  | VUA e               -> EUA (rbV e)
 
 and rbVTele ctor t (p, g) =
   let x = Var (p, t) in ctor p (rbV t) (rbV (g x))
@@ -369,6 +382,7 @@ and conv v1 v2 : bool = traceConv v1 v2;
     | VMeet (p1, x1, v1), VMeet (p2, x2, v2) -> conv p1 p2 && conv x1 x2 && conv v1 v2
     | VCoe (p1, x1), VCoe (p2, x2) -> conv p1 p2 && conv x1 x2
     | VCong (f1, p1), VCong (f2, p2) -> conv f1 f2 && conv p1 p2
+    | VUA e1, VUA e2 -> conv e1 e2
     | _, _ -> false
   end || convProofIrrel v1 v2
 
@@ -452,6 +466,7 @@ and infer ctx e : value = traceInfer e; try match e with
   | EMeet (p, x, e) -> inferMeet ctx p x e
   | ECoe (p, x) -> let (e, a, b) = extPath (infer ctx p) in ignore (extKan e); check ctx x a; b
   | ECong (f, p) -> inferCong ctx f p
+  | EUA e -> inferUA ctx e
   | e -> raise (InferError e)
   with ex -> Printf.printf "When trying to infer type of\n  %s\n" (showExp e); raise ex
 
@@ -508,6 +523,25 @@ and inferCong ctx f p =
   let fb = app (app (f', b), VRight (a, b)) in
   VPath (k, fa, fb)
 
+and inferUA ctx e =
+  let (t, (_, g)) = extSig (infer ctx e) in
+  let (a, (x, b')) = extPi t in let b = b' (Var (x, a)) in
+  if mem x b then raise (ExpectedNonDependent b);
+
+  let t1 = inferV a in let t2 = inferV b in
+  eqNf t1 t2; ignore (extKan t1);
+
+  let f = vfst (eval e ctx) in let (l, (y, r')) = extSig (g f) in
+  let r = r' (Var (y, l)) in if mem y r then raise (ExpectedNonDependent r);
+
+  let linv = VSig (implv b a, (freshName "g", fun g ->
+    VPi (a, (freshName "x", fun x -> VPath (a, app (g, app (f, x)), x))))) in
+
+  let rinv = VSig (implv b a, (freshName "h", fun h ->
+    VPi (b, (freshName "x", fun x -> VPath (b, app (f, app (h, x)), x))))) in
+
+  eqNf l linv; eqNf r rinv; VPath (t1, a, b)
+
 and mem x = function
   | Var (y, _) -> x = y
   | VSig (t, (p, f)) | VPi (t, (p, f)) | VLam (t, (p, f)) ->
@@ -515,7 +549,7 @@ and mem x = function
   | VKan _ | VPre _ | VHole -> false
 
   | VFst e  | VSnd e  | VId e   | VRefl e
-  | VJ e    | VIdp e  | VRev e  | VSymm e -> mem x e
+  | VJ e    | VIdp e  | VRev e  | VSymm e | VUA e -> mem x e
 
   | VPair (a, b)  | VComp (a, b) | VApp (a, b)
   | VCoe (a, b)   | VCong (a, b) | VTrans (a, b)
