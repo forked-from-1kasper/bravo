@@ -24,3 +24,4 @@ let tokenToString : token -> string = function
   | CONG       -> "CONG"        | ID         -> "ID"
   | REFL       -> "REFL"        | IDJ        -> "IDJ"
   | IMPORT     -> "IMPORT"      | UA         -> "UA"
+  | EQUIV      -> "EQUIV"       | MKEQV      -> "MKEQV"

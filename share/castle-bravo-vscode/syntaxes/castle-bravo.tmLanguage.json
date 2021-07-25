@@ -18,7 +18,7 @@
             "name": "keyword.other.castle-bravo"
         },
         {
-            "match": "(?<=^|[\\s(),])(λ|Σ|Π|Id|refl|idJ|forall|sigma|∂|left|right|∂-symm|∂-comp|∂-left|∂-right|∂-cong|Path|idp|meet|coe|cong|ua)(?=$|[\\s(),])",
+            "match": "(?<=^|[\\s(),])(λ|Σ|Π|Id|refl|idJ|forall|sigma|∂|left|right|∂-symm|∂-comp|∂-left|∂-right|∂-cong|Path|idp|meet|coe|cong|ua|mkeqv)(?=$|[\\s(),])",
             "name": "keyword.control.castle-bravo"
         },
         {
@@ -26,7 +26,7 @@
             "name": "keyword.other.castle-bravo"
         },
         {
-            "match": "(?<=^|[\\s()])(->|→|\\|->|:=|≔|≜|≝|:|\\*|⁻¹|⬝)(?=$|[\\s()])",
+            "match": "(?<=^|[\\s()])(->|→|\\|->|:=|≔|≜|≝|:|\\*|⁻¹|⬝|≃)(?=$|[\\s()])",
             "name": "keyword.other.castle-bravo"
         },
         {

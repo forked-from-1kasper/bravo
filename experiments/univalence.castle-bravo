@@ -1,17 +1,17 @@
 module univalence where
 import experiments/equiv
 
-def ua′ (A B : U) (e : equiv A B) : Path U A B := ua e
-def ideqv (A B : U) (p : Path U A B) : equiv A B :=
-coe (cong (λ (X : U) (H : ∂ A B X), equiv A X) p) (equiv-id A)
+def ua′ (A B : U) (e : A ≃ B) : Path U A B := ua e
+def ideqv (A B : U) (p : Path U A B) : A ≃ B :=
+coe (cong (λ (X : U) (H : ∂ A B X), A ≃ X) p) (equiv-id A)
 
-def uaβ (A B : U) (e : equiv A B) (x : A) : Path B (coe (ua e) x) (e.1 x) :=
+def uaβ (A B : U) (e : A ≃ B) (x : A) : Path B (coe (ua e) x) (e.1 x) :=
 idp (e.1 x)
 
-def equiv-symm′ (A B : U) (e : equiv A B) : equiv B A :=
+def equiv-symm′ (A B : U) (e : A ≃ B) : B ≃ A :=
 ideqv B A (ua e)⁻¹
 
-def equiv-trans′ (A B C : U) (e₁ : equiv A B) (e₂ : equiv B C) : equiv A C :=
+def equiv-trans′ (A B C : U) (e₁ : A ≃ B) (e₂ : B ≃ C) : A ≃ C :=
 ideqv A C ((ua e₁) ⬝ (ua e₂))
 
 -- it’s surprisingly slow

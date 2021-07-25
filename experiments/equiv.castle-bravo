@@ -4,19 +4,8 @@ import experiments/path
 def ~ (A : U) (B : A → U) (f g : Π (x : A), B x) :=
 Π (x : A), Path (B x) (f x) (g x)
 
-def linv (A B : U) (f : A → B) :=
-Σ (g : B → A), Π (x : A), Path A (g (f x)) x
-
-def rinv (A B : U) (f : A → B) :=
-Σ (g : B → A), Π (x : B), Path B (f (g x)) x
-
-def biinv (A B : U) (f : A → B) :=
-linv A B f × rinv A B f
-
 def qinv (A B : U) (f : A → B) :=
 Σ (g : B → A), (Π (x : A), Path A (g (f x)) x) × (Π (x : B), Path B (f (g x)) x)
-
-def equiv (A B : U) := Σ (f : A → B), biinv A B f
 
 def linv-inv (A B : U) (f : A → B) (g h : B → A)
   (G : Π (x : B), Path B (f (g x)) x) (H : Π (x : A), Path A (h (f x)) x) :
@@ -28,17 +17,17 @@ def rinv-inv (A B : U) (f : A → B) (g h : B → A)
   Π (x : B), Path B (f (h x)) x :=
 λ (x : B), (ap B B (∘ B A B f h) (f (g x)) x (G x))⁻¹ ⬝ (ap A B f (h (f (g x))) (g x) (H (g x))) ⬝ (G x)
 
-def equiv-id (A : U) : equiv A A :=
-(idfun A, ((idfun A, λ (x : A), idp x), (idfun A, λ (x : A), idp x)))
+def equiv-id (A : U) : A ≃ A :=
+mkeqv A A (idfun A) ((idfun A, λ (x : A), idp x), (idfun A, λ (x : A), idp x))
 
-def equiv-symm (A B : U) (e : equiv A B) : equiv B A :=
-(e.2.2.1, ((e.1, e.2.2.2), (e.1, linv-inv A B e.1 e.2.2.1 e.2.1.1 e.2.2.2 e.2.1.2)))
+def equiv-symm (A B : U) (e : A ≃ B) : B ≃ A :=
+mkeqv B A e.2.2.1 ((e.1, e.2.2.2), (e.1, linv-inv A B e.1 e.2.2.1 e.2.1.1 e.2.2.2 e.2.1.2))
 
-def equiv-trans (A B C : U) (e₁ : equiv A B) (e₂ : equiv B C) : equiv A C :=
-(∘ A B C e₂.1 e₁.1,
+def equiv-trans (A B C : U) (e₁ : A ≃ B) (e₂ : B ≃ C) : A ≃ C :=
+mkeqv A C (∘ A B C e₂.1 e₁.1)
   ((∘ C B A e₁.2.1.1 e₂.2.1.1, λ (x : A),
     (ap B A e₁.2.1.1 (e₂.2.1.1 (e₂.1 (e₁.1 x))) (e₁.1 x)
       (e₂.2.1.2 (e₁.1 x))) ⬝ (e₁.2.1.2 x)),
    (∘ C B A e₁.2.2.1 e₂.2.2.1, λ (x : C),
     (ap B C e₂.1 (e₁.1 (e₁.2.2.1 (e₂.2.2.1 x))) (e₂.2.2.1 x)
-      (e₁.2.2.2 (e₂.2.2.1 x))) ⬝ (e₂.2.2.2 x))))
+      (e₁.2.2.2 (e₂.2.2.1 x))) ⬝ (e₂.2.2.2 x)))

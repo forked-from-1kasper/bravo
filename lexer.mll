@@ -50,6 +50,8 @@ let axiom   = "axiom"|"postulate"
 let rev      = "\xE2\x81\xBB\xC2\xB9" (*  ⁻¹ *)
 let trans    = "\xE2\xAC\x9D"         (*  ⬝  *)
 
+let equiv    = "\xE2\x89\x83"         (*  ≃  *)
+
 let boundary = "\xE2\x88\x82"         (*  ∂  *)
 let symm     = boundary "-symm"
 let comp     = boundary "-comp"
@@ -85,5 +87,6 @@ rule main = parse
 | "cong"          { CONG }             | symm            { SYMM }
 | bleft           { BLEFT }            | bright          { BRIGHT }
 | bcong           { BCONG }            | comp            { COMP }
-| "ua"            { UA }               | ident as s      { IDENT s }
+| "ua"            { UA }               | equiv           { EQUIV }
+| "mkeqv"         { MKEQV }            | ident as s      { IDENT s }
 | eof             { EOF }

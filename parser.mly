@@ -31,7 +31,8 @@
 %token ID REFL IDJ
 %token PATH IDP REV TRANS
 %token BOUNDARY LEFT RIGHT SYMM COMP BLEFT BRIGHT BCONG
-%token MEET COE CONG UA
+%token MEET COE CONG
+%token UA EQUIV MKEQV
 
 %right ARROW PROD
 %left TRANS
@@ -83,6 +84,8 @@ exp4 :
   | COE exp6 exp6 { ECoe ($2, $3) }
   | CONG exp6 exp6 { ECong ($2, $3) }
   | UA exp6 { EUA $2 }
+  | MKEQV exp6 exp6 exp6 exp6 { EMkEquiv ($2, $3, $4, $5) }
+  | exp6 EQUIV exp6 { Equiv ($1, $3) }
   | exp5 { $1 }
 
 exp5:
