@@ -15,7 +15,7 @@ def equiv-trans′ (A B C : U) (e₁ : A ≃ B) (e₂ : B ≃ C) : A ≃ C :=
 ideqv A C ((ua e₁) ⬝ (ua e₂))
 
 -- it’s surprisingly slow
-def ua-ideqv (A B : U) (p : Path U A B) : Path (Path U A B) (ua (ideqv A B p)) p :=
-coe (cong (λ (X : U) (H : ∂ A B X), Path (Path U A X)
-  (ua (ideqv A X (meet p X H).2)) (meet p X H).2) p)
-  (idp (idp A))
+--def ua-ideqv (A B : U) (p : Path U A B) : Path (Path U A B) (ua (ideqv A B p)) p :=
+--coe (cong (λ (X : U) (H : ∂ A B X), Path (Path U A X)
+--  (ua (ideqv A X (meet p X H).2)) (meet p X H).2) p)
+--  (idp (idp A))

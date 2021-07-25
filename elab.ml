@@ -2,6 +2,10 @@ open Ident
 open Error
 open Expr
 
+let extPair : value -> value * value = function
+  | VPair (u, v) -> (u, v)
+  | v            -> raise (ExpectedPair v)
+
 let extPi : value -> value * clos = function
   | VPi (t, g) -> (t, g)
   | u -> raise (ExpectedPi u)

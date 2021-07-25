@@ -90,7 +90,7 @@ and trans = function
           (app (f1, (app (h1, (app (h2, x)))))) (app (h2, x))
           (app (p2, app (h2, x))), app (q2, x)))) in
 
-    VPair (f, VPair (VPair (g, r1), VPair (h, r2)))
+    VUA (VMkEquiv (t1, t3, f, VPair (VPair (g, r1), VPair (h, r2))))
   | p, q                   -> VTrans (p, q)
 
 and rev : value -> value = function
@@ -115,7 +115,7 @@ and rev : value -> value = function
               (app (f, app (h, app (f, x)))) (app (f, x))
               (app (p2, app (f, x))), app (p1, x))))) in
 
-    VPair (h, VPair (VPair (f, p2), VPair (f, linvinv)))
+    VUA (VMkEquiv (t1, t2, h, VPair (VPair (f, p2), VPair (f, linvinv))))
   | v             -> VRev v
 
 and symm = function
@@ -166,10 +166,9 @@ and coe p x = match p, x with
   | VUA e, _ -> app (vfst e, x)
   | VCong (VLam (t, (x, f)), r), v ->
     let g = f (Var (x, t)) in let (k, _) = extPi (inferV g) in
-    let y = freshName "σ" in let y' = Var (y, k) in
+    let (a, b, _) = extBoundary k in let y = freshName "σ" in let y' = Var (y, k) in
     begin match app (g, y') with
       | VPath _ ->
-        let (t, a, b) = extPath (inferV r) in
         let t' x h = let (v, _, _) = extPath (app (f x, h)) in v in
         let f' x h = let (_, v, _) = extPath (app (f x, h)) in v in
         let g' x h = let (_, _, v) = extPath (app (f x, h)) in v in
@@ -186,7 +185,6 @@ and coe p x = match p, x with
         trans (rev p1, trans (p2, p3))
 
       | VPi _ ->
-        let (t, a, b) = extPath (inferV r) in
         let t' x h = let (v, _) = extPi (app (f x, h)) in v in
         let f' x h = let (_, (_, v)) = extPi (app (f x, h)) in v in
 
@@ -208,7 +206,6 @@ and coe p x = match p, x with
         VLam (t' b (VRight (a, b)), (x, phi))
 
       | VSig _ ->
-        let (t, a, b) = extPath (inferV r) in
         let t' x h = let (v, _) = extSig (app (f x, h)) in v in
         let f' x h = let (_, (_, v)) = extSig (app (f x, h)) in v in
 
@@ -216,17 +213,23 @@ and coe p x = match p, x with
         let h1 = freshName "σ" in let h2 = freshName "σ′" in
 
         let fst = coe (cong (VLam (t, (y1, fun y1 ->
-          VLam (VBoundary (a, b, y1), (h1, fun h1 ->
-            t' y1 h1))))) r) (vfst v) in
+          VLam (VBoundary (a, b, y1), (h1, t' y1))))) r) (vfst v) in
 
         let snd = coe (cong (VLam (t, (y1, fun y1 ->
-        VLam (VBoundary (a, b, y1), (h1, fun h1 ->
-          f' y1 h1 (coe (cong (VLam (t, (y2, fun y2 ->
-            VLam (VBoundary (a, y1, y2), (h2, fun h2 ->
-              t' y2 (symm (bcomp (symm h1) (symm h2))))))))
-              (vsnd (meet r y1 h1))) (vfst v))))))) r) (vsnd v) in
+          VLam (VBoundary (a, b, y1), (h1, fun h1 ->
+            f' y1 h1 (coe (cong (VLam (t, (y2, fun y2 ->
+              VLam (VBoundary (a, y1, y2), (h2, fun h2 ->
+                t' y2 (symm (bcomp (symm h1) (symm h2))))))))
+                (vsnd (meet r y1 h1))) (vfst v))))))) r) (vsnd v) in
+        VPair (fst, snd)
 
-         VPair (fst, snd)
+      | VEquiv _ ->
+        let (fst, snd) = extPair (coe (VCong (VLam (t, (freshName "x",
+          fun x -> VLam (VBoundary (a, b, x), (freshName "σ", fun h ->
+            let (t1, t2) = extEquiv (app (f x, h)) in
+            VSig (implv t1 t2, (freshName "f", biinv t1 t2)))))), r)) v) in
+        let (t1', t2') = extEquiv (app (f b, VRight (a, b))) in
+        VMkEquiv (t1', t2', fst, snd)
       | _ -> VCoe (p, v)
     end
   | _, _ -> VCoe (p, x)
@@ -369,10 +372,10 @@ and inferFst = function
   | VEquiv (a, b) -> implv a b
   | v             -> raise (ExpectedSig v)
 
-and inferSnd fst = function
-  | VSig (_, (_, g)) -> g fst
-  | VEquiv (a, b)    -> prodv (linv a b fst) (rinv a b fst)
-  | v                -> raise (ExpectedSig v)
+and inferSnd v = function
+  | VSig (_, (_, g)) -> g v
+  | VEquiv (a, b)    -> biinv a b v
+  | u                -> raise (ExpectedSig u)
 
 (* Readback *)
 and rbV v : exp = traceRbV v; match v with
@@ -608,6 +611,8 @@ and rinv a b f =
   VSig (implv b a, (freshName "h", fun h ->
     VPi (b, (freshName "x", fun x -> VPath (b, app (f, app (h, x)), x)))))
 
+and biinv a b f = prodv (linv a b f) (rinv a b f)
+
 and checkUA ctx e p =
   let (t, a, b) = extPath p in ignore (extKan t);
   check ctx e (VEquiv (a, b))
@@ -634,7 +639,7 @@ and inferMkEquiv ctx a b f e =
   let (a', (x, b')) = extPi (infer ctx f) in let b'' = b' (Var (x, a')) in
 
   eqNf (eval a ctx) a'; eqNf (eval b ctx) b''; let f' = eval f ctx in
-  check ctx e (prodv (linv a' b'' f') (rinv a' b'' f')); VEquiv (a', b'')
+  check ctx e (biinv a' b'' f'); VEquiv (a', b'')
 
 and mem x = function
   | Var (y, _) -> x = y
