@@ -49,6 +49,7 @@ let univImpl a b = match a, b with
 
 let idv t x y = VApp (VApp (VId t, x), y)
 let implv a b = VPi (a, (Irrefutable, fun _ -> b))
+let prodv a b = VSig (a, (Irrefutable, fun _ -> b))
 
 let impl a b = EPi (a, (Irrefutable, b))
 let prod a b = ESig (a, (Irrefutable, b))

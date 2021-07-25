@@ -5,13 +5,13 @@ exception Restart
 exception InferError of exp
 exception ExpectedPi of value
 exception ExpectedESet of exp
+exception InferVError of value
 exception ExpectedSig of value
 exception ExpectedPath of value
 exception ExpectedVSet of value
 exception Ineq of value * value
 exception Parser of int * string
 exception UnknownOption of string
-exception ExpectedNeutral of value
 exception ExpectedFibrant of value
 exception UnknownCommand of string
 exception VariableNotFound of name
@@ -27,6 +27,7 @@ let prettyPrintError : exn -> unit = function
   | ExpectedBoundary v -> Printf.printf "“%s” expected to be a boundary.\n" (showValue v)
   | ExpectedPath v -> Printf.printf "“%s” expected to be a path.\n" (showValue v)
   | AlreadyDeclared p -> Printf.printf "“%s” is already declared.\n" p
+  | InferVError v -> Printf.printf "Cannot infer type of\n  %s\n" (showValue v)
   | InferError e -> Printf.printf "Cannot infer type of\n  %s\n" (showExp e)
   | VariableNotFound p -> Printf.printf "Variable %s was not found\n" (showName p)
   | InvalidModuleName (name, filename) -> Printf.printf "Module “%s” does not match name of its file: %s\n" name filename

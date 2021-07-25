@@ -14,7 +14,7 @@ def is-2-groupoid (A : U) : U := Π (a b : A), is-groupoid (Path A a b)
 def subst (A : U) (P : A → U) (a b : A) (p : Path A a b) (x : P a) : P b :=
 coe (cong (λ (x : A) (H : ∂ a b x), P x) p) x
 
-def ap (A B : U) (f : A → B) (a b : A) (p : Path A a b) :=
+def ap (A B : U) (f : A → B) (a b : A) (p : Path A a b) : Path B (f a) (f b) :=
 cong (λ (x : A) (H : ∂ a b x), f x) p
 
 def J (A : U) (P : Π (a b : A), Path A a b → U)

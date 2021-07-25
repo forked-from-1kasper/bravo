@@ -65,6 +65,25 @@ and rev : value -> value = function
   | VRev p        -> p
   | VIdp v        -> VIdp v
   | VTrans (p, q) -> trans (rev q, rev p)
+  (* (ua e)⁻¹ ~> ua e⁻¹ *)
+  | VUA e         ->
+    let f = vfst e in let (t1, (p, t2')) = extPi (inferV f) in
+    let t2 = t2' (Var (p, t1)) in
+
+    let g = vfst (vfst (vsnd e)) in
+    let h = vfst (vsnd (vsnd e)) in
+
+    let p1 = vsnd (vfst (vsnd e)) in
+    let p2 = vsnd (vsnd (vsnd e)) in
+
+    let linvinv =
+      VLam (t1, (freshName "x", fun x ->
+        trans (rev (app (p1, app (h, app (f, x)))),
+          trans (ap t2 (fun x -> app (g, x))
+              (app (f, app (h, app (f, x)))) (app (f, x))
+              (app (p2, app (f, x))), app (p1, x))))) in
+
+    VPair (h, VPair (VPair (f, p2), VPair (f, linvinv)))
   | v             -> VRev v
 
 and symm = function
@@ -309,7 +328,7 @@ and inferV v = traceInferV v; match v with
   | VPath (v, _, _) -> inferV v
   | VBoundary (v, _, _) -> let n = extSet (inferV (inferV v)) in VPre n
   | VUA e -> let (a, (p, b')) = extPi (inferV (vfst e)) in VPath (inferV a, a, b' (Var (p, a)))
-  | v -> raise (ExpectedNeutral v)
+  | v -> raise (InferVError v)
 
 (* Readback *)
 and rbV v : exp = traceRbV v; match v with
@@ -394,7 +413,7 @@ and convProofIrrel v1 v2 =
     | VBoundary (a1, b1, x1), VBoundary (a2, b2, x2) ->
       conv a1 a2 && conv b1 b2 && conv x1 x2
     | _, _ -> false
-  with ExpectedNeutral _ -> false
+  with InferVError _ -> false
 
 and eqNf v1 v2 : unit = traceEqNF v1 v2;
   if conv v1 v2 then () else raise (Ineq (v1, v2))
@@ -426,6 +445,12 @@ and check ctx (e0 : exp) (t0 : value) =
     | VKan v | VPre v -> if ieq u v then () else raise (Ineq (VPre u, VPre v))
     | t -> raise (Ineq (VPre u, t))
   end
+  | EUA e, t -> checkUA ctx e t
+  | ECong (f, p), q -> checkCong ctx f p q
+  | ECoe (p, x), t2 ->
+    let t1 = infer ctx x in let u1 = inferV t1 in let u2 = inferV t2 in
+    eqNf u1 u2; ignore (extKan (inferV t1));
+    check ctx p (VPath (u1, t1, t2))
   | e, t -> eqNf (infer ctx e) t
   with ex -> Printf.printf "When trying to typecheck\n  %s\nAgainst type\n  %s\n" (showExp e0) (showValue t0); raise ex
 
@@ -510,6 +535,34 @@ and inferMeet ctx p x e =
   let (a', b', x') = extBoundary (infer ctx e) in
   check ctx x t; eqNf a a'; eqNf b b'; eqNf (eval x ctx) x'; singl t a
 
+and checkCong ctx f p q =
+  let (k', fa', fb') = extPath q in
+  let (t, k, x, y, (a, b, x')) = extCongLam (infer ctx f) in
+
+  ignore (extKan (inferV t)); ignore (extKan (inferV k)); eqNf (Var (x, t)) x';
+  if mem x k || mem y k then raise (ExpectedNonDependent k);
+
+  let f' = eval f ctx in
+  let fa = app (app (f', a), VLeft (a, b)) in
+  let fb = app (app (f', b), VRight (a, b)) in
+
+  eqNf k k'; eqNf fa fa'; eqNf fb fb';
+  check ctx p (VPath (t, a, b))
+
+and linv a b f =
+  VSig (implv b a, (freshName "g", fun g ->
+    VPi (a, (freshName "x", fun x -> VPath (a, app (g, app (f, x)), x)))))
+
+and rinv a b f =
+  VSig (implv b a, (freshName "h", fun h ->
+    VPi (b, (freshName "x", fun x -> VPath (b, app (f, app (h, x)), x)))))
+
+and checkUA ctx e p =
+  let (t, a, b) = extPath p in ignore (extKan t);
+  let biinv = VSig (implv a b, (freshName "f", fun f ->
+    prodv (linv a b f) (rinv a b f))) in
+  check ctx e biinv
+
 and inferCong ctx f p =
   let (t, a, b) = extPath (infer ctx p) in
   let (t', k, x, y, (a', b', x')) = extCongLam (infer ctx f) in
@@ -534,13 +587,7 @@ and inferUA ctx e =
   let f = vfst (eval e ctx) in let (l, (y, r')) = extSig (g f) in
   let r = r' (Var (y, l)) in if mem y r then raise (ExpectedNonDependent r);
 
-  let linv = VSig (implv b a, (freshName "g", fun g ->
-    VPi (a, (freshName "x", fun x -> VPath (a, app (g, app (f, x)), x))))) in
-
-  let rinv = VSig (implv b a, (freshName "h", fun h ->
-    VPi (b, (freshName "x", fun x -> VPath (b, app (f, app (h, x)), x))))) in
-
-  eqNf l linv; eqNf r rinv; VPath (t1, a, b)
+  eqNf l (linv a b f); eqNf r (rinv a b f); VPath (t1, a, b)
 
 and mem x = function
   | Var (y, _) -> x = y
