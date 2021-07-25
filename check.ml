@@ -76,16 +76,17 @@ and trans = function
     let p1 = vsnd (vfst (vsnd e1)) in let q1 = vsnd (vfst (vsnd e2)) in
     let p2 = vsnd (vsnd (vsnd e1)) in let q2 = vsnd (vsnd (vsnd e2)) in
 
-    let f = VLam (t1, (freshName "x", fun x -> app (f2, app (f1, x)))) in
-    let g = VLam (t3, (freshName "x", fun x -> app (g1, app (g2, x)))) in
-    let h = VLam (t3, (freshName "x", fun x -> app (h1, app (h2, x)))) in
+    let x = freshName "x" in
+    let f = VLam (t1, (x, fun x -> app (f2, app (f1, x)))) in
+    let g = VLam (t3, (x, fun x -> app (g1, app (g2, x)))) in
+    let h = VLam (t3, (x, fun x -> app (h1, app (h2, x)))) in
 
-    let r1 = VLam (t1, (freshName "x", fun x ->
+    let r1 = VLam (t1, (x, fun x ->
       trans (ap t2 (fun y -> app (g1, y))
         (app (g2, app (f2, app (f1, x))))
         (app (f1, x)) (app (q1, app (f1, x))), app (p1, x)))) in
 
-    let r2 = VLam (t3, (freshName "x", fun x ->
+    let r2 = VLam (t3, (x, fun x ->
       trans (ap t2 (fun y -> app (f2, y))
           (app (f1, (app (h1, (app (h2, x)))))) (app (h2, x))
           (app (p2, app (h2, x))), app (q2, x)))) in
@@ -224,10 +225,11 @@ and coe p x = match p, x with
         VPair (fst, snd)
 
       | VEquiv _ ->
-        let (fst, snd) = extPair (coe (VCong (VLam (t, (freshName "x",
-          fun x -> VLam (VBoundary (a, b, x), (freshName "σ", fun h ->
+        let x = freshName "x" in let sigma = freshName "σ" in let phi = freshName "f" in
+        let (fst, snd) = extPair (coe (VCong (VLam (t, (x,
+          fun x -> VLam (VBoundary (a, b, x), (sigma, fun h ->
             let (t1, t2) = extEquiv (app (f x, h)) in
-            VSig (implv t1 t2, (freshName "f", biinv t1 t2)))))), r)) v) in
+            VSig (implv t1 t2, (phi, biinv t1 t2)))))), r)) v) in
         let (t1', t2') = extEquiv (app (f b, VRight (a, b))) in
         VMkEquiv (t1', t2', fst, snd)
       | _ -> VCoe (p, v)
@@ -280,12 +282,12 @@ and cong f p = match f, p with
 
     let x = freshName "x" in let y = freshName "σ" in
     let g a b k =
-    VLam (dom, (x, fun x ->
-      VLam (VBoundary (a, b, x), (y, fun y ->
-        app (app (f, x), k y))))) in
+      VLam (dom, (x, fun x ->
+        VLam (VBoundary (a, b, x), (y, fun y ->
+          app (app (f, x), k y))))) in
 
     trans (cong (g a1 b1 (fun y -> bright y q)) p,
-           cong (g a2 b2 (fun y -> bleft y (rev q))) q)
+           cong (g a2 b2 (fun y -> bleft y (rev p))) q)
   (* cong f (cong g p) ~> cong (f ∘ g) p *)
   | _, VCong (g, p) ->
     let t2 = inferV g in let (dom, _, _, _, _) = extCongLam t2 in
@@ -604,12 +606,14 @@ and checkCong ctx f p q =
   check ctx p (VPath (t, a, b))
 
 and linv a b f =
-  VSig (implv b a, (freshName "g", fun g ->
-    VPi (a, (freshName "x", fun x -> VPath (a, app (g, app (f, x)), x)))))
+  let g = freshName "g" in let x = freshName "x" in
+  VSig (implv b a, (g, fun g ->
+    VPi (a, (x, fun x -> VPath (a, app (g, app (f, x)), x)))))
 
 and rinv a b f =
-  VSig (implv b a, (freshName "h", fun h ->
-    VPi (b, (freshName "x", fun x -> VPath (b, app (f, app (h, x)), x)))))
+  let h = freshName "h" in let x = freshName "x" in
+  VSig (implv b a, (h, fun h ->
+    VPi (b, (x, fun x -> VPath (b, app (f, app (h, x)), x)))))
 
 and biinv a b f = prodv (linv a b f) (rinv a b f)
 
