@@ -11,6 +11,9 @@ idp (e.1 x)
 def equiv-symm′ (A B : U) (e : equiv A B) : equiv B A :=
 ideqv B A (ua e)⁻¹
 
+def equiv-trans′ (A B C : U) (e₁ : equiv A B) (e₂ : equiv B C) : equiv A C :=
+ideqv A C ((ua e₁) ⬝ (ua e₂))
+
 -- it’s surprisingly slow
 def ua-ideqv (A B : U) (p : Path U A B) : Path (Path U A B) (ua (ideqv A B p)) p :=
 coe (cong (λ (X : U) (H : ∂ A B X), Path (Path U A X)

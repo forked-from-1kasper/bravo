@@ -34,7 +34,7 @@ def equiv-id (A : U) : equiv A A :=
 def equiv-symm (A B : U) (e : equiv A B) : equiv B A :=
 (e.2.2.1, ((e.1, e.2.2.2), (e.1, linv-inv A B e.1 e.2.2.1 e.2.1.1 e.2.2.2 e.2.1.2)))
 
-def equiv-comp (A B C : U) (e₁ : equiv A B) (e₂ : equiv B C) : equiv A C :=
+def equiv-trans (A B C : U) (e₁ : equiv A B) (e₂ : equiv B C) : equiv A C :=
 (∘ A B C e₂.1 e₁.1,
   ((∘ C B A e₁.2.1.1 e₂.2.1.1, λ (x : A),
     (ap B A e₁.2.1.1 (e₂.2.1.1 (e₂.1 (e₁.1 x))) (e₁.1 x)

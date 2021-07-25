@@ -59,6 +59,34 @@ and trans = function
   | p, VTrans (VRev q, r)  -> if conv p q then r else VTrans (p, VTrans (VRev q, r))
   | VRev p, q              -> if conv p q then let (_, _, v) = extPath (inferV p) in VIdp v else VTrans (VRev p, q)
   | p, VRev q              -> if conv p q then let (_, v, _) = extPath (inferV p) in VIdp v else VTrans (p, VRev q)
+  | VUA e1, VUA e2         ->
+    let f1 = vfst e1 in let f2 = vfst e2 in
+
+    let (t1, _) = extPi (inferV f1) in
+    let (t2, (p, t3')) = extPi (inferV f2) in
+    let t3 = t3' (Var (p, t2)) in
+
+    let g1 = vfst (vfst (vsnd e1)) in let g2 = vfst (vfst (vsnd e2)) in
+    let h1 = vfst (vsnd (vsnd e1)) in let h2 = vfst (vsnd (vsnd e2)) in
+
+    let p1 = vsnd (vfst (vsnd e1)) in let q1 = vsnd (vfst (vsnd e2)) in
+    let p2 = vsnd (vsnd (vsnd e1)) in let q2 = vsnd (vsnd (vsnd e2)) in
+
+    let f = VLam (t1, (freshName "x", fun x -> app (f2, app (f1, x)))) in
+    let g = VLam (t3, (freshName "x", fun x -> app (g1, app (g2, x)))) in
+    let h = VLam (t3, (freshName "x", fun x -> app (h1, app (h2, x)))) in
+
+    let r1 = VLam (t1, (freshName "x", fun x ->
+      trans (ap t2 (fun y -> app (g1, y))
+        (app (g2, app (f2, app (f1, x))))
+        (app (f1, x)) (app (q1, app (f1, x))), app (p1, x)))) in
+
+    let r2 = VLam (t3, (freshName "x", fun x ->
+      trans (ap t2 (fun y -> app (f2, y))
+          (app (f1, (app (h1, (app (h2, x)))))) (app (h2, x))
+          (app (p2, app (h2, x))), app (q2, x)))) in
+
+    VPair (f, VPair (VPair (g, r1), VPair (h, r2)))
   | p, q                   -> VTrans (p, q)
 
 and rev : value -> value = function
