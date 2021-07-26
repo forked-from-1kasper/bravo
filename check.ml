@@ -262,7 +262,9 @@ and extCongLam t =
 
 and cong f p = match f, p with
   (* cong f (idp x) ~> idp (f x) *)
-  | _, VIdp x -> VIdp (app (f, x))
+  | _, VIdp x ->
+    let (_, _, _, _, (a, b, _)) = extCongLam (inferV f) in
+    VIdp (app (app (f, x), VLeft (a, b)))
   (* cong f p⁻¹ ~> (cong f p)⁻¹ *)
   | _, VRev p ->
     let t = inferV f in let (dom, _, _, _, _) = extCongLam t in
