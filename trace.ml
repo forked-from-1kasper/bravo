@@ -16,9 +16,6 @@ let traceInferV (v : value) : unit = if !Prefs.trace then
 let traceEval (e : exp) : unit = if !Prefs.trace then
   trace (Printf.sprintf "EVAL: %s\n" (showExp e))
 
-let traceWeak (e : exp) : unit = if !Prefs.trace then
-  trace (Printf.sprintf "WEAK: %s\n" (showExp e))
-
 let traceRbV (v : value) : unit = if !Prefs.trace then
   trace (Printf.sprintf "RBV: %s\n" (showValue v))
 

@@ -237,7 +237,7 @@ and coe p x = match p, x with
     end
   | _, _ -> VCoe (p, x)
 
-and closByVal ctx p t e v =
+and closByVal ctx p t e v = traceClos e p v;
   (* dirty hack to handle free variables introduced by type checker *)
   let ctx' = match v with
   | Var (x, t) -> if Env.mem x ctx then ctx else upLocal ctx x t v
