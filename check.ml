@@ -161,8 +161,9 @@ and ap t f a b p =
 and coe p x = match p, x with
   (* coe (idp α) x ~> x *)
   | VIdp _, _ -> x
-  (* coe p (coe q y) ~> coe (q ⬝ p) y *)
-  | _, VCoe (q, y) -> coe (trans (q, p)) y
+  (* coe (p ⬝ q) x ~> coe q (coe p x) *)
+  | VTrans (q, p), _ -> coe p (coe q x)
+
   (* coe (ua e) x ~> e.1 x *)
   | VUA e, _ -> app (vfst e, x)
   | VCong (VLam (t, (x, f)), r), v ->

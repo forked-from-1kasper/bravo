@@ -53,8 +53,8 @@ Probably, one of M¹, M² must take priority in this case, otherwise we will get
 
 (meet p x H).1 ~> x
 
-coe q (coe p x) ~> coe (p ⬝ q) x
-  coe (idp α) x ~> x
+coe (p ⬝ q) x ~> coe q (coe p x)
+coe (idp α) x ~> x
 
 coe (cong (λ x, Π (a : α[x]), β[x] a) p) φ x ~>
   coe (cong′ (λ y H, β[x/(meet p⁻¹ y (∂-symm H)).1] (coe (cong (λ y′, α[x/y′]) (meet p⁻¹ y (∂-symm H)).2) x)) p)

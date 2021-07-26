@@ -121,9 +121,13 @@ coe-cong-Path A a b (λ (x : A) (H : ∂ a b x), A)
 def trans′ (A : U) (a b c : A) (p : Path A a b) (q : Path A b c) : Path A a c :=
 coe (cong (λ (x : A) (H : ∂ b c x), Path A a x) q) p
 
+-- looks like that if subst A P a b p (subst A P b a p⁻¹ u) ≡ u,
+-- then typechecker can generate ill-typed terms
 def transport-back-and-forward (A : U) (P : A → U) (a b : A)
   (p : Path A a b) (u : P b) : Path (P b) (subst A P a b p (subst A P b a p⁻¹ u)) u :=
-idp u
+J A (λ (a b : A) (p : Path A a b),
+  Π (u : P b), Path (P b) (subst A P a b p (subst A P b a p⁻¹ u)) u) a
+  (λ (u : P a), idp u) b p u
 
 def cong-comp (A B : U) (a b c : A) (p : Path A a b) (q : Path A b c)
   (f : Π (x : A), ∂ a c x → B) :=
