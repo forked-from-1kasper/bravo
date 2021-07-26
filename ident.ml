@@ -21,16 +21,16 @@ end
 module Env = Map.Make(Name)
 module Files = Set.Make(String)
 
-let inc : int ref = ref 0
-let gen () = inc := !inc + 1; !inc
-
-let fresh : name -> name = function
-  | Irrefutable -> Irrefutable | Name (p, _) -> Name (p, gen ())
-
 let getDigit x = Char.chr (x + 0x80) |> Printf.sprintf "\xE2\x82%c"
 
 let rec showSubscript x =
   if x < 0 then failwith "showSubscript: expected positive integer"
   else if x = 0 then "" else showSubscript (x / 10) ^ getDigit (x mod 10)
 
+let inc : int ref = ref 0
+
+let gen () = inc := !inc + 1; !inc
 let freshName x = let n = gen () in Name (x ^ showSubscript n, n)
+
+let fresh : name -> name = function
+  | Irrefutable -> Irrefutable | Name (p, _) -> Name (p, gen ())

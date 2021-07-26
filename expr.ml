@@ -1,16 +1,17 @@
 open Ident
 
 type exp =
-  | EPre of int | EKan of int
-  | EVar of name | EHole
-  | EPi of exp * (name * exp) | ELam of exp * (name * exp) | EApp of exp * exp
-  | ESig of exp * (name * exp) | EPair  of exp * exp | EFst of exp | ESnd of exp
-  | EId of exp | ERefl of exp | EJ of exp
-  | EPath of exp * exp * exp | EIdp of exp | ERev of exp | ETrans of exp * exp
-  | EBoundary of exp * exp * exp | ELeft of exp * exp | ERight of exp * exp
-  | ESymm of exp | EComp of exp * exp | EBLeft of exp * exp | EBRight of exp * exp | EBCong of exp * exp * exp
-  | EMeet of exp * exp * exp | ECoe of exp * exp | ECong of exp * exp
-  | EUA of exp | Equiv of exp * exp | EMkEquiv of exp * exp * exp * exp
+  | EPre of int | EKan of int                                                 (* cosmos *)
+  | EVar of name | EHole                                                   (* variables *)
+  | EPi of exp * (name * exp) | ELam of exp * (name * exp) | EApp of exp * exp     (* Π *)
+  | ESig of exp * (name * exp) | EPair  of exp * exp | EFst of exp | ESnd of exp   (* Σ *)
+  | EId of exp | ERefl of exp | EJ of exp                            (* strict equality *)
+  | EPath of exp * exp * exp | EIdp of exp | ERev of exp | ETrans of exp * exp  (* path *)
+  | EBoundary of exp * exp * exp | ELeft of exp * exp | ERight of exp * exp        (* ∂ *)
+  | ESymm of exp | EComp of exp * exp                                              (* ∂ *)
+  | EBLeft of exp * exp | EBRight of exp * exp | EBCong of exp * exp * exp         (* ∂ *)
+  | EMeet of exp * exp * exp | ECoe of exp * exp | ECong of exp * exp (* Kan operations *)
+  | EUA of exp | Equiv of exp * exp | EMkEquiv of exp * exp * exp * exp   (* univalence *)
 
 type tele = name * exp
 
@@ -24,7 +25,8 @@ type value =
   | VId of value | VRefl of value | VJ of value
   | VPath of value * value * value | VIdp of value | VRev of value | VTrans of value * value
   | VBoundary of value * value * value | VLeft of value * value | VRight of value * value
-  | VSymm of value | VComp of value * value | VBLeft of value * value | VBRight of value * value | VBCong of value * value * value
+  | VSymm of value | VComp of value * value
+  | VBLeft of value * value | VBRight of value * value | VBCong of value * value * value
   | VMeet of value * value * value | VCoe of value * value | VCong of value * value
   | VUA of value | VEquiv of value * value | VMkEquiv of value * value * value * value
 
@@ -44,15 +46,13 @@ let name x = Name (x, 0)
 let decl x = EVar (name x)
 
 let upVar p x ctx = match p with Irrefutable -> ctx | _ -> Env.add p x ctx
-let upLocal (ctx : ctx) (p : name) t v : ctx = upVar p (Local, Value t, Value v) ctx
-let upGlobal (ctx : ctx) (p : name) t v : ctx = upVar p (Global, Value t, Value v) ctx
 
-let isGlobal : record -> bool = function Global, _, _ -> false | Local, _, _ -> true
-let freshVar ns n = match Env.find_opt n ns with Some x -> x | None -> n
+let upLocal ctx p t v : ctx = upVar p (Local, Value t, Value v) ctx
+let upGlobal ctx p t v : ctx = upVar p (Global, Value t, Value v) ctx
 
-let rec telescope (ctor : name -> exp -> exp -> exp) (e : exp) : tele list -> exp = function
+let rec telescope ctor e : tele list -> exp = function
   | (p, a) :: xs -> ctor p a (telescope ctor e xs)
-  | [] -> e
+  | []           -> e
 
 let parens b x = if b then "(" ^ x ^ ")" else x
 
@@ -90,8 +90,8 @@ let rec ppExp paren e = let x = match e with
   | Equiv (a, b) -> Printf.sprintf "%s ≃ %s" (ppExp true a) (ppExp true b)
   | EMkEquiv (a, b, f, e) -> Printf.sprintf "mkeqv %s %s %s %s" (ppExp true a) (ppExp true b) (ppExp true f) (ppExp true e)
   in match e with
-  | EVar _ | EFst _ | ESnd _ | EPre _
-  | EKan _ | EHole | EPair _ | ERev _ -> x
+  | EVar _ | EFst _ | ESnd _  | EPre _
+  | EKan _ | EHole  | EPair _ | ERev _ -> x
   | _ -> parens paren x
 
 and showExp e = ppExp false e
@@ -104,7 +104,7 @@ and showPiExp a p b = match p with
 let rec ppValue paren v = let x = match v with
   | VKan n -> "U" ^ showSubscript n
   | VLam (x, (p, clos)) -> Printf.sprintf "λ %s, %s" (showTele p x) (showClos p x clos)
-  | VPi (x, (p, clos)) -> showPi x p clos
+  | VPi (x, (p, clos)) -> showPiValue x p clos
   | VSig (x, (p, clos)) -> Printf.sprintf "Σ %s, %s" (showTele p x) (showClos p x clos)
   | VPair (fst, snd) -> Printf.sprintf "(%s, %s)" (showValue fst) (showValue snd)
   | VFst v -> ppValue true v ^ ".1"
@@ -135,27 +135,18 @@ let rec ppValue paren v = let x = match v with
   | VEquiv (a, b) -> Printf.sprintf "%s ≃ %s" (ppValue true a) (ppValue true b)
   | VMkEquiv (a, b, f, v) -> Printf.sprintf "mkeqv %s %s %s %s" (ppValue true a) (ppValue true b) (ppValue true f) (ppValue true v)
   in match v with
-  | Var _ | VFst _ | VSnd _ | VPre _
-  | VKan _ | VHole | VPair _ | VRev _ -> x
+  | Var _  | VFst _ | VSnd _  | VPre _
+  | VKan _ | VHole  | VPair _ | VRev _ -> x
   | _ -> parens paren x
 
 and showValue v = ppValue false v
 and showClos p t clos = showValue (clos (Var (p, t)))
 
-and showTele p x =
-  Printf.sprintf "(%s : %s)" (showName p) (showValue x)
+and showTele p x = Printf.sprintf "(%s : %s)" (showName p) (showValue x)
 
-and showTermBind : name * record -> string option = function
-  | p, (Local, _, t) -> Some (Printf.sprintf "%s := %s" (showName p) (showTerm t))
-  | _, _             -> None
-
-and showPi x p clos = match p with
+and showPiValue x p clos = match p with
   | Irrefutable -> Printf.sprintf "%s → %s" (ppValue true x) (showClos p x clos)
   | _           -> Printf.sprintf "Π %s, %s" (showTele p x) (showClos p x clos)
-
-and isRhoVisible = Env.exists (fun _ -> isGlobal)
-
-and showRho ctx : string = Env.bindings ctx |> List.filter_map showTermBind |> String.concat ", "
 
 and showTerm : term -> string = function Exp e -> showExp e | Value v -> showValue v
 
@@ -164,5 +155,5 @@ let showGamma (ctx : ctx) : string =
   |> List.filter_map
       (fun (p, x) -> match x with
         | Local, t, _ -> Some (Printf.sprintf "%s : %s" (showName p) (showTerm t))
-        | _, _, _ -> None)
+        | _, _, _     -> None)
   |> String.concat "\n"

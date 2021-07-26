@@ -9,13 +9,13 @@ type command =
   | Command of string * exp
 
 type decl =
-  | Def of string * exp option * exp
+  | Def   of string * exp option * exp
   | Axiom of string * exp
 
 type line =
   | Import of string list
   | Option of string * string
-  | Decl of decl
+  | Decl   of decl
 
 type content = line list
 type file = string * content

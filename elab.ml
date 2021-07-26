@@ -45,18 +45,14 @@ let imax a b = match a, b with
   | VKan _, _ | VPre _, _ -> raise (ExpectedVSet b)
   | _, _ -> raise (ExpectedVSet a)
 
-let univImpl a b = match a, b with
-  | VKan u, VKan v | VPre u, VKan v -> VKan (max u v)
-  | VPre u, VPre v | VKan u, VPre v -> VPre (max u v)
-  | VKan _, _      | VPre _, _      -> raise (ExpectedVSet b)
-  | _, _ -> raise (ExpectedVSet a)
-
 let idv t x y = VApp (VApp (VId t, x), y)
 let implv a b = VPi (a, (Irrefutable, fun _ -> b))
 let prodv a b = VSig (a, (Irrefutable, fun _ -> b))
 
 let impl a b = EPi (a, (Irrefutable, b))
 let prod a b = ESig (a, (Irrefutable, b))
+
+let freshVar ns n = match Env.find_opt n ns with Some x -> x | None -> n
 
 let rec salt (ns : name Env.t) : exp -> exp = function
   | ELam (a, (p, b))      -> saltTele eLam ns p a b
