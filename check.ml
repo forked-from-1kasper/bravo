@@ -356,10 +356,10 @@ and inferV v = traceInferV v; match v with
   | VComp (u, v) -> let (a, b, _) = extBoundary (inferV u) in
     let (_, _, y) = extBoundary (inferV v) in VBoundary (a, b, y)
   | VApp (f, x) -> let (_, (_, g)) = extPi (inferV f) in g x
-  | VRefl v  -> VApp (VApp (VId (inferV v), v), v)
+  | VRefl v -> VApp (VApp (VId (inferV v), v), v)
   | VIdp v -> VPath (inferV v, v, v)
   | VRev p -> let (v, a, b) = extPath (inferV p) in VPath (v, b, a)
-  | VTrans (p, q) -> let (u, a, _) = extPath (inferV p) in let (_, _, c) = extPath (inferV q) in VPath (u, a, c)
+  | VTrans (p, q) -> let (t, a, _) = extPath (inferV p) in let (_, _, c) = extPath (inferV q) in VPath (t, a, c)
   | VPre n -> VPre (n + 1)
   | VKan n -> VKan (n + 1)
   | VPath (v, _, _) -> inferV v
@@ -416,11 +416,6 @@ and rbV v : exp = traceRbV v; match v with
 
 and rbVTele ctor t (p, g) =
   let x = Var (p, t) in ctor p (rbV t) (rbV (g x))
-
-and prune ctx x = match Env.find_opt x ctx with
-  | Some (_, _, Exp e)   -> e
-  | Some (_, _, Value v) -> rbV v
-  | None                 -> raise (VariableNotFound x)
 
 (* Convertibility *)
 and conv v1 v2 : bool = traceConv v1 v2;
