@@ -24,5 +24,4 @@ idp (ua e₁ ⬝ ua e₂)
 -- it’s surprisingly slow
 def ua-ideqv (A B : U) (p : Path U A B) : Path (Path U A B) (ua (ideqv A B p)) p :=
 coe (cong (λ (X : U) (H : ∂ A B X), Path (Path U A X)
-  (ua (ideqv A X (meet p X H).2)) (meet p X H).2) p)
-  (idp (idp A))
+  (ua (ideqv A X (meet p X H).2)) (meet p X H).2) p) (idp (idp A))
