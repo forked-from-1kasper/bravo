@@ -26,3 +26,15 @@ def contr-singl (A : U) (a : A) : is-contr (singl A a) :=
 ((a, idp a), λ (z : singl A a),
   J A (λ (a b : A) (p : Path A a b), Path (singl A a) (a, idp a) (b, p))
     a (idp (a, idp a)) z.1 z.2)
+
+def PathP (A : U) (B : A → U) (a b : A) (p : Path A a b) (u : B a) (v : B b) :=
+Path (B b) (subst A B a b p u) v
+
+def Σ-mk (A : U) (B : A → U) (a : A) (b : B a) : Σ (x : A), B x := (a, b)
+
+def Σ-eq (A : U) (B : A → U) (a b : A) (p : Path A a b) (u : B a) (v : B b)
+  (q : PathP A B a b p u v) : Path (Σ (x : A), B x) (a, u) (b, v) :=
+J A (λ (a b : A) (p : Path A a b), Π (u : B a) (v : B b)
+  (q : PathP A B a b p u v), Path (Σ (x : A), B x) (a, u) (b, v)) a
+  (λ (u v : B a) (q : Path (B a) u v), cong (λ (x : B a) (H : ∂ u v x), Σ-mk A B a x) q)
+  b p u v q
