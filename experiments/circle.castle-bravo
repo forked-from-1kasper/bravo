@@ -36,6 +36,9 @@ def S¹-pred (l : Ω¹S¹) := l ⬝ loop⁻¹
 def power : Z → Ω¹S¹ :=
 Z-rec Ω¹S¹ (idp base) S¹-succ S¹-pred
 
+def Z-add (x y : Z) : Z :=
+winding (power x ⬝ power y)
+
 def decode : Π (x : S¹), helix x → Path S¹ base x :=
 S¹-ind (λ (x : S¹), helix x → Path S¹ base x) power (idp power)
 
