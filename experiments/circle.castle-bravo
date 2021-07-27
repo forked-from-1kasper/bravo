@@ -28,8 +28,24 @@ def winding := encode base
 def Z-rec (A : U) (z : A) (s p : A → A) : Z → A :=
 Z-ind (λ (x : Z), A) z (λ (x : Z), s) (λ (x : Z), p)
 
-def S¹-succ (l : Path S¹ base base) := l ⬝ loop
-def S¹-pred (l : Path S¹ base base) := l ⬝ loop⁻¹
+def Ω¹S¹ := Path S¹ base base
 
-def power : Z → Path S¹ base base :=
-Z-rec (Path S¹ base base) (idp base) S¹-succ S¹-pred
+def S¹-succ (l : Ω¹S¹) := l ⬝ loop
+def S¹-pred (l : Ω¹S¹) := l ⬝ loop⁻¹
+
+def power : Z → Ω¹S¹ :=
+Z-rec Ω¹S¹ (idp base) S¹-succ S¹-pred
+
+def decode : Π (x : S¹), helix x → Path S¹ base x :=
+S¹-ind (λ (x : S¹), helix x → Path S¹ base x) power (idp power)
+
+def decode-encode : Π (x : S¹) (p : Path S¹ base x), Path (Path S¹ base x) (decode x (encode x p)) p :=
+J′ S¹ base (λ (x : S¹) (p : Path S¹ base x), Path (Path S¹ base x) (decode x (encode x p)) p) (idp (idp base))
+
+def encode-decode : Π (z : Z), Path Z (encode base (decode base z)) z :=
+Z-ind (λ (z : Z), Path Z (encode base (decode base z)) z) (idp zero)
+  (λ (z : Z), ap Z Z succ (encode base (decode base z)) z)
+  (λ (z : Z), ap Z Z pred (encode base (decode base z)) z)
+
+def fundamental-group : Ω¹S¹ ≃ Z :=
+mkeqv Ω¹S¹ Z (encode base) ((decode base, decode-encode base), (decode base, encode-decode))

@@ -19,7 +19,11 @@ cong (λ (x : A) (H : ∂ a b x), f x) p
 
 def J (A : U) (P : Π (a b : A), Path A a b → U)
   (a : A) (d : P a a (idp a)) (b : A) (p : Path A a b) : P a b p :=
-coe (cong (λ (x : A) (H : ∂ a b x), P a (meet p x H).1 (meet p x H).2) p) d
+coe (cong (λ (x : A) (H : ∂ a b x), P a x (meet p x H).2) p) d
+
+def J′ (A : U) (a : A) (P : Π (b : A), Path A a b → U)
+  (d : P a (idp a)) (b : A) (p : Path A a b) : P b p :=
+coe (cong (λ (x : A) (H : ∂ a b x), P x (meet p x H).2) p) d
 
 def singl (A : U) (a : A) := Σ (b : A), Path A a b
 def contr-singl (A : U) (a : A) : is-contr (singl A a) :=
