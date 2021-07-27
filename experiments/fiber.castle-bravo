@@ -1,0 +1,40 @@
+module fiber where
+import experiments/path
+
+-- https://github.com/groupoid/arend/blob/master/src/Fiber.ard
+
+def family (B : U) := B → U
+def total (B : U) (F : family B) := Σ (x : B), F x
+
+def trivial (B : U) (F : family B) (x : total B F) : B := x.1
+
+def fiber (A B : U) (f : A → B) (y : B) := Σ (x : A), Path B (f x) y
+
+def encode (B : U) (F : B → U) (y : B)
+  (x : fiber (total B F) B (trivial B F) y) : F y :=
+subst B F x.1.1 y x.2 x.1.2
+
+def decode (B : U) (F : B → U) (y : B) (x : F y) :
+  fiber (total B F) B (trivial B F) y :=
+((y, x), idp y)
+
+def encode-decode (B : U) (F : family B) (y : B) (x : F y) :
+  Path (F y) (encode B F y (decode B F y x)) x :=
+idp x
+
+def decode-encode′ (B : U) (F : family B) (y x : B) (f : F x)
+  (p : Path B (trivial B F (x, f)) y) :=
+J′ B (trivial B F (x, f)) (λ (y : B) (p : Path B (trivial B F (x, f)) y),
+  Path (fiber (total B F) B (trivial B F) y)
+       (decode B F y (encode B F y ((x, f), p))) ((x, f), p))
+  (idp ((x, f), idp x)) y p
+
+def decode-encode (B : U) (F : family B) (y : B) (x : fiber (total B F) B (trivial B F) y) :
+  Path (fiber (total B F) B (trivial B F) y) (decode B F y (encode B F y x)) x :=
+decode-encode′ B F y x.1.1 x.1.2 x.2
+
+def fiber-eq-Π-param (B : U) (F : family B) (y : B) :
+  Path U (fiber (total B F) B (trivial B F) y) (F y) :=
+ua (mkeqv (fiber (total B F) B (trivial B F) y) (F y)
+  (encode B F y) ((decode B F y, decode-encode B F y),
+                  (decode B F y, encode-decode B F y)))

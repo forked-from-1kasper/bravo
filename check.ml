@@ -540,7 +540,7 @@ and check ctx (e0 : exp) (t0 : value) =
     let x = Var (p, t) in let ctx' = upLocal ctx p t x in
     check ctx' b (g x)
   | EPair (e1, e2), VSig (t, (_, g)) ->
-    ignore (extSet (infer ctx (rbV t)));
+    ignore (extSet (inferV t));
     check ctx e1 t; check ctx e2 (g (eval e1 ctx))
   | EHole, v -> traceHole v ctx
   | ERefl e, VApp (VApp (VId t, a), b) | EIdp e, VPath (t, a, b) ->
