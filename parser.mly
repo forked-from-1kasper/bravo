@@ -14,6 +14,10 @@
     end
 
   let global = function
+    | "Z"    -> EZ
+    | "zero" -> EZero
+    | "succ" -> ESucc
+    | "pred" -> EPred
     | "S¹"   -> ES1
     | "loop" -> ELoop
     | "base" -> EBase
@@ -39,7 +43,7 @@
 %token BOUNDARY LEFT RIGHT SYMM COMP BLEFT BRIGHT BCONG
 %token MEET COE CONG
 %token UA EQUIV MKEQV
-%token S1IND
+%token ZIND S1IND
 
 %right ARROW PROD
 %left TRANS
@@ -98,6 +102,7 @@ exp5 :
   | UA exp6 { EUA $2 }
   | MKEQV exp6 exp6 exp6 exp6 { EMkEquiv ($2, $3, $4, $5) }
   | exp6 EQUIV exp6 { Equiv ($1, $3) }
+  | ZIND exp6 { EZInd $2 }
   | S1IND exp6 { ES1Ind $2 }
   | exp6 { $1 }
 

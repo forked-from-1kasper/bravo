@@ -63,8 +63,8 @@ let subscript = '\xE2' '\x82' ['\x80'-'\x89']
 let kan       = 'U' subscript*
 let pre       = 'V' subscript*
 
-let s1        = "S\xC2\xB9"
-let s1ind     = s1 "-ind"
+let zind  = "Z-ind"
+let s1ind = "S\xC2\xB9-ind"
 
 rule main = parse
 | nl              { nextLine lexbuf; main lexbuf }
@@ -91,5 +91,6 @@ rule main = parse
 | bleft           { BLEFT }            | bright          { BRIGHT }
 | bcong           { BCONG }            | comp            { COMP }
 | "ua"            { UA }               | equiv           { EQUIV }
-| s1ind           { S1IND }            | "mkeqv"         { MKEQV }
-| ident as s      { IDENT s }          | eof             { EOF }
+| zind            { ZIND }             | s1ind           { S1IND }
+| "mkeqv"         { MKEQV }            | ident as s      { IDENT s }
+| eof             { EOF }

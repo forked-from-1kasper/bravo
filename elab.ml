@@ -87,6 +87,11 @@ let rec salt (ns : name Env.t) : exp -> exp = function
   | EUA e                 -> EUA (salt ns e)
   | Equiv (a, b)          -> Equiv (salt ns a, salt ns b)
   | EMkEquiv (a, b, f, e) -> EMkEquiv (salt ns a, salt ns b, salt ns f, salt ns e)
+  | EZ                    -> EZ
+  | EZero                 -> EZero
+  | ESucc                 -> ESucc
+  | EPred                 -> EPred
+  | EZInd e               -> EZInd (salt ns e)
   | ES1                   -> ES1
   | EBase                 -> EBase
   | ELoop                 -> ELoop

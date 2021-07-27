@@ -1,11 +1,26 @@
 module circle where
 import experiments/path
 
+def S¹-rec (β : U) : Π (b : β), Path β b b → S¹ → β :=
+S¹-ind (λ (x : S¹), β)
+
 def rot (x : S¹) : Path S¹ x x :=
 S¹-ind (λ (y : S¹), Path S¹ y y) loop (idp loop) x
 
 def inv : S¹ → S¹ :=
-S¹-ind (λ (y : S¹), S¹) base loop⁻¹
+S¹-rec S¹ base loop⁻¹
 
 def test :=
 ap S¹ S¹ inv base base loop
+
+def Z-succ-equiv : Z ≃ Z :=
+mkeqv Z Z succ ((pred, λ (x : Z), idp x), (pred, λ (x : Z), idp x))
+
+def helix : S¹ → U :=
+S¹-ind (λ (x : S¹), U) Z (ua Z-succ-equiv)
+
+def encode (x : S¹) (p : Path S¹ base x) : helix x :=
+subst S¹ helix base x p zero
+
+-- it computes!
+def winding := encode base

@@ -12,6 +12,7 @@ type exp =
   | EBLeft of exp * exp | EBRight of exp * exp | EBCong of exp * exp * exp         (* ∂ *)
   | EMeet of exp * exp * exp | ECoe of exp * exp | ECong of exp * exp (* Kan operations *)
   | EUA of exp | Equiv of exp * exp | EMkEquiv of exp * exp * exp * exp   (* univalence *)
+  | EZ | EZero | ESucc | EPred | EZInd of exp                                      (* Z *)
   | ES1 | EBase | ELoop | ES1Ind of exp                                           (* S¹ *)
 
 type tele = name * exp
@@ -30,6 +31,7 @@ type value =
   | VBLeft of value * value | VBRight of value * value | VBCong of value * value * value
   | VMeet of value * value * value | VCoe of value * value | VCong of value * value
   | VUA of value | VEquiv of value * value | VMkEquiv of value * value * value * value
+  | VZ | VZero | VSucc | VPred | VZInd of value
   | VS1 | VBase | VLoop | VS1Ind of value
 
 and clos = name * (value -> value)
@@ -91,11 +93,14 @@ let rec ppExp paren e = let x = match e with
   | EUA e -> Printf.sprintf "ua %s" (ppExp true e)
   | Equiv (a, b) -> Printf.sprintf "%s ≃ %s" (ppExp true a) (ppExp true b)
   | EMkEquiv (a, b, f, e) -> Printf.sprintf "mkeqv %s %s %s %s" (ppExp true a) (ppExp true b) (ppExp true f) (ppExp true e)
+  | EZ -> "Z" | EZero -> "zero" | ESucc -> "succ" | EPred -> "pred"
+  | EZInd e -> Printf.sprintf "Z-ind %s" (ppExp true e)
   | ES1 -> "S¹" | EBase -> "base" | ELoop -> "loop"
   | ES1Ind e -> Printf.sprintf "S¹-ind %s" (ppExp true e)
   in match e with
   | EVar _ | EFst _ | ESnd _  | EPre _
   | EKan _ | EHole  | EPair _ | ERev _
+  | EZ     | EZero  | ESucc   | EPred
   | ES1    | EBase  | ELoop -> x
   | _ -> parens paren x
 
@@ -139,11 +144,14 @@ let rec ppValue paren v = let x = match v with
   | VUA e -> Printf.sprintf "ua %s" (ppValue true e)
   | VEquiv (a, b) -> Printf.sprintf "%s ≃ %s" (ppValue true a) (ppValue true b)
   | VMkEquiv (a, b, f, v) -> Printf.sprintf "mkeqv %s %s %s %s" (ppValue true a) (ppValue true b) (ppValue true f) (ppValue true v)
+  | VZ -> "Z" | VZero -> "zero" | VSucc -> "succ" | VPred -> "pred"
+  | VZInd e -> Printf.sprintf "Z-ind %s" (ppValue true e)
   | VS1 -> "S¹" | VBase -> "base" | VLoop -> "loop"
   | VS1Ind e -> Printf.sprintf "S¹-ind %s" (ppValue true e)
   in match v with
   | Var _  | VFst _ | VSnd _  | VPre _
   | VKan _ | VHole  | VPair _ | VRev _
+  | VZ     | VZero  | VSucc   | VPred
   | VS1    | VBase  | VLoop -> x
   | _ -> parens paren x
 
