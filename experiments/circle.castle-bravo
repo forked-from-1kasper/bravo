@@ -24,3 +24,12 @@ subst S¹ helix base x p zero
 
 -- it computes!
 def winding := encode base
+
+def Z-rec (A : U) (z : A) (s p : A → A) : Z → A :=
+Z-ind (λ (x : Z), A) z (λ (x : Z), s) (λ (x : Z), p)
+
+def S¹-succ (l : Path S¹ base base) := l ⬝ loop
+def S¹-pred (l : Path S¹ base base) := l ⬝ loop⁻¹
+
+def power : Z → Path S¹ base base :=
+Z-rec (Path S¹ base base) (idp base) S¹-succ S¹-pred

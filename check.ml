@@ -343,8 +343,8 @@ and app (f, x) = match f, x with
   | VLam (_, (_, f)), v -> f v
   | VApp (VApp (VApp (VZInd _, z), s), p), _ -> begin match x with
     | VZero           -> z
-    | VApp (VSucc, x) -> app (s, x)
-    | VApp (VPred, x) -> app (p, x)
+    | VApp (VSucc, x) -> app (app (s, x), app (f, x))
+    | VApp (VPred, x) -> app (app (p, x), app (f, x))
     | _               -> VApp (f, x)
   end
   | VSucc, VApp (VPred, z) -> z
