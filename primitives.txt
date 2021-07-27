@@ -87,3 +87,11 @@ ua : α ≃ β → α = β
 ua e₁ ⬝ ua e₂ ~> ua (e₂ ∘ e₁)
  ua (ideqv α) ~> idp α
  coe (ua e) x ~> e.1 x
+
+    S¹ : U
+  base : S¹
+  loop : Path S¹ base base
+S¹-ind : Π (β : S¹ → U) (b : β base), Path (β base) (coe (cong β loop) b) b → Π (x : S¹), β x
+
+                S¹-ind β b ℓ base ~> b
+cong (λ x H, S¹-ind β b ℓ x) loop ~> ℓ

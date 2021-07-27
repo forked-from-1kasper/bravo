@@ -1,0 +1,11 @@
+module circle where
+import experiments/path
+
+def rot (x : S¹) : Path S¹ x x :=
+S¹-ind (λ (y : S¹), Path S¹ y y) loop (idp loop) x
+
+def inv : S¹ → S¹ :=
+S¹-ind (λ (y : S¹), S¹) base loop⁻¹
+
+def test :=
+ap S¹ S¹ inv base base loop

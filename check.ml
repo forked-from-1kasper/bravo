@@ -51,6 +51,10 @@ let rec eval (e0 : exp) (ctx : ctx) = traceEval e0; match e0 with
   | EUA e                 -> ua (eval e ctx)
   | Equiv (a, b)          -> VEquiv (eval a ctx, eval b ctx)
   | EMkEquiv (a, b, f, e) -> VMkEquiv (eval a ctx, eval b ctx, eval f ctx, eval e ctx)
+  | ES1                   -> VS1
+  | EBase                 -> VBase
+  | ELoop                 -> VLoop
+  | ES1Ind e              -> VS1Ind (eval e ctx)
 
 and bcomp a b = reduceBoundary (VComp (a, b))
 and bleft v p = reduceBoundary (VBLeft (v, p))
@@ -311,7 +315,14 @@ and cong f p = match f, p with
     if convVar x v then p
     (* cong (λ _, x) p ~> idp x *)
     else if not (mem x v || mem y v) then VIdp v
-    else VCong (f, p)
+    else begin match v with
+      | VApp (VApp (VApp (VS1Ind k, b), l), z) ->
+        (* cong (λ x H, S¹-ind β b ℓ x) loop ~> ℓ[x/base, H/left base base] *)
+        if convVar x z && not (mem x k || mem y k || mem x b ||
+                               mem y b || mem x l || mem y l)
+        then l else VCong (f, p)
+      | _ -> VCong (f, p)
+    end
 
 and ua e =
   match vfst e with
@@ -324,6 +335,8 @@ and ua e =
 and app (f, x) = match f, x with
   (* (λ (x : t), f) v ~> f[x/v] *)
   | VLam (_, (_, f)), v -> f v
+  (* S¹-ind β b ℓ base ~> b *)
+  | VApp (VApp (VS1Ind _, b), _), VBase -> b
   | _, _ -> VApp (f, x)
 
 and getRho ctx x = match Env.find_opt x ctx with
@@ -370,7 +383,15 @@ and inferV v = traceInferV v; match v with
   | VUA e -> let (a, b) = extEquiv (inferV e) in VPath (inferV a, a, b)
   | VEquiv (a, _) -> inferV a
   | VMkEquiv (a, b, _, _) -> VEquiv (a, b)
+  | VS1 -> VKan 0 | VBase -> VS1 | VLoop -> VPath (VS1, VBase, VBase)
+  | VS1Ind v -> inferS1Ind v
   | v -> raise (InferVError v)
+
+and inferS1Ind v =
+  let f = fun x -> app (v, x) in
+  VPi (app (v, VBase), (freshName "b", fun b ->
+    implv (VPath (app (v, VBase), coe (ap VS1 f VBase VBase VLoop) b, b))
+          (VPi (VS1, (freshName "x", f)))))
 
 and inferFst = function
   | VSig (t, _)   -> t
@@ -416,6 +437,10 @@ and rbV v : exp = traceRbV v; match v with
   | VUA e                 -> EUA (rbV e)
   | VEquiv (a, b)         -> Equiv (rbV a, rbV b)
   | VMkEquiv (a, b, f, v) -> EMkEquiv (rbV a, rbV b, rbV f, rbV v)
+  | VS1                   -> ES1
+  | VBase                 -> EBase
+  | VLoop                 -> ELoop
+  | VS1Ind v              -> ES1Ind (rbV v)
 
 and rbVTele ctor t (p, g) =
   let x = Var (p, t) in ctor p (rbV t) (rbV (g x))
@@ -454,6 +479,10 @@ and conv v1 v2 : bool = traceConv v1 v2;
     | VEquiv (a1, b1), VEquiv (a2, b2) -> conv a1 a2 && conv b1 b2
     | VMkEquiv (a1, b1, f1, v1), VMkEquiv (a2, b2, f2, v2) ->
       conv a1 a2 && conv b1 b2 && conv f1 f2 && conv v1 v2
+    | VS1, VS1 -> true
+    | VBase, VBase -> true
+    | VLoop, VLoop -> true
+    | VS1Ind u, VS1Ind v -> conv u v
     | _, _ -> false
   end || convProofIrrel v1 v2
 
@@ -546,6 +575,10 @@ and infer ctx e : value = traceInfer e; try match e with
   | EUA e -> inferUA ctx e
   | Equiv (a, b) -> let t1 = infer ctx a in let t2 = infer ctx b in ignore (extSet t1); eqNf t1 t2; t1
   | EMkEquiv (a, b, f, e) -> inferMkEquiv ctx a b f e
+  | ES1 -> VKan 0 | EBase -> VS1 | ELoop -> VPath (VS1, VBase, VBase)
+  | ES1Ind e ->
+    let (t, (p, g)) = extPi (infer ctx e) in eqNf t VS1;
+    ignore (extSet (g (Var (p, t)))); inferS1Ind (eval e ctx)
   | e -> raise (InferError e)
   with ex -> Printf.printf "When trying to infer type of\n  %s\n" (showExp e); raise ex
 
@@ -647,10 +680,12 @@ and mem x = function
   | Var (y, _) -> x = y
   | VSig (t, (p, f)) | VPi (t, (p, f)) | VLam (t, (p, f)) ->
     mem x t || mem x (f (Var (p, t)))
-  | VKan _ | VPre _ | VHole -> false
+  | VKan _ | VPre _ | VHole
+  | VS1    | VBase  | VLoop -> false
 
   | VFst e  | VSnd e  | VId e   | VRefl e
-  | VJ e    | VIdp e  | VRev e  | VSymm e | VUA e -> mem x e
+  | VJ e    | VIdp e  | VRev e  | VSymm e
+  | VUA e   | VS1Ind e -> mem x e
 
   | VPair (a, b)  | VComp (a, b) | VApp (a, b)
   | VCoe (a, b)   | VCong (a, b) | VTrans (a, b)

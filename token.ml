@@ -25,3 +25,4 @@ let tokenToString : token -> string = function
   | REFL       -> "REFL"        | IDJ        -> "IDJ"
   | IMPORT     -> "IMPORT"      | UA         -> "UA"
   | EQUIV      -> "EQUIV"       | MKEQV      -> "MKEQV"
+  | S1IND      -> "S1IND"

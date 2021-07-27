@@ -87,6 +87,10 @@ let rec salt (ns : name Env.t) : exp -> exp = function
   | EUA e                 -> EUA (salt ns e)
   | Equiv (a, b)          -> Equiv (salt ns a, salt ns b)
   | EMkEquiv (a, b, f, e) -> EMkEquiv (salt ns a, salt ns b, salt ns f, salt ns e)
+  | ES1                   -> ES1
+  | EBase                 -> EBase
+  | ELoop                 -> ELoop
+  | ES1Ind e              -> ES1Ind (salt ns e)
 
 and saltTele ctor ns p a b =
   let x = fresh p in ctor x (salt ns a) (salt (Env.add p x ns) b)
