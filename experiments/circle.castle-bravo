@@ -59,8 +59,5 @@ def π₁S¹ : ∞-group :=
 (Ω¹S¹, λ (x y : Ω¹S¹), x ⬝ y, λ (x : Ω¹S¹), x⁻¹, idp base,
  λ (x y z : Ω¹S¹), idp (x ⬝ y ⬝ z), λ (x : Ω¹S¹), idp x, λ (x : Ω¹S¹), idp (idp base))
 
-def anoos :=
-cong (λ (X : U) (H : ∂ Ω¹S¹ Z X), is-∞-group X) (ua fundamental-group)
-
 def integer : ∞-group :=
 (Z, coe (cong (λ (X : U) (H : ∂ Ω¹S¹ Z X), is-∞-group X) (ua fundamental-group)) π₁S¹.2)

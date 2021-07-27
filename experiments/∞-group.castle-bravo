@@ -6,3 +6,17 @@ def is-∞-group (A : U) :=
   (Π (x : A), Path A (φ x ε) x) × (Π (x : A), Path A (φ x (ι x)) ε)
 
 def ∞-group := Σ (A : U), is-∞-group A
+
+def op∞ (G : ∞-group) : G.1 → G.1 → G.1 := G.2.1
+def inv∞ (G : ∞-group) : G.1 → G.1 := G.2.2.1
+def ε∞ (G : ∞-group) : G.1 := G.2.2.2.1
+
+def assoc∞ (G : ∞-group) : Π (x y z : G.1),
+  Path G.1 (op∞ G x (op∞ G y z)) (op∞ G (op∞ G x y) z) :=
+G.2.2.2.2.1
+
+def ε-left∞ (G : ∞-group) : Π (x : G.1), Path G.1 (op∞ G x (ε∞ G)) x :=
+G.2.2.2.2.2.1
+
+def mul-left-inv∞ (G : ∞-group) : Π (x : G.1), Path G.1 (op∞ G x (inv∞ G x)) (ε∞ G) :=
+G.2.2.2.2.2.2
