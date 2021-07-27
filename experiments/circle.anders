@@ -1,0 +1,43 @@
+module circle where
+
+import experiments/path
+import experiments/∞-group
+
+def S¹-rec (β : U) : Π (b : β), Path β b b → S¹ → β := S¹-ind (λ (x : S¹), β)
+def rot (x : S¹) : Path S¹ x x := S¹-ind (λ (y : S¹), Path S¹ y y) loop (idp loop) x
+def inv : S¹ → S¹ := S¹-rec S¹ base loop⁻¹
+def test := ap S¹ S¹ inv base base loop
+def Z-succ-equiv : Z ≃ Z := mkeqv Z Z succ ((pred, λ (x : Z), idp x), (pred, λ (x : Z), idp x))
+def helix : S¹ → U := S¹-ind (λ (x : S¹), U) Z (ua Z-succ-equiv)
+def encode (x : S¹) (p : Path S¹ base x) : helix x := subst S¹ helix base x p zero
+
+-- it computes!
+def winding := encode base
+
+def Z-rec (A : U) (z : A) (s p : A → A) : Z → A
+ := Z-ind (λ (x : Z), A) z (λ (x : Z), s) (λ (x : Z), p)
+def Ω¹S¹ := Path S¹ base base
+def S¹-succ (l : Ω¹S¹) := l ⬝ loop
+def S¹-pred (l : Ω¹S¹) := l ⬝ loop⁻¹
+def power : Z → Ω¹S¹ := Z-rec Ω¹S¹ (idp base) S¹-succ S¹-pred
+def Z-add (x y : Z) : Z := winding (power x ⬝ power y)
+def decode : Π (x : S¹), helix x → Path S¹ base x
+ := S¹-ind (λ (x : S¹), helix x → Path S¹ base x) power (idp power)
+
+def decode-encode : Π (x : S¹) (p : Path S¹ base x), Path (Path S¹ base x) (decode x (encode x p)) p
+ := J′ S¹ base (λ (x : S¹) (p : Path S¹ base x), Path (Path S¹ base x) (decode x (encode x p)) p) (idp (idp base))
+
+def encode-decode : Π (z : Z), Path Z (encode base (decode base z)) z
+ := Z-ind (λ (z : Z), Path Z (encode base (decode base z)) z) (idp zero)
+          (λ (z : Z), ap Z Z succ (encode base (decode base z)) z)
+          (λ (z : Z), ap Z Z pred (encode base (decode base z)) z)
+
+def fundamental-group : Ω¹S¹ ≃ Z
+ := mkeqv Ω¹S¹ Z (encode base) ((decode base, decode-encode base), (decode base, encode-decode))
+
+def π₁S¹ : ∞-group
+ := (Ω¹S¹, λ (x y : Ω¹S¹), x ⬝ y, λ (x : Ω¹S¹), x⁻¹, idp base,
+    λ (x y z : Ω¹S¹), idp (x ⬝ y ⬝ z), λ (x : Ω¹S¹), idp x, λ (x : Ω¹S¹), idp (idp base))
+
+def integer : ∞-group
+ := (Z, coe (cong (λ (X : U) (H : ∂ Ω¹S¹ Z X), is-∞-group X) (ua fundamental-group)) π₁S¹.2)
