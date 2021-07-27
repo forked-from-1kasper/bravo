@@ -318,8 +318,9 @@ and cong f p = match f, p with
     else begin match v with
       | VApp (VApp (VApp (VS1Ind k, b), l), z) ->
         (* cong (λ x H, S¹-ind β b ℓ x) loop ~> ℓ[x/base, H/left base base] *)
-        if convVar x z && not (mem x k || mem y k || mem x b ||
-                               mem y b || mem x l || mem y l)
+        if convVar x z && conv p VLoop &&
+           not (mem x k || mem y k || mem x b ||
+                mem y b || mem x l || mem y l)
         then l else VCong (f, p)
       | _ -> VCong (f, p)
     end
