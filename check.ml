@@ -277,36 +277,32 @@ and cong f p = match f, p with
   (* cong f p⁻¹ ~> (cong f p)⁻¹ *)
   | _, VRev p ->
     let t = inferV f in let (dom, _, _, _, _) = extCongLam t in
-    let (_, b, a) = extPath (inferV p) in
+    let (_, a, b) = extPath (inferV p) in
 
     let x = freshName "x" in let y = freshName "σ" in
     let g = VLam (dom, (x, fun x ->
-      VLam (VBoundary (b, a, x), (y, fun y ->
+      VLam (VBoundary (a, b, x), (y, fun y ->
         app (app (f, x), symm y))))) in
     rev (cong g p)
   (* cong f (p ⬝ q) ~> cong f p ⬝ cong f q *)
   | _, VTrans (p, q) ->
-    let t = inferV f in
-    let (dom, _, _, _, _) = extCongLam t in
-    let (_, a1, b1) = extPath (inferV p) in
-    let (_, a2, b2) = extPath (inferV q) in
+    let (t1, a1, b1) = extPath (inferV p) in
+    let (t2, a2, b2) = extPath (inferV q) in
 
     let x = freshName "x" in let y = freshName "σ" in
-    let g a b k =
-      VLam (dom, (x, fun x ->
+    let g t a b k =
+      VLam (t, (x, fun x ->
         VLam (VBoundary (a, b, x), (y, fun y ->
           app (app (f, x), k y))))) in
 
-    trans (cong (g a1 b1 (fun y -> bright y q)) p,
-           cong (g a2 b2 (fun y -> bleft y (rev p))) q)
+    trans (cong (g t1 a1 b1 (fun y -> bright y q)) p,
+           cong (g t2 a2 b2 (fun y -> bleft y (rev p))) q)
   (* cong f (cong g p) ~> cong (f ∘ g) p *)
   | _, VCong (g, p) ->
-    let t2 = inferV g in let (dom, _, _, _, _) = extCongLam t2 in
-
-    let (_, a, b) = extPath (inferV p) in
+    let (t, a, b) = extPath (inferV p) in
     let x = freshName "x" in let sigma = freshName "σ" in
 
-    let h = VLam (dom, (x, fun x ->
+    let h = VLam (t, (x, fun x ->
       VLam (VBoundary (a, b, x), (sigma, fun y ->
         app (app (f, app (app (g, x), y)), bcong g x y))))) in
     cong h p
@@ -342,8 +338,8 @@ and app (f, x) = match f, x with
   | VLam (_, (_, f)), v -> f v
   | VApp (VApp (VApp (VZInd _, z), s), p), _ -> begin match x with
     | VZero           -> z
-    | VApp (VSucc, x) -> app (app (s, x), app (f, x))
-    | VApp (VPred, x) -> app (app (p, x), app (f, x))
+    | VApp (VSucc, y) -> app (app (s, y), app (f, y))
+    | VApp (VPred, y) -> app (app (p, y), app (f, y))
     | _               -> VApp (f, x)
   end
   | VSucc, VApp (VPred, z) -> z
