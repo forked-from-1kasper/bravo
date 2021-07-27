@@ -172,7 +172,6 @@ and coe p x = match p, x with
   | VIdp _, _ -> x
   (* coe (p ⬝ q) x ~> coe q (coe p x) *)
   | VTrans (q, p), _ -> coe p (coe q x)
-
   (* coe (ua e) x ~> e.1 x *)
   | VUA e, _ -> app (vfst e, x)
   | VCong (VLam (t, (x, f)), r), v ->
@@ -322,7 +321,7 @@ and cong f p = match f, p with
     else if not (mem x v || mem y v) then VIdp v
     else begin match v with
       | VApp (VApp (VApp (VS1Ind k, b), l), z) ->
-        (* cong (λ x H, S¹-ind β b ℓ x) loop ~> ℓ[x/base, H/left base base] *)
+        (* cong (λ x H, S¹-ind β b ℓ x) loop ~> ℓ *)
         if convVar x z && conv p VLoop &&
            not (mem x k || mem y k || mem x b ||
                 mem y b || mem x l || mem y l)

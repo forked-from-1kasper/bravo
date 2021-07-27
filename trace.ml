@@ -27,3 +27,9 @@ let traceConv (v1 : value) (v2 : value) : unit = if !Prefs.trace then
 
 let traceEqNF (v1 : value) (v2 : value) : unit = if !Prefs.trace then
   trace (Printf.sprintf "EQNF: %s = %s\n" (showValue v1) (showValue v2))
+
+let traceDebug f =
+  Printf.printf "START\n";
+  let res = f () in
+  Printf.printf "END\n";
+  res

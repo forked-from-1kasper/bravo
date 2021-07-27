@@ -1,0 +1,8 @@
+module ∞-group where
+
+def is-∞-group (A : U) :=
+Σ (φ : A → A → A) (ι : A → A) (ε : A),
+  (Π (x y z : A), Path A (φ x (φ y z)) (φ (φ x y) z)) ×
+  (Π (x : A), Path A (φ x ε) x) × (Π (x : A), Path A (φ x (ι x)) ε)
+
+def ∞-group := Σ (A : U), is-∞-group A
