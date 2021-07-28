@@ -61,8 +61,8 @@ let rec eval (e0 : exp) (ctx : ctx) = traceEval e0; match e0 with
   | ELoop                 -> VLoop
   | ES1Ind e              -> VS1Ind (eval e ctx)
 
-and bcomp a b = reduceBoundary (VComp (a, b))
-and bleft v p = reduceBoundary (VBLeft (v, p))
+and bcomp a b  = reduceBoundary (VComp (a, b))
+and bleft v p  = reduceBoundary (VBLeft (v, p))
 and bright v p = reduceBoundary (VBRight (v, p))
 
 and trans = function
