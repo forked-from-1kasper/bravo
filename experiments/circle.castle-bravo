@@ -3,17 +3,25 @@ module circle where
 import experiments/path
 import experiments/∞-group
 
+def Ω¹S¹ := Path S¹ base base
+
 def S¹-rec (β : U) : Π (b : β), Path β b b → S¹ → β :=
 S¹-ind (λ (x : S¹), β)
 
 def rot (x : S¹) : Path S¹ x x :=
 S¹-ind (λ (y : S¹), Path S¹ y y) loop (idp loop) x
 
+def μ (x : S¹) : S¹ → S¹ := S¹-rec S¹ x (rot x)
+def σ (x : S¹) := μ x x
+
+def double-loop : Ω¹S¹ → Ω¹S¹ :=
+ap S¹ S¹ σ base base
+
 def inv : S¹ → S¹ :=
 S¹-rec S¹ base loop⁻¹
 
 def test :=
-ap S¹ S¹ inv base base loop
+ap S¹ S¹ inv base base (loop ⬝ loop ⬝ loop)
 
 def Z-succ-equiv : Z ≃ Z :=
 mkeqv Z Z succ ((pred, λ (x : Z), idp x), (pred, λ (x : Z), idp x))
@@ -29,8 +37,6 @@ def winding := encode base
 
 def Z-rec (A : U) (z : A) (s p : A → A) : Z → A :=
 Z-ind (λ (x : Z), A) z (λ (x : Z), s) (λ (x : Z), p)
-
-def Ω¹S¹ := Path S¹ base base
 
 def S¹-succ (l : Ω¹S¹) := l ⬝ loop
 def S¹-pred (l : Ω¹S¹) := l ⬝ loop⁻¹
