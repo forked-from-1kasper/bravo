@@ -180,6 +180,16 @@ and coe p x = match p, x with
   | VTrans (q, p), _ -> coe p (coe q x)
   (* coe (ua e) x ~> e.1 x *)
   | VUA e, _ -> app (vfst e, x)
+  | VRev (VCong (VLam (t, (x, f)), r)), v ->
+    let g = f (Var (x, t)) in let (k, _) = extPi (inferV g) in
+    let (a, b, _) = extBoundary k in let y = freshName "σ" in let y' = Var (y, k) in
+    begin match app (g, y') with
+      | VPath _ | VPi _ | VSig _ | VEquiv _ ->
+        let x = freshName "x" in let h = freshName "σ" in
+        coe (VCong (VLam (t, (x, fun x ->
+          VLam (VBoundary (b, a, x), (h, fun h -> app (f x, symm h))))), rev r)) v
+      | _ -> VCoe (p, v)
+    end
   | VCong (VLam (t, (x, f)), r), v ->
     let g = f (Var (x, t)) in let (k, _) = extPi (inferV g) in
     let (a, b, _) = extBoundary k in let y = freshName "σ" in let y' = Var (y, k) in

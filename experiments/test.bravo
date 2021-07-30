@@ -154,3 +154,22 @@ idp (ap A C (λ (x : A), g (f x)) a b p)
 
 def path-idfun (A : U) (a b : A) (p : Path A a b) :=
 J A (λ (a b : A) (p : Path A a b), Path A a b) a (idp a) b p
+
+def coe-cong-Π-rev′ (Δ : U) (α β : Δ) (A : Π (x : Δ), ∂ β α x → U)
+  (B : Π (x : Δ) (H : ∂ β α x), A x H → U) (p : Path Δ α β)
+  (φ : Π (b : A β (left β α)),  B β (left β α) b) :
+       Π (a : A α (right β α)), B α (right β α) a :=
+coe (cong (λ (x : Δ) (H : ∂ β α x), Π (a : A x H), B x H a) p⁻¹) φ
+
+def coe-cong-Π-rev (Δ : U) (α β : Δ) (A : Π (x : Δ), ∂ β α x → U)
+  (B : Π (x : Δ) (H : ∂ β α x), A x H → U) (p : Path Δ α β)
+  (φ : Π (b : A β (left β α)),  B β (left β α) b) :
+       Π (a : A α (right β α)), B α (right β α) a :=
+coe-cong-Π Δ β α A B p⁻¹ φ
+
+def coe-cong-Π-rev-is-correct (Δ : U) (α β : Δ) (A : Π (x : Δ), ∂ β α x → U)
+  (B : Π (x : Δ) (H : ∂ β α x), A x H → U) (p : Path Δ α β)
+  (φ : Π (b : A β (left β α)),  B β (left β α) b) :
+  Path (Π (a : A α (right β α)), B α (right β α) a)
+       (coe-cong-Π-rev Δ α β A B p φ) (coe-cong-Π-rev′ Δ α β A B p φ) :=
+idp (coe-cong-Π-rev Δ α β A B p φ)

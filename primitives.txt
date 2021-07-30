@@ -74,6 +74,8 @@ apd (f : Π (x : α), β x) p := cong′ (λ y H, coe (cong β ((meet p⁻¹ y (
 
 coe (cong (λ x, f[x] = g[x]) p) q ~> (apd (λ y, f[x/y]) p)⁻¹ ⬝ cong (coe (cong β p)) q ⬝ apd (λ y, g[x/y]) p
 
+Similar rules should be applied in cases like coe (cong (λ x, Π (a : α[x]), β[x] a) p)⁻¹ φ
+
        cong f p⁻¹ ~> (cong f p)⁻¹
    cong f (p ⬝ q) ~> cong f p ⬝ cong f q
 cong g (cong f p) ~> cong (g ∘ f) p
