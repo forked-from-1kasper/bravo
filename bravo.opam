@@ -1,6 +1,6 @@
 opam-version: "2.0"
 name: "bravo"
-version: "0.0.1"
+version: "0.8.0"
 maintainer: "Namdak Tonpa <maxim@synrc.com>"
 authors: [
   "Namdak Tonpa @5HT"
