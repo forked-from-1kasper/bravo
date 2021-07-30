@@ -1,0 +1,9 @@
+(env (dev (flags (:standard -warn-error -A))))
+(ocamllex lexer)
+(menhir (modules parser))
+(executable (name bravo) (package bravo) (public_name bravo))
+(install (files experiments/N3000.bravo    experiments/cat.bravo
+                experiments/circle.bravo   experiments/equiv.bravo
+                experiments/fiber.bravo    experiments/path.bravo
+                experiments/test.bravo     experiments/univalence.bravo
+                experiments/inf-group.bravo) (section share) (package bravo))
