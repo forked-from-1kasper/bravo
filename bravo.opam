@@ -1,0 +1,21 @@
+opam-version: "2.0"
+name: "bravo"
+version: "0.0.1"
+maintainer: "Namdak Tonpa <maxim@synrc.com>"
+authors: [
+  "Namdak Tonpa @5HT"
+  "Siegmentation Fault @siegment"
+]
+homepage: "https://github.com/forked-from-1kasper/castle_bravo"
+bug-reports: "https://github.com/forked-from-1kasper/castle_bravo/issues"
+dev-repo: "git+https://github.com/forked-from-1kasper/castle_bravo"
+synopsis: "Cubical type system with definitional S¹ and Path-β"
+license: "ISC"
+depends: [
+  "dune" {>= "2.0"}
+  "ocaml" {>= "4.10"}
+  "menhir" {>= "20200123"}
+]
+build: [
+  ["dune" "build" "-p" name "-j" jobs]
+]

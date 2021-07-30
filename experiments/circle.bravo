@@ -1,7 +1,9 @@
 module circle where
 
 import experiments/path
-import experiments/∞-group
+import experiments/inf-group
+
+def Ω¹S¹ := Path S¹ base base
 
 def Ω¹S¹ := Path S¹ base base
 
