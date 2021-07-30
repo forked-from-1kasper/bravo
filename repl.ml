@@ -30,7 +30,7 @@ let main ctx : command -> unit = function
 let check filename =
   st := handleErrors (checkFile !st) filename !st
 
-let banner = "Castle Bravo theorem prover, version 0.0.0"
+let banner = "Castle Bravo theorem prover, version 0.0.1"
 
 let repl () =
   print_endline ("\n" ^ banner) ;

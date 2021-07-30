@@ -5,7 +5,7 @@ open Ident
 open Expr
 open Elab
 
-let ext x = x ^ ".castle-bravo"
+let ext x = x ^ ".bravo"
 
 type state = ctx * Files.t
 let empty : state = (Env.empty, Files.empty)
