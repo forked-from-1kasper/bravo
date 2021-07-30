@@ -1,4 +1,4 @@
-module ∞-group where
+module inf-group where
 
 def is-∞-group (A : U) :=
 Σ (φ : A → A → A) (ι : A → A) (ε : A),

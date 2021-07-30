@@ -5,6 +5,12 @@ open Elab
 open Expr
 
 let ieq u v : bool = !Prefs.girard || u = v
+
+let isProofIrrel = function
+  | VApp (VApp (VId _, _), _) -> true
+  | VBoundary _               -> true
+  | _                         -> false
+
 let vfst : value -> value = function
   | VPair (u, _)          -> u
   (* (meet p x H).1 ~> x *)
@@ -61,8 +67,8 @@ let rec eval (e0 : exp) (ctx : ctx) = traceEval e0; match e0 with
   | ELoop                 -> VLoop
   | ES1Ind e              -> VS1Ind (eval e ctx)
 
-and bcomp a b = reduceBoundary (VComp (a, b))
-and bleft v p = reduceBoundary (VBLeft (v, p))
+and bcomp a b  = reduceBoundary (VComp (a, b))
+and bleft v p  = reduceBoundary (VBLeft (v, p))
 and bright v p = reduceBoundary (VBRight (v, p))
 
 and trans = function
@@ -360,7 +366,7 @@ and inferV v = traceInferV v; match v with
   | VPi (t, (x, f)) | VSig (t, (x, f)) -> imax (inferV t) (inferV (f (Var (x, t))))
   | VFst e -> inferFst (inferV e)
   | VSnd e -> inferSnd (vfst e) (inferV e)
-  | VCoe (p, _) -> let (_, t, _) = extPath (inferV p) in t
+  | VCoe (p, _) -> let (_, _, t) = extPath (inferV p) in t
   | VMeet (p, _, _) -> let (t, a, _) = extPath (inferV p) in singl t a
   | VLeft (a, b) -> VBoundary (a, b, a)
   | VRight (a, b) -> VBoundary (a, b, b)
@@ -500,8 +506,8 @@ and conv v1 v2 : bool = traceConv v1 v2;
     | VCong (f1, p1), VCong (f2, p2) -> conv f1 f2 && conv p1 p2
     | VUA e1, VUA e2 -> conv e1 e2
     | VEquiv (a1, b1), VEquiv (a2, b2) -> conv a1 a2 && conv b1 b2
-    | VMkEquiv (a1, b1, f1, v1), VMkEquiv (a2, b2, f2, v2) ->
-      conv a1 a2 && conv b1 b2 && conv f1 f2 && conv v1 v2
+    | VMkEquiv (_, _, f1, v1), VMkEquiv (_, _, f2, v2) -> conv f1 f2 && conv v1 v2
+    | VMkEquiv (_, _, f, v), u | u, VMkEquiv (_, _, f, v) -> conv (vfst u) f && conv (vsnd u) v
     | VZ, VZ -> true
     | VZero, VZero -> true
     | VSucc, VSucc -> true
@@ -516,12 +522,9 @@ and conv v1 v2 : bool = traceConv v1 v2;
 
 and convProofIrrel v1 v2 =
   (* Id A a b is proof-irrelevant *)
-  try match inferV v1, inferV v2 with
-    | VApp (VApp (VId t1, a1), b1), VApp (VApp (VId t2, a2), b2) ->
-      conv t1 t2 && conv a1 a2 && conv b1 b2
-    | VBoundary (a1, b1, x1), VBoundary (a2, b2, x2) ->
-      conv a1 a2 && conv b1 b2 && conv x1 x2
-    | _, _ -> false
+  try let t1 = inferV v1 in let t2 = inferV v2 in
+    if isProofIrrel t1 && isProofIrrel t2
+    then conv t1 t2 else false
   with InferVError _ -> false
 
 and eqNf v1 v2 : unit = traceEqNF v1 v2;

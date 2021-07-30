@@ -88,6 +88,19 @@ ua e₁ ⬝ ua e₂ ~> ua (e₂ ∘ e₁)
  ua (ideqv α) ~> idp α
  coe (ua e) x ~> e.1 x
 
+    Z : U
+ zero : Z
+ succ : Z → Z
+ pred : Z → Z
+Z-ind : Π (β : Z → U), β zero → (Π z, β z → β (succ z)) → (Π z, β z → β (pred z)) → Π z, β z
+
+succ (pred z) ~> z
+pred (succ z) ~> z
+
+    Z-ind β z s p zero ~> z
+Z-ind β z s p (succ z) ~> s (Z-ind β z s p z)
+Z-ind β z s p (pred z) ~> p (Z-ind β z s p z)
+
     S¹ : U
   base : S¹
   loop : Path S¹ base base
