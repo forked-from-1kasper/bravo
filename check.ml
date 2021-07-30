@@ -187,7 +187,8 @@ and coe p x = match p, x with
       | VPath _ | VPi _ | VSig _ | VEquiv _ ->
         let x = freshName "x" in let h = freshName "σ" in
         coe (VCong (VLam (t, (x, fun x ->
-          VLam (VBoundary (b, a, x), (h, fun h -> app (f x, symm h))))), rev r)) v
+          VLam (VBoundary (b, a, x), (h, fun h ->
+            app (f x, symm h))))), rev r)) v
       | _ -> VCoe (p, v)
     end
   | VCong (VLam (t, (x, f)), r), v ->
