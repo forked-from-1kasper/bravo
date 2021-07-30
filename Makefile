@@ -7,10 +7,10 @@ clean:
 	ocamlbuild -clean
 
 native:
-	ocamlbuild $(FLAGS) castle_bravo.native
+	ocamlbuild $(FLAGS) bravo.native
 
 release:
-	ocamlbuild $(FLAGS) castle_bravo.native $(OPTFLAGS)
+	ocamlbuild $(FLAGS) bravo.native $(OPTFLAGS)
 
 byte:
-	ocamlbuild $(FLAGS) castle_bravo.byte -tag 'debug'
+	ocamlbuild $(FLAGS) bravo.byte -tag 'debug'

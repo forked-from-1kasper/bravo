@@ -7,7 +7,7 @@ type cmdline =
   | Repl | Help | Trace | Indices | Girard | Silent
 
 let help =
-"\n  invocation = castle_bravo | castle_bravo list
+"\n  invocation = bravo | bravo list
         list = [] | command list
    primitive = zero | one | interval
 
