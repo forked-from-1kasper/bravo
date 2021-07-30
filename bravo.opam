@@ -9,7 +9,7 @@ authors: [
 homepage: "https://github.com/forked-from-1kasper/castle_bravo"
 bug-reports: "https://github.com/forked-from-1kasper/castle_bravo/issues"
 dev-repo: "git+https://github.com/forked-from-1kasper/castle_bravo"
-synopsis: "Cubical type system with definitional S¹ and Path-β"
+synopsis: "Computable homotopy system with definitional S¹ and Path-β"
 license: "ISC"
 depends: [
   "dune" {>= "2.0"}
