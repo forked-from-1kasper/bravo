@@ -17,6 +17,13 @@ coe (cong (λ (x : A) (H : ∂ a b x), P x) p) x
 def ap (A B : U) (f : A → B) (a b : A) (p : Path A a b) : Path B (f a) (f b) :=
 cong (λ (x : A) (H : ∂ a b x), f x) p
 
+def apd (A : U) (a b : A) (B : Π (x : A), ∂ a b x → U)
+  (f : Π (x : A) (H : ∂ a b x), B x H) (p : Path A a b) :
+  Path (B b (right a b)) (coe (cong B p) (f a (left a b))) (f b (right a b)) :=
+cong (λ (x : A) (H : ∂ a b x),
+  coe (cong (λ (y : A) (H′ : ∂ x b y), B y (∂-comp H H′))
+    ((meet p⁻¹ x (∂-symm H)).2)⁻¹) (f x H)) p
+
 def J (A : U) (P : Π (a b : A), Path A a b → U)
   (a : A) (d : P a a (idp a)) (b : A) (p : Path A a b) : P a b p :=
 coe (cong (λ (x : A) (H : ∂ a b x), P a x (meet p x H).2) p) d
