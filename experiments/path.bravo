@@ -33,6 +33,19 @@ def bimap (A B C : U) (a b : A) (a′ b′ : B) (f : A → B → C)
 J A (λ (a b : A) (p : Path A a b), Path C (f a a′) (f b b′))
   a (ap B C (f a) a′ b′ q) b p
 
+def bimap′ (A B C : U) (a b : A) (a′ b′ : B) (f : A → B → C)
+  (p : Path A a b) (q : Path B a′ b′) : Path C (f a a′) (f b b′) :=
+J B (λ (a′ b′ : B) (p : Path B a′ b′), Path C (f a a′) (f b b′))
+  a′ (ap A C (λ (x : A), f x a′) a b p) b′ q
+
+def bimap-eq-bimap′ (A B C : U) (a b : A) (a′ b′ : B) (f : A → B → C)
+  (p : Path A a b) (q : Path B a′ b′) :
+  Path (Path C (f a a′) (f b b′)) (bimap A B C a b a′ b′ f p q) (bimap′ A B C a b a′ b′ f p q) :=
+J A (λ (a b : A) (p : Path A a b),
+  Path (Path C (f a a′) (f b b′)) (bimap A B C a b a′ b′ f p q)
+                                  (bimap′ A B C a b a′ b′ f p q))
+  a (idp (ap B C (f a) a′ b′ q)) b p
+
 def J′ (A : U) (a : A) (P : Π (b : A), Path A a b → U)
   (d : P a (idp a)) (b : A) (p : Path A a b) : P b p :=
 coe (cong (λ (x : A) (H : ∂ a b x), P x (meet p x H).2) p) d
