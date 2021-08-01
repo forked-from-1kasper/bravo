@@ -8,6 +8,11 @@ def Ω¹S¹ := Path S¹ base base
 def S¹-rec (β : U) : Π (b : β), Path β b b → S¹ → β :=
 S¹-ind (λ (x : S¹), β)
 
+def triv : S¹ → S¹ := S¹-rec S¹ base loop
+
+def triv-eq-id : Π (x : S¹), Path S¹ (triv x) x :=
+S¹-ind (λ (x : S¹), Path S¹ (triv x) x) (idp base) (idp (idp base))
+
 def rot (x : S¹) : Path S¹ x x :=
 S¹-ind (λ (y : S¹), Path S¹ y y) loop (idp loop) x
 
