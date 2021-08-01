@@ -11,8 +11,18 @@ S¹-ind (λ (x : S¹), β)
 def rot (x : S¹) : Path S¹ x x :=
 S¹-ind (λ (y : S¹), Path S¹ y y) loop (idp loop) x
 
+def S¹-cong (β : U) (b : Π (x : S¹), ∂ base base x → β)
+  (ℓ : Π (x : S¹) (H : ∂ base base x), Path β (b x H) (b x H)) :=
+cong (λ (x : S¹) (H : ∂ base base x), S¹-rec β (b x H) (ℓ x H) x) loop
+
 def μ (x : S¹) : S¹ → S¹ := S¹-rec S¹ x (rot x)
 def σ (x : S¹) := μ x x
+
+def μ-base-left : Π (x : S¹), Path S¹ (μ base x) x :=
+S¹-ind (λ (x : S¹), Path S¹ (μ base x) x) (idp base) (idp (idp base))
+
+def μ-base-right : Π (x : S¹), Path S¹ (μ x base) x :=
+S¹-ind (λ (x : S¹), Path S¹ (μ x base) x) (idp base) (idp (idp base))
 
 def double-loop : Ω¹S¹ → Ω¹S¹ :=
 ap S¹ S¹ σ base base
