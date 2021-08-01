@@ -46,6 +46,11 @@ J A (λ (a b : A) (p : Path A a b),
                                   (bimap′ A B C a b a′ b′ f p q))
   a (idp (ap B C (f a) a′ b′ q)) b p
 
+def diagonal-bimap (A B : U) (f : A → A → B) (a b : A) (p : Path A a b) :
+  Path (Path B (f a a) (f b b)) (bimap A A B a b a b f p p) (ap A B (λ (x : A), f x x) a b p) :=
+J A (λ (a b : A) (p : Path A a b), Path (Path B (f a a) (f b b)) (bimap A A B a b a b f p p) (ap A B (λ (x : A), f x x) a b p))
+  a (idp (idp (f a a))) b p
+
 def J′ (A : U) (a : A) (P : Π (b : A), Path A a b → U)
   (d : P a (idp a)) (b : A) (p : Path A a b) : P b p :=
 coe (cong (λ (x : A) (H : ∂ a b x), P x (meet p x H).2) p) d
