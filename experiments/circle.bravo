@@ -21,8 +21,8 @@ def σ (x : S¹) := μ x x
 def μ-base-left : Π (x : S¹), Path S¹ (μ base x) x :=
 S¹-ind (λ (x : S¹), Path S¹ (μ base x) x) (idp base) (idp (idp base))
 
-def μ-base-right : Π (x : S¹), Path S¹ (μ x base) x :=
-S¹-ind (λ (x : S¹), Path S¹ (μ x base) x) (idp base) (idp (idp base))
+def μ-base-right (x : S¹) : Path S¹ (μ x base) x :=
+idp x
 
 def double-loop : Ω¹S¹ → Ω¹S¹ :=
 ap S¹ S¹ σ base base
