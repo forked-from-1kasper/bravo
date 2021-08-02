@@ -333,12 +333,16 @@ and cong f p = match f, p with
     (* cong (λ _, x) p ~> idp x *)
     else if not (mem x v || mem y v) then VIdp v
     else begin match v with
-      | VApp (VApp (VApp (VS1Ind k, b), l), z) ->
-        (* cong (λ x H, S¹-ind β b ℓ x) loop ~> ℓ *)
-        if convVar x z && conv p VLoop &&
-           not (mem x k || mem y k || mem x b ||
-                mem y b || mem x l || mem y l)
-        then l else VCong (f, p)
+      | VApp (VApp (VApp (VS1Ind _, b), l), z) ->
+        (* cong (λ x H, S¹-ind β b ℓ x) loop ~> ℓ[x/base, H/left base base] ⬝ cong (λ x′ H′, b[x/x′, H/H′]) loop *)
+        if convVar x z && conv p VLoop then begin
+          let p = subst (rho2 x VBase y (VLeft (VBase, VBase))) l in
+          let x' = freshName "x" in let y' = freshName "σ" in
+          let q = cong (VLam (VS1, (x', fun x' ->
+            VLam (VBoundary (VBase, VBase, x'), (y', fun y' ->
+              subst (rho2 x x' y y') b))))) VLoop in
+          trans (p, q)
+        end else VCong (f, p)
       | _ -> VCong (f, p)
     end
 
@@ -743,3 +747,49 @@ and mem x = function
   | VBoundary (a, b, c) | VMeet (a, b, c) -> mem x a || mem x b || mem x c
 
   | VMkEquiv (a, b, c, d) -> mem x a || mem x b || mem x c || mem x d
+
+and subst rho = function
+  | VPre n                -> VPre n
+  | VKan n                -> VKan n
+  | VHole                 -> VHole
+  | VApp (f, x)           -> app (subst rho f, subst rho x)
+  | VPi (t, (p, f))       -> VPi (subst rho t, (p, fun x -> subst rho (f x)))
+  | VSig (t, (p, f))      -> VSig (subst rho t, (p, fun x -> subst rho (f x)))
+  | VLam (t, (p, f))      -> VLam (subst rho t, (p, fun x -> subst rho (f x)))
+  | VPair (a, b)          -> VPair (subst rho a, subst rho b)
+  | VFst v                -> vfst (subst rho v)
+  | VSnd v                -> vsnd (subst rho v)
+  | VId v                 -> VId (subst rho v)
+  | VRefl v               -> VRefl (subst rho v)
+  | VJ v                  -> VJ (subst rho v)
+  | VPath (e, a, b)       -> VPath (subst rho e, subst rho a, subst rho b)
+  | VIdp e                -> VIdp (subst rho e)
+  | VRev p                -> rev (subst rho p)
+  | VTrans (p, q)         -> trans (subst rho p, subst rho q)
+  | VBoundary (a, b, x)   -> VBoundary (subst rho a, subst rho b, subst rho x)
+  | VLeft (a, b)          -> VLeft (subst rho a, subst rho b)
+  | VRight (a, b)         -> VRight (subst rho a, subst rho b)
+  | VSymm e               -> symm (subst rho e)
+  | VComp (a, b)          -> bcomp (subst rho a) (subst rho b)
+  | VBLeft (e, p)         -> bleft (subst rho e) (subst rho p)
+  | VBRight (e, p)        -> bright (subst rho e) (subst rho p)
+  | VBCong (f, x, e)      -> bcong (subst rho f) (subst rho x) (subst rho e)
+  | VMeet (p, x, e)       -> meet (subst rho p) (subst rho x) (subst rho e)
+  | VCoe (p, x)           -> coe (subst rho p) (subst rho x)
+  | VCong (f, p)          -> cong (subst rho f) (subst rho p)
+  | VUA e                 -> ua (subst rho e)
+  | VEquiv (a, b)         -> VEquiv (subst rho a, subst rho b)
+  | VMkEquiv (a, b, f, e) -> VMkEquiv (subst rho a, subst rho b, subst rho f, subst rho e)
+  | VZ                    -> VZ
+  | VZero                 -> VZero
+  | VSucc                 -> VSucc
+  | VPred                 -> VPred
+  | VZInd v               -> VZInd (subst rho v)
+  | VS1                   -> VS1
+  | VBase                 -> VBase
+  | VLoop                 -> VLoop
+  | VS1Ind v              -> VS1Ind (subst rho v)
+  | Var (x, t)            -> begin match Env.find_opt x rho with
+    | Some v -> v
+    | None   -> Var (x, t)
+  end

@@ -105,3 +105,5 @@ let freshExp = salt Env.empty
 let convVar p = function
   | Var (q, _) -> p = q
   | _          -> false
+
+let rho2 x x' y y' = Env.add y y' (Env.add x x' Env.empty)

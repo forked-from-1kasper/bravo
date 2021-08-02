@@ -109,4 +109,4 @@ Z-ind β z s p (pred z) ~> p (Z-ind β z s p z)
 S¹-ind : Π (β : S¹ → U) (b : β base), Path (β base) (coe (cong β loop) b) b → Π (x : S¹), β x
 
                 S¹-ind β b ℓ base ~> b
-cong (λ x H, S¹-ind β b ℓ x) loop ~> ℓ
+cong (λ x H, S¹-ind β b ℓ x) loop ~> ℓ[x/base, H/left base base] ⬝ cong (λ x′ H′, b[x/x′, H/H′]) loop
