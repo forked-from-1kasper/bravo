@@ -32,8 +32,8 @@ S¹-ind (λ (x : S¹), Path S¹ (μ base x) x) (idp base) (idp (idp base))
 def μ-base-right (x : S¹) : Path S¹ (μ x base) x :=
 idp x
 
-def double-loop : Ω¹S¹ → Ω¹S¹ :=
-ap S¹ S¹ σ base base
+def double-loop := ap S¹ S¹ σ base base
+def triple-loop := ap S¹ S¹ (λ (x : S¹), μ x (σ x)) base base
 
 def inv : S¹ → S¹ :=
 S¹-rec S¹ base loop⁻¹
