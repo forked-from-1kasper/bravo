@@ -9,3 +9,26 @@ def center : Π (z : Z), Path R (elem zero) (elem z) :=
 Z-ind (λ (z : Z), Path R (elem zero) (elem z)) (idp (elem zero))
   (λ (z : Z) (p : Path R (elem zero) (elem z)), p ⬝ glue z)
   (λ (z : Z) (p : Path R (elem zero) (elem z)), p ⬝ (glue (pred z))⁻¹)
+
+def vect (u v : Z) : Path R (elem u) (elem v) :=
+(center u)⁻¹ ⬝ center v
+
+def R-contr : is-contr R :=
+(elem zero, R-ind (λ (y : R), Path R (elem zero) y) center
+  (Z-ind (λ (z : Z),
+    Path (Path R (elem zero) (elem (succ z)))
+      (subst R (λ (y : R), Path R (elem zero) y)
+        (elem z) (elem (succ z)) (glue z) (center z))
+      (center (succ z)))
+    (idp (glue zero))
+    (λ (z : Z) (p : Path (Path R (elem zero) (elem (succ z)))
+                         (center z ⬝ glue z) (center z ⬝ glue z)),
+      idp (center z ⬝ glue z ⬝ glue (succ z)))
+    (λ (z : Z) (p : Path (Path R (elem zero) (elem (succ z)))
+                         (center z ⬝ glue z) (center z ⬝ glue z)),
+      idp (center z))))
+
+def dist : is-prop R := contr-impl-prop R R-contr
+
+def Z-lift (f : Z → Z) : R → R :=
+R-rec R (λ (z : Z), elem (f z)) (λ (z : Z), vect (f z) (f (succ z)))

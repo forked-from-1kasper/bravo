@@ -5,11 +5,14 @@ def idfun (A : U) (a : A) : A := a
 
 def ∘ (A B C : U) (f : B → C) (g : A → B) : A → C := λ (x : A), f (g x)
 
-def is-contr (A: U) : U := Σ (x: A), Π (y: A), Path A x y
+def is-contr (A: U) : U := Σ (x : A), Π (y : A), Path A x y
 def is-prop (A : U) : U := Π (a b : A), Path A a b
 def is-set (A : U) : U := Π (a b : A), is-prop (Path A a b)
 def is-groupoid (A : U) : U := Π (a b : A), is-set (Path A a b)
 def is-2-groupoid (A : U) : U := Π (a b : A), is-groupoid (Path A a b)
+
+def contr-impl-prop (A : U) (z : is-contr A) : is-prop A :=
+λ (a b : A), (z.2 a)⁻¹ ⬝ z.2 b
 
 def subst (A : U) (P : A → U) (a b : A) (p : Path A a b) (x : P a) : P b :=
 coe (cong (λ (x : A) (H : ∂ a b x), P x) p) x
