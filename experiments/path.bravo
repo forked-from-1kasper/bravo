@@ -1,6 +1,5 @@
 module path where
 
-def ⊥-rec (A : V) : ⊥ → A := ⊥-ind (λ (_ : ⊥), A)
 def ¬ (A : V) := A → ⊥
 
 def id (A : U) : U := A

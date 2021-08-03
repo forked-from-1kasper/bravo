@@ -72,7 +72,7 @@ let rec eval (e0 : exp) (ctx : ctx) = traceEval e0; match e0 with
   | EGlue                 -> VGlue
   | ERInd e               -> VRInd (eval e ctx)
   | EBot                  -> VBot
-  | EBotInd e             -> VBotInd (eval e ctx)
+  | EBotRec e             -> VBotRec (eval e ctx)
 
 and bcomp a b  = reduceBoundary (VComp (a, b))
 and bleft v p  = reduceBoundary (VBLeft (v, p))
@@ -436,7 +436,7 @@ and inferV v = traceInferV v; match v with
   | VS1Ind v -> inferS1Ind v
   | VR -> VKan 0 | VElem -> implv VZ VR | VGlue -> inferGlue ()
   | VRInd v -> inferRInd v
-  | VBot -> VKan 0 | VBotInd v -> inferBotInd v
+  | VBot -> VKan 0 | VBotRec v -> implv VBot v
   | v -> raise (InferVError v)
 
 and inferS1Ind v =
@@ -466,8 +466,6 @@ and inferRInd v =
           VLam (VBoundary (elemv z, elemv (succv z), x),
             (freshName "y", fun _ -> e x))))) (VApp (VGlue, z))) (app (cz, z)), app (cz, succv z)))))
       (VPi (VR, (freshName "z", e)))))
-
-and inferBotInd v = VPi (VBot, (freshName "x", fun x -> app (v, x)))
 
 and inferFst = function
   | VSig (t, _)   -> t
@@ -527,7 +525,7 @@ and rbV v : exp = traceRbV v; match v with
   | VGlue                 -> EGlue
   | VRInd v               -> ERInd (rbV v)
   | VBot                  -> EBot
-  | VBotInd v             -> EBotInd (rbV v)
+  | VBotRec v             -> EBotRec (rbV v)
 
 and rbVTele ctor t (p, g) =
   let x = Var (p, t) in ctor p (rbV t) (rbV (g x))
@@ -580,7 +578,7 @@ and conv v1 v2 : bool = traceConv v1 v2;
     | VGlue, VGlue -> true
     | VRInd u, VRInd v -> conv u v
     | VBot, VBot -> true
-    | VBotInd u, VBotInd v -> conv u v
+    | VBotRec u, VBotRec v -> conv u v
     | _, _ -> false
   end || convProofIrrel v1 v2
 
@@ -676,13 +674,13 @@ and infer ctx e : value = traceInfer e; try match e with
   | ES1Ind e -> inferInd ctx VS1 e inferS1Ind
   | ERInd e -> inferInd ctx VR e inferRInd
   | ER -> VKan 0 | Elem -> implv VZ VR | EGlue -> inferGlue ()
-  | EBot -> VKan 0 | EBotInd e -> inferInd ctx VBot e inferBotInd
+  | EBot -> VKan 0 | EBotRec e -> ignore (extSet (infer ctx e)); implv VBot (eval e ctx)
   | e -> raise (InferError e)
   with ex -> Printf.printf "When trying to infer type of\n  %s\n" (showExp e); raise ex
 
 and inferInd ctx t e f =
   let (t', (p, g)) = extPi (infer ctx e) in eqNf t t';
-  ignore (extSet (g (Var (p, t)))); f (eval e ctx)
+  ignore (extKan (g (Var (p, t)))); f (eval e ctx)
 
 and inferTele ctx p a b =
   ignore (extSet (infer ctx a));
@@ -790,7 +788,7 @@ and mem x = function
   | VFst e  | VSnd e  | VId e    | VRefl e
   | VJ e    | VIdp e  | VRev e   | VSymm e
   | VUA e   | VZInd e | VS1Ind e | VRInd e
-  | VBotInd e -> mem x e
+  | VBotRec e -> mem x e
 
   | VPair (a, b)  | VComp (a, b) | VApp (a, b)
   | VCoe (a, b)   | VCong (a, b) | VTrans (a, b)
@@ -850,7 +848,7 @@ and subst rho = function
   | VGlue                 -> VGlue
   | VRInd v               -> VRInd (subst rho v)
   | VBot                  -> VBot
-  | VBotInd v             -> VBotInd (subst rho v)
+  | VBotRec v             -> VBotRec (subst rho v)
   | Var (x, t)            -> begin match Env.find_opt x rho with
     | Some v -> v
     | None   -> Var (x, t)

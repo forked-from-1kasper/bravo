@@ -68,7 +68,7 @@ let s1ind = "S\xC2\xB9-ind"
 let rind  = "R-ind"
 
 let bot    = "_|_" | "\xE2\x8A\xA5" (* ⊥ *)
-let botind = bot "-ind"
+let botrec = bot "-rec"
 
 rule main = parse
 | nl       { nextLine lexbuf; main lexbuf }
@@ -96,6 +96,6 @@ rule main = parse
 | bcong    { BCONG }       | comp       { COMP }
 | "ua"     { UA }          | equiv      { EQUIV }
 | zind     { ZIND }        | s1ind      { S1IND }
-| rind     { RIND }        | botind     { BOTIND }
+| rind     { RIND }        | botrec     { BOTREC }
 | "mkeqv"  { MKEQV }       | ident as s { IDENT s }
 | eof      { EOF }

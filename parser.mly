@@ -48,7 +48,7 @@
 %token BOUNDARY LEFT RIGHT SYMM COMP BLEFT BRIGHT BCONG
 %token MEET COE CONG
 %token UA EQUIV MKEQV
-%token ZIND S1IND RIND BOTIND
+%token ZIND S1IND RIND BOTREC
 
 %right ARROW PROD
 %left TRANS
@@ -110,7 +110,7 @@ exp5 :
   | ZIND exp6 { EZInd $2 }
   | S1IND exp6 { ES1Ind $2 }
   | RIND exp6 { ERInd $2 }
-  | BOTIND exp6 { EBotInd $2 }
+  | BOTREC exp6 { EBotRec $2 }
   | exp6 { $1 }
 
 exp6:
