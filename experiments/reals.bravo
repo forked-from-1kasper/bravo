@@ -44,6 +44,13 @@ R-rec (B x) (Z-con A B f g p x) (Z-ind (λ (z : Z), Path (B x) (Z-con A B f g p 
   (λ (z : Z) (_ : Path (B x) (Z-con A B f g p x z) (g x)), p x))
 
 def funext (A : U) (B : A → U) (f g : Π (x : A), B x)
-  (p : Π (x : A), Path (B x) (f x) (g x)) (x : A) :=
+  (p : Π (x : A), Path (B x) (f x) (g x)) :=
 ap R (Π (x : A), B x) (λ (z : R) (x : A), R-con A B f g p x z)
      (elem zero) (elem (succ zero)) (glue zero)
+
+def Z-lift² (f : Z → Z → Z) : R → R → R :=
+R-rec (R → R) (λ (z : Z), Z-lift (f z))
+  (λ (z : Z), funext R (λ (_ : R), R) (Z-lift (f z)) (Z-lift (f (succ z)))
+    (λ (x : R), dist (Z-lift (f z) x) (Z-lift (f (succ z)) x)))
+
+def R-add := Z-lift² Z-add
