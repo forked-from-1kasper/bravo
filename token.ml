@@ -26,4 +26,4 @@ let tokenToString : token -> string = function
   | IMPORT     -> "IMPORT"      | UA         -> "UA"
   | EQUIV      -> "EQUIV"       | MKEQV      -> "MKEQV"
   | ZIND       -> "ZIND"        | S1IND      -> "S1IND"
-  | RIND       -> "RIND"
+  | RIND       -> "RIND"        | BOTIND     -> "BOTIND"
