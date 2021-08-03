@@ -32,3 +32,18 @@ def dist : is-prop R := contr-impl-prop R R-contr
 
 def Z-lift (f : Z → Z) : R → R :=
 R-rec R (λ (z : Z), elem (f z)) (λ (z : Z), vect (f z) (f (succ z)))
+
+def Z-con (A : U) (B : A → U) (f g : Π (x : A), B x)
+  (p : Π (x : A), Path (B x) (f x) (g x)) (x : A) : Z → B x :=
+Z-rec (B x) (f x) (λ (_ : B x), g x) (λ (_ : B x), f x)
+
+def R-con (A : U) (B : A → U) (f g : Π (x : A), B x)
+  (p : Π (x : A), Path (B x) (f x) (g x)) (x : A) : R → B x :=
+R-rec (B x) (Z-con A B f g p x) (Z-ind (λ (z : Z), Path (B x) (Z-con A B f g p x z) (g x))
+  (p x) (λ (z : Z) (_ : Path (B x) (Z-con A B f g p x z) (g x)), idp (g x))
+  (λ (z : Z) (_ : Path (B x) (Z-con A B f g p x z) (g x)), p x))
+
+def funext (A : U) (B : A → U) (f g : Π (x : A), B x)
+  (p : Π (x : A), Path (B x) (f x) (g x)) (x : A) :=
+ap R (Π (x : A), B x) (λ (z : R) (x : A), R-con A B f g p x z)
+     (elem zero) (elem (succ zero)) (glue zero)
