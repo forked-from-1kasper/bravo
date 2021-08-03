@@ -459,7 +459,7 @@ and inferRInd v =
         coe (cong (VLam (VR, (freshName "x", fun x ->
           VLam (VBoundary (elemv z, elemv (succv z), x),
             (freshName "y", fun _ -> e x))))) (VApp (VGlue, z))) (app (cz, z)), app (cz, succv z)))))
-      (VPi (VZ, (freshName "z", e)))))
+      (VPi (VR, (freshName "z", e)))))
 
 and inferFst = function
   | VSig (t, _)   -> t
