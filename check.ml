@@ -381,6 +381,9 @@ and app (f, x) = match f, x with
   | VApp (VApp (VS1Ind _, b), _), VBase -> b
   | _, _ -> VApp (f, x)
 
+and succv z = app (VSucc, z)
+and predv z = app (VPred, z)
+
 and getRho ctx x = match Env.find_opt x ctx with
   | Some (_, _, Value v) -> v
   | Some (_, _, Exp e)   -> eval e ctx

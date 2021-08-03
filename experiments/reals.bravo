@@ -4,3 +4,8 @@ import experiments/circle
 def R-rec (A : U) := R-ind (λ (x : R), A)
 
 def cis := R-rec S¹ (λ (_ : Z), base) (λ (_ : Z), loop)
+
+def center : Π (z : Z), Path R (elem zero) (elem z) :=
+Z-ind (λ (z : Z), Path R (elem zero) (elem z)) (idp (elem zero))
+  (λ (z : Z) (p : Path R (elem zero) (elem z)), p ⬝ glue z)
+  (λ (z : Z) (p : Path R (elem zero) (elem z)), p ⬝ (glue (pred z))⁻¹)

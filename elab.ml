@@ -50,8 +50,6 @@ let implv a b = VPi (a, (Irrefutable, fun _ -> b))
 let prodv a b = VSig (a, (Irrefutable, fun _ -> b))
 
 let elemv z = VApp (VElem, z)
-let succv z = VApp (VSucc, z)
-let predv z = VApp (VPred, z)
 
 let impl a b = EPi (a, (Irrefutable, b))
 let prod a b = ESig (a, (Irrefutable, b))
