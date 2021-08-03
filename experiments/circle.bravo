@@ -5,8 +5,8 @@ import experiments/inf-group
 
 def Ω¹S¹ := Path S¹ base base
 
---def S¹-∂-connected : Π (x : S¹), ∂ base base x :=
---S¹-ind (λ (x : S¹), ∂ base base x) (left base base) (idp (left base base))
+def S¹-∂-connected : Π (x : S¹), ∂ base base x :=
+S¹-ind (λ (x : S¹), ∂ base base x) (left base base) (idp (left base base))
 
 def S¹-rec (β : U) : Π (b : β), Path β b b → S¹ → β :=
 S¹-ind (λ (x : S¹), β)

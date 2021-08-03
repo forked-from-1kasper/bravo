@@ -21,6 +21,9 @@
     | "S¹"   -> ES1
     | "loop" -> ELoop
     | "base" -> EBase
+    | "R"    -> ER
+    | "elem" -> Elem
+    | "glue" -> EGlue
     | x      -> decl x
 
   let rec getVar x =
@@ -43,7 +46,7 @@
 %token BOUNDARY LEFT RIGHT SYMM COMP BLEFT BRIGHT BCONG
 %token MEET COE CONG
 %token UA EQUIV MKEQV
-%token ZIND S1IND
+%token ZIND S1IND RIND
 
 %right ARROW PROD
 %left TRANS
@@ -104,6 +107,7 @@ exp5 :
   | exp6 EQUIV exp6 { Equiv ($1, $3) }
   | ZIND exp6 { EZInd $2 }
   | S1IND exp6 { ES1Ind $2 }
+  | RIND exp6 { ERInd $2 }
   | exp6 { $1 }
 
 exp6:

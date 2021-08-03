@@ -14,6 +14,7 @@ type exp =
   | EUA of exp | Equiv of exp * exp | EMkEquiv of exp * exp * exp * exp   (* univalence *)
   | EZ | EZero | ESucc | EPred | EZInd of exp                                      (* Z *)
   | ES1 | EBase | ELoop | ES1Ind of exp                                           (* S¹ *)
+  | ER | Elem | EGlue | ERInd of exp                                               (* R *)
 
 type tele = name * exp
 
@@ -33,6 +34,7 @@ type value =
   | VUA of value | VEquiv of value * value | VMkEquiv of value * value * value * value
   | VZ | VZero | VSucc | VPred | VZInd of value
   | VS1 | VBase | VLoop | VS1Ind of value
+  | VR | VElem | VGlue | VRInd of value
 
 and clos = name * (value -> value)
 
@@ -97,11 +99,14 @@ let rec ppExp paren e = let x = match e with
   | EZInd e -> Printf.sprintf "Z-ind %s" (ppExp true e)
   | ES1 -> "S¹" | EBase -> "base" | ELoop -> "loop"
   | ES1Ind e -> Printf.sprintf "S¹-ind %s" (ppExp true e)
+  | ER -> "R" | Elem -> "elem" | EGlue -> "glue"
+  | ERInd e -> Printf.sprintf "R-ind %s" (ppExp true e)
   in match e with
   | EVar _ | EFst _ | ESnd _  | EPre _
   | EKan _ | EHole  | EPair _ | ERev _
   | EZ     | EZero  | ESucc   | EPred
-  | ES1    | EBase  | ELoop -> x
+  | ES1    | EBase  | ELoop
+  | ER     | Elem   | EGlue -> x
   | _ -> parens paren x
 
 and showExp e = ppExp false e
@@ -148,11 +153,14 @@ let rec ppValue paren v = let x = match v with
   | VZInd e -> Printf.sprintf "Z-ind %s" (ppValue true e)
   | VS1 -> "S¹" | VBase -> "base" | VLoop -> "loop"
   | VS1Ind e -> Printf.sprintf "S¹-ind %s" (ppValue true e)
+  | VR -> "R" | VElem -> "elem" | VGlue -> "glue"
+  | VRInd e -> Printf.sprintf "R-ind %s" (ppValue true e)
   in match v with
   | Var _  | VFst _ | VSnd _  | VPre _
   | VKan _ | VHole  | VPair _ | VRev _
   | VZ     | VZero  | VSucc   | VPred
-  | VS1    | VBase  | VLoop -> x
+  | VS1    | VBase  | VLoop
+  | VR     | VElem  | VGlue -> x
   | _ -> parens paren x
 
 and showValue v = ppValue false v

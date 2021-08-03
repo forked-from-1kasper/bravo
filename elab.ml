@@ -49,6 +49,10 @@ let idv t x y = VApp (VApp (VId t, x), y)
 let implv a b = VPi (a, (Irrefutable, fun _ -> b))
 let prodv a b = VSig (a, (Irrefutable, fun _ -> b))
 
+let elemv z = VApp (VElem, z)
+let succv z = VApp (VSucc, z)
+let predv z = VApp (VPred, z)
+
 let impl a b = EPi (a, (Irrefutable, b))
 let prod a b = ESig (a, (Irrefutable, b))
 
@@ -96,6 +100,10 @@ let rec salt (ns : name Env.t) : exp -> exp = function
   | EBase                 -> EBase
   | ELoop                 -> ELoop
   | ES1Ind e              -> ES1Ind (salt ns e)
+  | ER                    -> ER
+  | Elem                  -> Elem
+  | EGlue                 -> EGlue
+  | ERInd e               -> ERInd (salt ns e)
 
 and saltTele ctor ns p a b =
   let x = fresh p in ctor x (salt ns a) (salt (Env.add p x ns) b)
