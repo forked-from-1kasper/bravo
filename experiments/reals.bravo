@@ -76,10 +76,3 @@ axiom elem-inj (x y : Z) : Id R (elem x) (elem y) → Id Z x y
 
 def unglue (z : Z) (p : Id R (elem z) (elem (succ z))) : ⊥ :=
 z-strict-ineq-succ-z z (elem-inj z (succ z) p)
-
---def cis-over-add-elem (y : R) : Π (x : Z), Id S¹ (cis (R-add (elem x) y)) (cis y) :=
---Z-ind (λ (x : Z), Id S¹ (cis (R-add (elem x) y)) (cis y)) (refl (cis y)) ? ?
-
---def cis-over-add (x y : R) : Id S¹ (cis (R-add x y)) (μ (cis x) (cis y)) :=
---R-ind (λ (y : R), Id S¹ (cis (R-add x y)) (μ (cis x) (cis y)))
---  (λ (z : Z), refl (cis x)) ? y
