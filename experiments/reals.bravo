@@ -54,3 +54,25 @@ R-rec (R → R) (λ (z : Z), Z-lift (f z))
     (λ (x : R), dist (Z-lift (f z) x) (Z-lift (f (succ z)) x)))
 
 def R-add := Z-lift² Z-add
+
+def reflect (A : U) (a b : A) : Id A a b → Path A a b :=
+idJ A (λ (a b : A) (_ : Id A a b), Path A a b) a (idp a) b
+
+def 0-ineq-1 (p : Path Z zero (succ zero)) : ⊥ :=
+coe (cong (λ (z : Z) (p : ∂ zero (succ zero) z),
+  Z-ind (λ (_ : Z), U) Z (λ (_ : Z) (_ : U), ⊥) (λ (_ : Z) (_ : U), ⊥) z) p) zero
+
+def z-ineq-succ-z (z : Z) : Path Z z (succ z) → ⊥ :=
+Z-ind (λ (z : Z), Path Z z (succ z) → ⊥) 0-ineq-1
+  (λ (z : Z) (f : Path Z z (succ z) → ⊥) (p : Path Z (succ z) (succ (succ z))),
+    f (ap Z Z pred (succ z) (succ (succ z)) p))
+  (λ (z : Z) (f : Path Z z (succ z) → ⊥) (p : Path Z (pred z) z),
+    f (ap Z Z succ (pred z) z p)) z
+
+def z-strict-ineq-succ-z (z : Z) (p : Id Z z (succ z)) : ⊥ :=
+z-ineq-succ-z z (reflect Z z (succ z) p)
+
+axiom elem-inj (x y : Z) : Id R (elem x) (elem y) → Id Z x y
+
+def unglue (z : Z) (p : Id R (elem z) (elem (succ z))) : ⊥ :=
+z-strict-ineq-succ-z z (elem-inj z (succ z) p)
