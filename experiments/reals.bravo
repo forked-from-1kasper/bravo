@@ -1,0 +1,6 @@
+module reals where
+import experiments/circle
+
+def R-rec (A : U) := R-ind (λ (x : R), A)
+
+def cis := R-rec S¹ (λ (_ : Z), base) (λ (_ : Z), loop)
