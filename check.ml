@@ -624,11 +624,11 @@ and infer ctx e : value = traceInfer e; try match e with
   | EZ -> VKan 0 | EZero -> VZ | ESucc -> implv VZ VZ | EPred -> implv VZ VZ
   | EZInd e ->
     let (t, (p, g)) = extPi (infer ctx e) in eqNf t VZ;
-    ignore (extSet (g (Var (p, t)))); inferZInd (eval e ctx)
+    ignore (extKan (g (Var (p, t)))); inferZInd (eval e ctx)
   | ES1 -> VKan 0 | EBase -> VS1 | ELoop -> VPath (VS1, VBase, VBase)
   | ES1Ind e ->
     let (t, (p, g)) = extPi (infer ctx e) in eqNf t VS1;
-    ignore (extSet (g (Var (p, t)))); inferS1Ind (eval e ctx)
+    ignore (extKan (g (Var (p, t)))); inferS1Ind (eval e ctx)
   | e -> raise (InferError e)
   with ex -> Printf.printf "When trying to infer type of\n  %s\n" (showExp e); raise ex
 
