@@ -37,6 +37,8 @@ def Z-con (A : U) (B : A → U) (f g : Π (x : A), B x)
   (p : Π (x : A), Path (B x) (f x) (g x)) (x : A) : Z → B x :=
 Z-rec (B x) (f x) (λ (_ : B x), g x) (λ (_ : B x), f x)
 
+def R-neg : R → R := Z-lift Z-neg′
+
 def R-con (A : U) (B : A → U) (f g : Π (x : A), B x)
   (p : Π (x : A), Path (B x) (f x) (g x)) (x : A) : R → B x :=
 R-rec (B x) (Z-con A B f g p x) (Z-ind (λ (z : Z), Path (B x) (Z-con A B f g p x z) (g x))
@@ -74,3 +76,8 @@ z-ineq-succ-z z (reflect Z z (succ z) p)
 
 def unglue (z : Z) (p : Id R (elem z) (elem (succ z))) : ⊥ :=
 z-strict-ineq-succ-z z (R-inj z (succ z) p)
+
+def cis-respects-unit : Id S¹ (cis (elem zero)) base := refl base
+
+def cis-respects-inverse : Π (x : R), Id S¹ (cis (R-neg x)) (ι (cis x)) :=
+R-indˢ (λ (_ : R), S¹) (λ (x : R), cis (R-neg x)) (λ (x : R), ι (cis x)) (λ (_ : Z), refl base)

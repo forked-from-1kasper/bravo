@@ -1,6 +1,6 @@
 module circle where
 
-import experiments/path
+import experiments/integer
 import experiments/inf-group
 
 def Ω¹S¹ := Path S¹ base base
@@ -35,14 +35,8 @@ idp x
 def double-loop := ap S¹ S¹ σ base base
 def triple-loop := ap S¹ S¹ (λ (x : S¹), μ x (σ x)) base base
 
-def inv : S¹ → S¹ :=
-S¹-rec S¹ base loop⁻¹
-
-def test :=
-ap S¹ S¹ inv base base (loop ⬝ loop ⬝ loop)
-
-def Z-succ-equiv : Z ≃ Z :=
-mkeqv Z Z succ ((pred, λ (x : Z), idp x), (pred, λ (x : Z), idp x))
+def ι : S¹ → S¹ := S¹-rec S¹ base loop⁻¹
+def ι-test := ap S¹ S¹ ι base base (loop ⬝ loop ⬝ loop)
 
 def helix : S¹ → U :=
 S¹-ind (λ (x : S¹), U) Z (ua Z-succ-equiv)
@@ -52,9 +46,6 @@ subst S¹ helix base x p zero
 
 -- it computes!
 def winding := encode base
-
-def Z-rec (A : U) (z : A) (s p : A → A) : Z → A :=
-Z-ind (λ (x : Z), A) z (λ (x : Z), s) (λ (x : Z), p)
 
 def S¹-succ (l : Ω¹S¹) := l ⬝ loop
 def S¹-pred (l : Ω¹S¹) := l ⬝ loop⁻¹

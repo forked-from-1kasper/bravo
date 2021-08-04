@@ -1,0 +1,10 @@
+module integer where
+import experiments/path
+
+def Z-rec (A : U) (z : A) (s p : A → A) : Z → A :=
+Z-ind (λ (x : Z), A) z (λ (x : Z), s) (λ (x : Z), p)
+
+def Z-succ-equiv : Z ≃ Z :=
+mkeqv Z Z succ ((pred, λ (x : Z), idp x), (pred, λ (x : Z), idp x))
+
+def Z-neg′ : Z → Z := Z-rec Z zero pred succ
