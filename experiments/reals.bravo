@@ -72,7 +72,5 @@ Z-ind (λ (z : Z), Path Z z (succ z) → ⊥) 0-ineq-1
 def z-strict-ineq-succ-z (z : Z) (p : Id Z z (succ z)) : ⊥ :=
 z-ineq-succ-z z (reflect Z z (succ z) p)
 
-axiom elem-inj (x y : Z) : Id R (elem x) (elem y) → Id Z x y
-
 def unglue (z : Z) (p : Id R (elem z) (elem (succ z))) : ⊥ :=
-z-strict-ineq-succ-z z (elem-inj z (succ z) p)
+z-strict-ineq-succ-z z (R-inj z (succ z) p)

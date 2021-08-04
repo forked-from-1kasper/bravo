@@ -27,3 +27,4 @@ let tokenToString : token -> string = function
   | EQUIV      -> "EQUIV"       | MKEQV      -> "MKEQV"
   | ZIND       -> "ZIND"        | S1IND      -> "S1IND"
   | RIND       -> "RIND"        | BOTREC     -> "BOTREC"
+  | S1INDS     -> "S1INDS"      | RINDS      -> "RINDS"

@@ -67,6 +67,10 @@ let zind  = "Z-ind"
 let s1ind = "S\xC2\xB9-ind"
 let rind  = "R-ind"
 
+let strict = "^s" | "\xCB\xA2" (* ˢ *)
+let s1inds = s1ind strict
+let rinds  = rind strict
+
 let bot    = "_|_" | "\xE2\x8A\xA5" (* ⊥ *)
 let botrec = bot "-rec"
 
@@ -97,5 +101,6 @@ rule main = parse
 | "ua"     { UA }          | equiv      { EQUIV }
 | zind     { ZIND }        | s1ind      { S1IND }
 | rind     { RIND }        | botrec     { BOTREC }
+| s1inds   { S1INDS }      | rinds      { RINDS }
 | "mkeqv"  { MKEQV }       | ident as s { IDENT s }
 | eof      { EOF }

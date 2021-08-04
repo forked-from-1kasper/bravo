@@ -98,10 +98,13 @@ let rec salt (ns : name Env.t) : exp -> exp = function
   | EBase                 -> EBase
   | ELoop                 -> ELoop
   | ES1Ind e              -> ES1Ind (salt ns e)
+  | ES1IndS e             -> ES1IndS (salt ns e)
   | ER                    -> ER
   | Elem                  -> Elem
   | EGlue                 -> EGlue
   | ERInd e               -> ERInd (salt ns e)
+  | ERIndS e              -> ERIndS (salt ns e)
+  | ERInj                 -> ERInj
   | EBot                  -> EBot
   | EBotRec e             -> EBotRec (salt ns e)
 

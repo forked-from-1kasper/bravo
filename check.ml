@@ -67,10 +67,13 @@ let rec eval (e0 : exp) (ctx : ctx) = traceEval e0; match e0 with
   | EBase                 -> VBase
   | ELoop                 -> VLoop
   | ES1Ind e              -> VS1Ind (eval e ctx)
+  | ES1IndS e             -> VS1IndS (eval e ctx)
   | ER                    -> VR
   | Elem                  -> VElem
   | EGlue                 -> VGlue
   | ERInd e               -> VRInd (eval e ctx)
+  | ERIndS e              -> VRIndS (eval e ctx)
+  | ERInj                 -> VRInj
   | EBot                  -> VBot
   | EBotRec e             -> VBotRec (eval e ctx)
 
@@ -375,12 +378,18 @@ and app (f, x) = match f, x with
     | VApp (VPred, y) -> app (app (p, y), app (f, y)) (* Z-ind β z s p (pred z) ~> p (Z-ind β z s p z) *)
     | _               -> VApp (f, x)
   end
+  (* S¹-ind β b ℓ base ~> b *)
+  | VApp (VApp (VS1Ind _, b), _), VBase -> b
+  (* S¹-indˢ β f g p base ~> p *)
+  | VApp (VApp (VApp (VS1IndS _, _), _), p), VBase -> p
   (* R-ind β cz sz (elem z) ~> cz z *)
   | VApp (VApp (VRInd _, cz), _), VApp (VElem, z) -> app (cz, z)
   | VSucc, VApp (VPred, z) -> z (* succ (pred z) ~> z *)
   | VPred, VApp (VSucc, z) -> z (* pred (succ z) ~> z *)
-  (* S¹-ind β b ℓ base ~> b *)
-  | VApp (VApp (VS1Ind _, b), _), VBase -> b
+  (* R-inj x x (refl (elem x)) ~> refl x *)
+  | VApp (VApp (VRInj, x), _), VRefl _ -> VRefl x
+  (* R-indˢ β f g p (elem z) ~> p z *)
+  | VApp (VApp (VApp (VRIndS _, _), _), p), VApp (VElem, z) -> app (p, z)
   | _, _ -> VApp (f, x)
 
 and succv z = app (VSucc, z)
@@ -419,7 +428,7 @@ and inferV v = traceInferV v; match v with
   | VComp (u, v) -> let (a, b, _) = extBoundary (inferV u) in
     let (_, _, y) = extBoundary (inferV v) in VBoundary (a, b, y)
   | VApp (f, x) -> let (_, (_, g)) = extPi (inferV f) in g x
-  | VRefl v -> VApp (VApp (VId (inferV v), v), v)
+  | VRefl v -> idv (inferV v) v v
   | VIdp v -> VPath (inferV v, v, v)
   | VRev p -> let (v, a, b) = extPath (inferV p) in VPath (v, b, a)
   | VTrans (p, q) -> let (t, a, _) = extPath (inferV p) in let (_, _, c) = extPath (inferV q) in VPath (t, a, c)
@@ -433,9 +442,9 @@ and inferV v = traceInferV v; match v with
   | VZ -> VKan 0 | VZero -> VZ | VSucc -> implv VZ VZ | VPred -> implv VZ VZ
   | VZInd v -> inferZInd v
   | VS1 -> VKan 0 | VBase -> VS1 | VLoop -> VPath (VS1, VBase, VBase)
-  | VS1Ind v -> inferS1Ind v
+  | VS1Ind v -> inferS1Ind v | VS1IndS v -> inferS1IndS v
   | VR -> VKan 0 | VElem -> implv VZ VR | VGlue -> inferGlue ()
-  | VRInd v -> inferRInd v
+  | VRInd v -> inferRInd v | VRIndS v -> inferRIndS v | VRInj -> inferRInj ()
   | VBot -> VKan 0 | VBotRec v -> implv VBot v
   | v -> raise (InferVError v)
 
@@ -444,6 +453,14 @@ and inferS1Ind v =
   VPi (e VBase, (freshName "b", fun b ->
     implv (VPath (e VBase, coe (ap VS1 e VBase VBase VLoop) b, b))
           (VPi (VS1, (freshName "x", e)))))
+
+and inferS1IndS v =
+  let e = fun x -> app (v, x) in
+  let f = freshName "f" in let g = freshName "g" in let x = freshName "x" in
+  let t = VPi (VS1, (x, e)) in
+  VPi (t, (f, fun f -> VPi (t, (g, fun g ->
+    implv (idv (e VBase) (app (f, VBase)) (app (g, VBase)))
+      (VPi (VS1, (x, fun x -> idv (e x) (app (f, x)) (app (g, x)))))))))
 
 and inferZInd v =
   let e = fun x -> app (v, x) in
@@ -466,6 +483,18 @@ and inferRInd v =
           VLam (VBoundary (elemv z, elemv (succv z), x),
             (freshName "y", fun _ -> e x))))) (VApp (VGlue, z))) (app (cz, z)), app (cz, succv z)))))
       (VPi (VR, (freshName "z", e)))))
+
+and inferRIndS v =
+  let e = fun x -> app (v, x) in
+  let f = freshName "f" in let g = freshName "g" in let x = freshName "x" in
+  let t = VPi (VR, (x, e)) in
+  VPi (t, (f, fun f -> VPi (t, (g, fun g ->
+    implv (VPi (VZ, (x, fun x -> idv (e (elemv x)) (app (f, elemv x)) (app (g, elemv x)))))
+          (VPi (VR, (x, fun x -> idv (e x) (app (f, x)) (app (g, x)))))))))
+
+and inferRInj () =
+  let x = freshName "x" in let y = freshName "y" in
+  VPi (VZ, (x, fun x -> VPi (VZ, (y, fun y -> implv (idv VR (elemv x) (elemv y)) (idv VZ x y)))))
 
 and inferFst = function
   | VSig (t, _)   -> t
@@ -520,10 +549,13 @@ and rbV v : exp = traceRbV v; match v with
   | VBase                 -> EBase
   | VLoop                 -> ELoop
   | VS1Ind v              -> ES1Ind (rbV v)
+  | VS1IndS v             -> ES1IndS (rbV v)
   | VR                    -> ER
   | VElem                 -> Elem
   | VGlue                 -> EGlue
   | VRInd v               -> ERInd (rbV v)
+  | VRIndS v              -> ERIndS (rbV v)
+  | VRInj                 -> ERInj
   | VBot                  -> EBot
   | VBotRec v             -> EBotRec (rbV v)
 
@@ -573,10 +605,13 @@ and conv v1 v2 : bool = traceConv v1 v2;
     | VBase, VBase -> true
     | VLoop, VLoop -> true
     | VS1Ind u, VS1Ind v -> conv u v
+    | VS1IndS u, VS1IndS v -> conv u v
     | VR, VR -> true
     | VElem, VElem -> true
     | VGlue, VGlue -> true
     | VRInd u, VRInd v -> conv u v
+    | VRIndS u, VRIndS v -> conv u v
+    | VRInj, VRInj -> true
     | VBot, VBot -> true
     | VBotRec u, VBotRec v -> conv u v
     | _, _ -> false
@@ -642,7 +677,7 @@ and infer ctx e : value = traceInfer e; try match e with
   | EPre u -> VPre (u + 1)
   | EPath (e, a, b) -> let t = eval e ctx in check ctx a t; check ctx b t; infer ctx e
   | EId e -> let v = eval e ctx in let n = extSet (infer ctx e) in implv v (implv v (VPre n))
-  | ERefl e -> let v = eval e ctx in let t = infer ctx e in VApp (VApp (VId t, v), v)
+  | ERefl e -> let v = eval e ctx in idv (infer ctx e) v v
   | EJ e -> inferJ ctx e
   | EIdp e -> let v = eval e ctx in let t = infer ctx e in VPath (t, v, v)
   | ERev p -> let (v, a, b) = extPath (infer ctx p) in VPath (v, b, a)
@@ -669,18 +704,21 @@ and infer ctx e : value = traceInfer e; try match e with
   | Equiv (a, b) -> let t1 = infer ctx a in let t2 = infer ctx b in ignore (extSet t1); eqNf t1 t2; t1
   | EMkEquiv (a, b, f, e) -> inferMkEquiv ctx a b f e
   | EZ -> VKan 0 | EZero -> VZ | ESucc -> implv VZ VZ | EPred -> implv VZ VZ
-  | EZInd e -> inferInd ctx VZ e inferZInd
+  | EZInd e -> inferInd false ctx VZ e inferZInd
   | ES1 -> VKan 0 | EBase -> VS1 | ELoop -> VPath (VS1, VBase, VBase)
-  | ES1Ind e -> inferInd ctx VS1 e inferS1Ind
-  | ERInd e -> inferInd ctx VR e inferRInd
+  | ES1Ind e -> inferInd true ctx VS1 e inferS1Ind
+  | ES1IndS e -> inferInd false ctx VS1 e inferS1IndS
   | ER -> VKan 0 | Elem -> implv VZ VR | EGlue -> inferGlue ()
+  | ERInd e -> inferInd true ctx VR e inferRInd
+  | ERIndS e -> inferInd false ctx VR e inferRIndS
+  | ERInj -> inferRInj ()
   | EBot -> VKan 0 | EBotRec e -> ignore (extSet (infer ctx e)); implv VBot (eval e ctx)
   | e -> raise (InferError e)
   with ex -> Printf.printf "When trying to infer type of\n  %s\n" (showExp e); raise ex
 
-and inferInd ctx t e f =
-  let (t', (p, g)) = extPi (infer ctx e) in eqNf t t';
-  ignore (extKan (g (Var (p, t)))); f (eval e ctx)
+and inferInd fibrant ctx t e f =
+  let (t', (p, g)) = extPi (infer ctx e) in eqNf t t'; let k = g (Var (p, t)) in
+  ignore (if fibrant then extKan k else extSet k); f (eval e ctx)
 
 and inferTele ctx p a b =
   ignore (extSet (infer ctx a));
@@ -780,15 +818,15 @@ and mem x = function
   | Var (y, _) -> x = y
   | VSig (t, (p, f)) | VPi (t, (p, f)) | VLam (t, (p, f)) ->
     mem x t || mem x (f (Var (p, t)))
-  | VKan _ | VPre _ | VHole
-  | VR     | VElem  | VGlue
-  | VS1    | VBase  | VLoop | VBot
+  | VS1    | VBase  | VLoop
+  | VKan _ | VPre _ | VHole | VBot
+  | VR     | VElem  | VGlue | VRInj
   | VZ     | VZero  | VSucc | VPred -> false
 
-  | VFst e  | VSnd e  | VId e    | VRefl e
-  | VJ e    | VIdp e  | VRev e   | VSymm e
-  | VUA e   | VZInd e | VS1Ind e | VRInd e
-  | VBotRec e -> mem x e
+  | VFst e    | VSnd e    | VId e    | VRefl e
+  | VJ e      | VIdp e    | VRev e   | VSymm e
+  | VUA e     | VZInd e   | VS1Ind e | VRInd e
+  | VBotRec e | VS1IndS e | VRIndS e -> mem x e
 
   | VPair (a, b)  | VComp (a, b) | VApp (a, b)
   | VCoe (a, b)   | VCong (a, b) | VTrans (a, b)
@@ -843,10 +881,13 @@ and subst rho = function
   | VBase                 -> VBase
   | VLoop                 -> VLoop
   | VS1Ind v              -> VS1Ind (subst rho v)
+  | VS1IndS v             -> VS1IndS (subst rho v)
   | VR                    -> VR
   | VElem                 -> VElem
   | VGlue                 -> VGlue
   | VRInd v               -> VRInd (subst rho v)
+  | VRIndS v              -> VRIndS (subst rho v)
+  | VRInj                 -> VRInj
   | VBot                  -> VBot
   | VBotRec v             -> VBotRec (subst rho v)
   | Var (x, t)            -> begin match Env.find_opt x rho with

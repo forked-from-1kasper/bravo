@@ -94,7 +94,7 @@ ua e₁ ⬝ ua e₂ ~> ua (e₂ ∘ e₁)
  zero : Z
  succ : Z → Z
  pred : Z → Z
-Z-ind : Π (β : Z → U), β zero → (Π z, β z → β (succ z)) → (Π z, β z → β (pred z)) → Π z, β z
+Z-ind : Π (β : Z → V), β zero → (Π z, β z → β (succ z)) → (Π z, β z → β (pred z)) → Π z, β z
 
 succ (pred z) ~> z
 pred (succ z) ~> z
@@ -103,18 +103,24 @@ pred (succ z) ~> z
 Z-ind β z s p (succ z) ~> s (Z-ind β z s p z)
 Z-ind β z s p (pred z) ~> p (Z-ind β z s p z)
 
-    S¹ : U
-  base : S¹
-  loop : Path S¹ base base
-S¹-ind : Π (β : S¹ → U) (b : β base), Path (β base) (coe (cong β loop) b) b → Π (x : S¹), β x
+     S¹ : U
+   base : S¹
+   loop : Path S¹ base base
+ S¹-ind : Π (β : S¹ → U) (b : β base), Path (β base) (coe (cong β loop) b) b → Π (x : S¹), β x
+S¹-indˢ : Π (β : S¹ → V) (f g : Π (x : S¹), β x), Id (β base) (f base) (g base) → Π (x : S¹), Id A (f x) (g x)
 
                 S¹-ind β b ℓ base ~> b
 cong (λ x H, S¹-ind β b ℓ x) loop ~> ℓ[x/base, H/left base base] ⬝ cong (λ x′ H′, b[x/x′, H/H′]) loop
+             S¹-indˢ β f g p base ~> p
 
-    R : U
- elem : Z → R
- glue : Π (z : Z), Path R (elem z) (elem (succ z))
-R-ind : Π (β : R → U) (cz : Π z, β (elem z)), (Π z, Path (β (elem (succ z))) (coe (cong β (glue z)) (cz z)) (cz (succ z))) → Π z, β z
+     R : U
+  elem : Z → R
+  glue : Π (z : Z), Path R (elem z) (elem (succ z))
+ R-ind : Π (β : R → U) (cz : Π z, β (elem z)), (Π z, Path (β (elem (succ z))) (coe (cong β (glue z)) (cz z)) (cz (succ z))) → Π z, β z
+R-indˢ : Π (β : R → V) (f g : Π (z : R), β x), (Π (z : Z), Id (β (elem x)) (f (elem x)) (g (elem x))) → Π (x : R), Id (β x) (f x) (g x)
+ R-inj : Π (x y : Z), Id R (elem x) (elem y) → Id Z x y
 
               R-ind β cz sz (elem z) ~> cz z
 cong (λ x H, R-ind β cz sz) (glue z) ~> sz z
+             R-indˢ β f g p (elem z) ~> p z
+           R-inj x x (refl (elem x)) ~> refl x

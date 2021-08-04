@@ -13,8 +13,8 @@ type exp =
   | EMeet of exp * exp * exp | ECoe of exp * exp | ECong of exp * exp (* Kan operations *)
   | EUA of exp | Equiv of exp * exp | EMkEquiv of exp * exp * exp * exp   (* univalence *)
   | EZ | EZero | ESucc | EPred | EZInd of exp                                      (* Z *)
-  | ES1 | EBase | ELoop | ES1Ind of exp                                           (* S¹ *)
-  | ER | Elem | EGlue | ERInd of exp                                               (* R *)
+  | ES1 | EBase | ELoop | ES1Ind of exp | ES1IndS of exp                          (* S¹ *)
+  | ER | Elem | EGlue | ERInd of exp | ERIndS of exp | ERInj                       (* R *)
   | EBot | EBotRec of exp                                                          (* ⊥ *)
 
 type tele = name * exp
@@ -34,8 +34,8 @@ type value =
   | VMeet of value * value * value | VCoe of value * value | VCong of value * value
   | VUA of value | VEquiv of value * value | VMkEquiv of value * value * value * value
   | VZ | VZero | VSucc | VPred | VZInd of value
-  | VS1 | VBase | VLoop | VS1Ind of value
-  | VR | VElem | VGlue | VRInd of value
+  | VS1 | VBase | VLoop | VS1Ind of value | VS1IndS of value
+  | VR | VElem | VGlue | VRInd of value | VRIndS of value | VRInj
   | VBot | VBotRec of value
 
 and clos = name * (value -> value)
@@ -101,8 +101,10 @@ let rec ppExp paren e = let x = match e with
   | EZInd e -> Printf.sprintf "Z-ind %s" (ppExp true e)
   | ES1 -> "S¹" | EBase -> "base" | ELoop -> "loop"
   | ES1Ind e -> Printf.sprintf "S¹-ind %s" (ppExp true e)
+  | ES1IndS e -> Printf.sprintf "S¹-indˢ %s" (ppExp true e)
   | ER -> "R" | Elem -> "elem" | EGlue -> "glue"
   | ERInd e -> Printf.sprintf "R-ind %s" (ppExp true e)
+  | ERIndS e -> Printf.sprintf "R-indˢ %s" (ppExp true e) | ERInj -> "R-inj"
   | EBot -> "⊥" | EBotRec e -> Printf.sprintf "⊥-ind %s" (ppExp true e)
   in match e with
   | EVar _ | EFst _ | ESnd _  | EPre _
@@ -156,8 +158,10 @@ let rec ppValue paren v = let x = match v with
   | VZInd e -> Printf.sprintf "Z-ind %s" (ppValue true e)
   | VS1 -> "S¹" | VBase -> "base" | VLoop -> "loop"
   | VS1Ind e -> Printf.sprintf "S¹-ind %s" (ppValue true e)
+  | VS1IndS e -> Printf.sprintf "S¹-indˢ %s" (ppValue true e)
   | VR -> "R" | VElem -> "elem" | VGlue -> "glue"
   | VRInd e -> Printf.sprintf "R-ind %s" (ppValue true e)
+  | VRIndS e -> Printf.sprintf "R-indˢ %s" (ppValue true e) | VRInj -> "R-inj"
   | VBot -> "⊥" | VBotRec e -> Printf.sprintf "⊥-ind %s" (ppValue true e)
   in match v with
   | Var _  | VFst _ | VSnd _  | VPre _
