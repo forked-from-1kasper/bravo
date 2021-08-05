@@ -47,12 +47,12 @@ subst S¹ helix base x p Z-zero
 -- it computes!
 def winding := encode base
 
-def S¹-succ (l : Ω¹S¹) := l ⬝ loop
-def S¹-pred (l : Ω¹S¹) := l ⬝ loop⁻¹
+def turn (l : Ω¹S¹) := l ⬝ loop
+def back-turn (l : Ω¹S¹) := l ⬝ loop⁻¹
 
 def power : Z → Ω¹S¹ :=
-Z-rec Ω¹S¹ (N-rec Ω¹S¹ (idp base) (λ (_ : N), S¹-succ))
-           (N-rec Ω¹S¹ loop⁻¹ (λ (_ : N), S¹-pred))
+Z-rec Ω¹S¹ (N-rec Ω¹S¹ (idp base) (λ (_ : N), turn))
+           (N-rec Ω¹S¹ loop⁻¹ (λ (_ : N), back-turn))
 
 def decode : Π (x : S¹), helix x → Path S¹ base x :=
 S¹-ind (λ (x : S¹), helix x → Path S¹ base x) power
