@@ -63,6 +63,7 @@ let subscript = '\xE2' '\x82' ['\x80'-'\x89']
 let kan       = 'U' subscript*
 let pre       = 'V' subscript*
 
+let nind  = "N-ind"
 let zind  = "Z-ind"
 let s1ind = "S\xC2\xB9-ind"
 let rind  = "R-ind"
@@ -75,32 +76,32 @@ let bot    = "_|_" | "\xE2\x8A\xA5" (* ⊥ *)
 let botrec = bot "-rec"
 
 rule main = parse
-| nl       { nextLine lexbuf; main lexbuf }
-| comment  { nextLine lexbuf; main lexbuf }
-| ws+      { main lexbuf }
-| "module" { MODULE }      | "where"    { WHERE }
-| "import" { IMPORT }      | "option"   { OPTION }
-| def      { DEF }         | colon      { COLON }
-| ','      { COMMA }       | '_'        { IRREF }
-| '('      { LPARENS }     | ')'        { RPARENS }
-| ".1"     { FST }         | ".2"       { SND }
-| pi       { PI }          | sigma      { SIGMA }
-| axiom    { AXIOM }       | defeq      { DEFEQ }
-| lam      { LAM }         | arrow      { ARROW }
-| prod     { PROD }        | kan as s   { KAN (getLevel s) }
-| "Path"   { PATH }        | "Id"       { ID }
-| "refl"   { REFL }        | "idJ"      { IDJ }
-| rev      { REV }         | trans      { TRANS }
-| "idp"    { IDP }         | pre as s   { PRE (getLevel s) }
-| "?"      { HOLE }        | boundary   { BOUNDARY }
-| "left"   { LEFT }        | "right"    { RIGHT }
-| "meet"   { MEET }        | "coe"      { COE }
-| "cong"   { CONG }        | symm       { SYMM }
-| bleft    { BLEFT }       | bright     { BRIGHT }
-| bcong    { BCONG }       | comp       { COMP }
-| "ua"     { UA }          | equiv      { EQUIV }
-| zind     { ZIND }        | s1ind      { S1IND }
-| rind     { RIND }        | botrec     { BOTREC }
-| s1inds   { S1INDS }      | rinds      { RINDS }
-| "mkeqv"  { MKEQV }       | ident as s { IDENT s }
-| eof      { EOF }
+| nl         { nextLine lexbuf; main lexbuf }
+| comment    { nextLine lexbuf; main lexbuf }
+| ws+        { main lexbuf }
+| "module"   { MODULE }      | "where"    { WHERE }
+| "import"   { IMPORT }      | "option"   { OPTION }
+| def        { DEF }         | colon      { COLON }
+| ','        { COMMA }       | '_'        { IRREF }
+| '('        { LPARENS }     | ')'        { RPARENS }
+| ".1"       { FST }         | ".2"       { SND }
+| pi         { PI }          | sigma      { SIGMA }
+| axiom      { AXIOM }       | defeq      { DEFEQ }
+| lam        { LAM }         | arrow      { ARROW }
+| prod       { PROD }        | kan as s   { KAN (getLevel s) }
+| "Path"     { PATH }        | "Id"       { ID }
+| "refl"     { REFL }        | "idJ"      { IDJ }
+| rev        { REV }         | trans      { TRANS }
+| "idp"      { IDP }         | pre as s   { PRE (getLevel s) }
+| "?"        { HOLE }        | boundary   { BOUNDARY }
+| "left"     { LEFT }        | "right"    { RIGHT }
+| "meet"     { MEET }        | "coe"      { COE }
+| "cong"     { CONG }        | symm       { SYMM }
+| bleft      { BLEFT }       | bright     { BRIGHT }
+| bcong      { BCONG }       | comp       { COMP }
+| "ua"       { UA }          | equiv      { EQUIV }
+| nind       { NIND }        | zind       { ZIND }
+| s1ind      { S1IND }       | s1inds     { S1INDS }
+| rind       { RIND }        | rinds      { RINDS }
+| botrec     { BOTREC }      | "mkeqv"    { MKEQV }
+| ident as s { IDENT s }     | eof        { EOF }

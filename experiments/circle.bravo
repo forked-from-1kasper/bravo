@@ -1,6 +1,6 @@
 module circle where
 
-import experiments/integer
+import experiments/funext
 import experiments/inf-group
 
 def Ω¹S¹ := Path S¹ base base
@@ -42,7 +42,7 @@ def helix : S¹ → U :=
 S¹-ind (λ (x : S¹), U) Z (ua Z-succ-equiv)
 
 def encode (x : S¹) (p : Path S¹ base x) : helix x :=
-subst S¹ helix base x p zero
+subst S¹ helix base x p Z-zero
 
 -- it computes!
 def winding := encode base
@@ -51,18 +51,29 @@ def S¹-succ (l : Ω¹S¹) := l ⬝ loop
 def S¹-pred (l : Ω¹S¹) := l ⬝ loop⁻¹
 
 def power : Z → Ω¹S¹ :=
-Z-rec Ω¹S¹ (idp base) S¹-succ S¹-pred
+Z-rec Ω¹S¹ (N-rec Ω¹S¹ (idp base) (λ (_ : N), S¹-succ))
+           (N-rec Ω¹S¹ loop⁻¹ (λ (_ : N), S¹-pred))
 
 def decode : Π (x : S¹), helix x → Path S¹ base x :=
-S¹-ind (λ (x : S¹), helix x → Path S¹ base x) power (idp power)
+S¹-ind (λ (x : S¹), helix x → Path S¹ base x) power
+  (funext Z (λ (_ : Z), Ω¹S¹) (λ (z : Z), power (Z-pred z) ⬝ loop) power
+    (Z-ind (λ (z : Z), Path Ω¹S¹ (power (Z-pred z) ⬝ loop) (power z))
+      (N-ind (λ (m : N), Path Ω¹S¹ (power (Z-pred (pos m)) ⬝ loop) (power (pos m)))
+        (idp (idp base)) (λ (m : N) (p : Path Ω¹S¹ (power (Z-pred (pos m)) ⬝ loop) (power (pos m))), idp (power (pos (succ m)))))
+      (λ (n : N), idp (power (neg n)))))
 
 def decode-encode : Π (x : S¹) (p : Path S¹ base x), Path (Path S¹ base x) (decode x (encode x p)) p :=
 J′ S¹ base (λ (x : S¹) (p : Path S¹ base x), Path (Path S¹ base x) (decode x (encode x p)) p) (idp (idp base))
 
+def encode-decodeᵀ (z : Z) :=
+Path Z (encode base (decode base z)) z
+
 def encode-decode : Π (z : Z), Path Z (encode base (decode base z)) z :=
-Z-ind (λ (z : Z), Path Z (encode base (decode base z)) z) (idp zero)
-  (λ (z : Z), ap Z Z succ (encode base (decode base z)) z)
-  (λ (z : Z), ap Z Z pred (encode base (decode base z)) z)
+Z-ind encode-decodeᵀ
+  (N-ind (λ (m : N), encode-decodeᵀ (pos m)) (idp (pos zero))
+         (λ (m : N), ap Z Z Z-succ (encode base (decode base (pos m))) (pos m)))
+  (N-ind (λ (m : N), encode-decodeᵀ (neg m)) (idp (neg zero))
+         (λ (m : N), ap Z Z Z-pred (encode base (decode base (neg m))) (neg m)))
 
 def fundamental-group : Ω¹S¹ ≃ Z :=
 mkeqv Ω¹S¹ Z (encode base) ((decode base, decode-encode base), (decode base, encode-decode))

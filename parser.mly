@@ -14,20 +14,24 @@
     end
 
   let global = function
-    | "Z"     -> EZ
-    | "zero"  -> EZero
-    | "succ"  -> ESucc
-    | "pred"  -> EPred
-    | "S¹"    -> ES1
-    | "loop"  -> ELoop
-    | "base"  -> EBase
-    | "R"     -> ER
-    | "elem"  -> Elem
-    | "glue"  -> EGlue
-    | "_|_"   -> EBot
-    | "⊥"     -> EBot
-    | "R-inj" -> ERInj
-    | x       -> decl x
+    | "N"      -> EN
+    | "zero"   -> EZero
+    | "succ"   -> ESucc
+    | "Z"      -> EZ
+    | "pos"    -> EPos
+    | "neg"    -> ENeg
+    | "Z-succ" -> EZSucc
+    | "Z-pred" -> EZPred
+    | "S¹"     -> ES1
+    | "loop"   -> ELoop
+    | "base"   -> EBase
+    | "R"      -> ER
+    | "elem"   -> Elem
+    | "glue"   -> EGlue
+    | "_|_"    -> EBot
+    | "⊥"      -> EBot
+    | "R-inj"  -> ERInj
+    | x        -> decl x
 
   let rec getVar x =
     match remSuffix "⁻¹" x with
@@ -49,7 +53,7 @@
 %token BOUNDARY LEFT RIGHT SYMM COMP BLEFT BRIGHT BCONG
 %token MEET COE CONG
 %token UA EQUIV MKEQV
-%token ZIND S1IND S1INDS RIND RINDS BOTREC
+%token NIND ZIND S1IND S1INDS RIND RINDS BOTREC
 
 %right ARROW PROD
 %left TRANS
@@ -108,6 +112,7 @@ exp5 :
   | UA exp6 { EUA $2 }
   | MKEQV exp6 exp6 exp6 exp6 { EMkEquiv ($2, $3, $4, $5) }
   | exp6 EQUIV exp6 { Equiv ($1, $3) }
+  | NIND exp6 { ENInd $2 }
   | ZIND exp6 { EZInd $2 }
   | S1IND exp6 { ES1Ind $2 }
   | S1INDS exp6 { ES1IndS $2 }

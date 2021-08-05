@@ -1,0 +1,20 @@
+module funext where
+import experiments/integer
+
+def R-rec (A : U) := R-ind (λ (x : R), A)
+
+def Z-con (A : U) (B : A → U) (f g : Π (x : A), B x)
+  (p : Π (x : A), Path (B x) (f x) (g x)) (x : A) : Z → B x :=
+Z-rec (B x) (λ (_ : N), g x) (λ (_ : N), f x)
+
+def R-con (A : U) (B : A → U) (f g : Π (x : A), B x)
+  (p : Π (x : A), Path (B x) (f x) (g x)) (x : A) : R → B x :=
+R-rec (B x) (Z-con A B f g p x)
+  (Z-ind (λ (z : Z), Path (B x) (Z-con A B f g p x z) (Z-con A B f g p x (Z-succ z))) (λ (_ : N), idp (g x))
+    (N-ind (λ (n : N), Path (B x) (f x) (Z-con A B f g p x (Z-succ (neg n)))) (p x)
+           (λ (n : N) (p : Path (B x) (f x) (Z-con A B f g p x (Z-succ (neg n)))), idp (f x))))
+
+def funext (A : U) (B : A → U) (f g : Π (x : A), B x)
+  (p : Π (x : A), Path (B x) (f x) (g x)) :=
+ap R (Π (x : A), B x) (λ (z : R) (x : A), R-con A B f g p x z)
+     (elem (neg zero)) (elem (pos zero)) (glue (neg zero))

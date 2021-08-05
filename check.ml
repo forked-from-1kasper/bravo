@@ -58,10 +58,15 @@ let rec eval (e0 : exp) (ctx : ctx) = traceEval e0; match e0 with
   | EUA e                 -> ua (eval e ctx)
   | Equiv (a, b)          -> VEquiv (eval a ctx, eval b ctx)
   | EMkEquiv (a, b, f, e) -> VMkEquiv (eval a ctx, eval b ctx, eval f ctx, eval e ctx)
-  | EZ                    -> VZ
+  | EN                    -> VN
   | EZero                 -> VZero
   | ESucc                 -> VSucc
-  | EPred                 -> VPred
+  | ENInd e               -> VNInd (eval e ctx)
+  | EZ                    -> VZ
+  | EPos                  -> VPos
+  | ENeg                  -> VNeg
+  | EZSucc                -> VZSucc
+  | EZPred                -> VZPred
   | EZInd e               -> VZInd (eval e ctx)
   | ES1                   -> VS1
   | EBase                 -> VBase
@@ -372,28 +377,46 @@ and ua e =
 and app (f, x) = match f, x with
   (* (λ (x : t), f) v ~> f[x/v] *)
   | VLam (_, (_, f)), v -> f v
-  | VApp (VApp (VApp (VZInd _, z), s), p), _ -> begin match x with
-    | VZero           -> z                            (* Z-ind β z s p zero ~> z *)
-    | VApp (VSucc, y) -> app (app (s, y), app (f, y)) (* Z-ind β z s p (succ z) ~> s (Z-ind β z s p z) *)
-    | VApp (VPred, y) -> app (app (p, y), app (f, y)) (* Z-ind β z s p (pred z) ~> p (Z-ind β z s p z) *)
-    | _               -> VApp (f, x)
-  end
+  (* N-ind A z s zero ~> z *)
+  | VApp (VApp (VNInd _, z), _), VZero -> z
+
+  (* N-ind A z s (succ n) ~> s (N-ind A z s n) *)
+  | VApp (VApp (VNInd _, _), s), VApp (VSucc, n) -> app (app (s, n), app (f, n))
+  (* Z-ind A p n (pos x) ~> p x *)
+  | VApp (VApp (VZInd _, p), _), VApp (VPos, x) -> app (p, x)
+  (* Z-ind A p n (neg x) ~> n x *)
+  | VApp (VApp (VZInd _, _), n), VApp (VNeg, x) -> app (n, x)
+
+  (* Z-succ (neg (succ n)) ~> neg n *)
+  | VZSucc, VApp (VNeg, VApp (VSucc, n)) -> negv n
+  (* Z-succ (neg zero) ~> pos zero *)
+  | VZSucc, VApp (VNeg, VZero) -> posv VZero
+  (* Z-succ (pos n) ~> pos (succ n) *)
+  | VZSucc, VApp (VPos, n) -> posv (succv n)
+  (* Z-pred (neg n) ~> neg (succ n) *)
+  | VZPred, VApp (VNeg, n) -> negv (succv n)
+  (* Z-pred (pos zero) ~> neg zero *)
+  | VZPred, VApp (VPos, VZero) -> negv VZero
+  (* Z-pred (pos (succ n)) ~> pos n *)
+  | VZPred, VApp (VPos, VApp (VSucc, n)) -> posv n
+  (* Z-succ (Z-pred z) ~> z *)
+  | VZSucc, VApp (VZPred, z) -> z
+  (* Z-pred (Z-succ z) ~> z *)
+  | VZPred, VApp (VZSucc, z) -> z
+
   (* S¹-ind β b ℓ base ~> b *)
   | VApp (VApp (VS1Ind _, b), _), VBase -> b
   (* S¹-indˢ β f g p base ~> p *)
   | VApp (VApp (VApp (VS1IndS _, _), _), p), VBase -> p
+
   (* R-ind β cz sz (elem z) ~> cz z *)
   | VApp (VApp (VRInd _, cz), _), VApp (VElem, z) -> app (cz, z)
-  | VSucc, VApp (VPred, z) -> z (* succ (pred z) ~> z *)
-  | VPred, VApp (VSucc, z) -> z (* pred (succ z) ~> z *)
-  (* R-inj x x (refl (elem x)) ~> refl x *)
-  | VApp (VApp (VRInj, x), _), VRefl _ -> VRefl x
   (* R-indˢ β f g p (elem z) ~> p z *)
   | VApp (VApp (VApp (VRIndS _, _), _), p), VApp (VElem, z) -> app (p, z)
-  | _, _ -> VApp (f, x)
+  (* R-inj x x (refl (elem x)) ~> refl x *)
+  | VApp (VApp (VRInj, x), _), VRefl _ -> VRefl x
 
-and succv z = app (VSucc, z)
-and predv z = app (VPred, z)
+  | _, _ -> VApp (f, x)
 
 and getRho ctx x = match Env.find_opt x ctx with
   | Some (_, _, Value v) -> v
@@ -439,14 +462,28 @@ and inferV v = traceInferV v; match v with
   | VUA e -> let (a, b) = extEquiv (inferV e) in VPath (inferV a, a, b)
   | VEquiv (a, _) -> inferV a
   | VMkEquiv (a, b, _, _) -> VEquiv (a, b)
-  | VZ -> VKan 0 | VZero -> VZ | VSucc -> implv VZ VZ | VPred -> implv VZ VZ
-  | VZInd v -> inferZInd v
+  | VN -> VKan 0 | VZero -> VN | VSucc -> implv VN VN
+  | VNInd v -> inferNInd v
+  | VZ -> VKan 0 | VPos -> implv VN VZ | VNeg -> implv VN VZ
+  | VZSucc -> implv VZ VZ | VZPred -> implv VZ VZ | VZInd v -> inferZInd v
   | VS1 -> VKan 0 | VBase -> VS1 | VLoop -> VPath (VS1, VBase, VBase)
   | VS1Ind v -> inferS1Ind v | VS1IndS v -> inferS1IndS v
   | VR -> VKan 0 | VElem -> implv VZ VR | VGlue -> inferGlue ()
   | VRInd v -> inferRInd v | VRIndS v -> inferRIndS v | VRInj -> inferRInj ()
   | VBot -> VKan 0 | VBotRec v -> implv VBot v
   | v -> raise (InferVError v)
+
+and inferNInd v =
+  let e = fun x -> app (v, x) in
+  implv (e VZero)
+    (implv (VPi (VN, (freshName "n", fun n -> implv (e n) (e (succv n)))))
+           (VPi (VN, (freshName "n", e))))
+
+and inferZInd v =
+  let e = fun x -> app (v, x) in
+  implv (VPi (VN, (freshName "n", e << posv)))
+    (implv (VPi (VN, (freshName "n", e << negv)))
+      (VPi (VZ, (freshName "z", e))))
 
 and inferS1Ind v =
   let e = fun x -> app (v, x) in
@@ -462,26 +499,21 @@ and inferS1IndS v =
     implv (idv (e VBase) (app (f, VBase)) (app (g, VBase)))
       (VPi (VS1, (x, fun x -> idv (e x) (app (f, x)) (app (g, x)))))))))
 
-and inferZInd v =
-  let e = fun x -> app (v, x) in
-  implv (e VZero)
-    (implv (VPi (VZ, (freshName "z", fun z -> implv (e z) (e (succv z)))))
-      (implv (VPi (VZ, (freshName "z", fun z -> implv (e z) (e (predv z)))))
-        (VPi (VZ, (freshName "z", e)))))
+and zsuccv z = app (VZSucc, z)
 
 and inferGlue () =
   let z = freshName "z" in
-  VPi (VZ, (z, fun z -> VPath (VR, elemv z, elemv (succv z))))
+  VPi (VZ, (z, fun z -> VPath (VR, elemv z, elemv (zsuccv z))))
 
 and inferRInd v =
   let e = fun x -> app (v, x) in
   let cz = freshName "cz" in
   VPi (VPi (VZ, (freshName "z", e << elemv)), (cz, fun cz ->
     implv (VPi (VZ, (freshName "z", fun z ->
-      VPath (e (elemv (succv z)),
+      VPath (e (elemv (zsuccv z)),
         coe (cong (VLam (VR, (freshName "x", fun x ->
-          VLam (VBoundary (elemv z, elemv (succv z), x),
-            (freshName "y", fun _ -> e x))))) (VApp (VGlue, z))) (app (cz, z)), app (cz, succv z)))))
+          VLam (VBoundary (elemv z, elemv (zsuccv z), x),
+            (freshName "y", fun _ -> e x))))) (VApp (VGlue, z))) (app (cz, z)), app (cz, zsuccv z)))))
       (VPi (VR, (freshName "z", e)))))
 
 and inferRIndS v =
@@ -540,10 +572,15 @@ and rbV v : exp = traceRbV v; match v with
   | VUA e                 -> EUA (rbV e)
   | VEquiv (a, b)         -> Equiv (rbV a, rbV b)
   | VMkEquiv (a, b, f, v) -> EMkEquiv (rbV a, rbV b, rbV f, rbV v)
-  | VZ                    -> EZ
+  | VN                    -> EN
   | VZero                 -> EZero
   | VSucc                 -> ESucc
-  | VPred                 -> EPred
+  | VNInd v               -> ENInd (rbV v)
+  | VZ                    -> EZ
+  | VPos                  -> EPos
+  | VNeg                  -> ENeg
+  | VZSucc                -> EZSucc
+  | VZPred                -> EZPred
   | VZInd v               -> EZInd (rbV v)
   | VS1                   -> ES1
   | VBase                 -> EBase
@@ -596,10 +633,15 @@ and conv v1 v2 : bool = traceConv v1 v2;
     | VEquiv (a1, b1), VEquiv (a2, b2) -> conv a1 a2 && conv b1 b2
     | VMkEquiv (_, _, f1, v1), VMkEquiv (_, _, f2, v2) -> conv f1 f2 && conv v1 v2
     | VMkEquiv (_, _, f, v), u | u, VMkEquiv (_, _, f, v) -> conv (vfst u) f && conv (vsnd u) v
-    | VZ, VZ -> true
+    | VN, VN -> true
     | VZero, VZero -> true
     | VSucc, VSucc -> true
-    | VPred, VPred -> true
+    | VNInd u, VNInd v -> conv u v
+    | VZ, VZ -> true
+    | VPos, VPos -> true
+    | VNeg, VNeg -> true
+    | VZSucc, VZSucc -> true
+    | VZPred, VZPred -> true
     | VZInd u, VZInd v -> conv u v
     | VS1, VS1 -> true
     | VBase, VBase -> true
@@ -703,7 +745,10 @@ and infer ctx e : value = traceInfer e; try match e with
   | EUA e -> inferUA ctx e
   | Equiv (a, b) -> let t1 = infer ctx a in let t2 = infer ctx b in ignore (extSet t1); eqNf t1 t2; t1
   | EMkEquiv (a, b, f, e) -> inferMkEquiv ctx a b f e
-  | EZ -> VKan 0 | EZero -> VZ | ESucc -> implv VZ VZ | EPred -> implv VZ VZ
+  | EN -> VKan 0 | EZero -> VN | ESucc -> implv VN VN
+  | ENInd e -> inferInd false ctx VN e inferNInd
+  | EZ -> VKan 0 | EPos -> implv VN VZ | ENeg -> implv VN VZ
+  | EZSucc -> implv VZ VZ | EZPred -> implv VZ VZ
   | EZInd e -> inferInd false ctx VZ e inferZInd
   | ES1 -> VKan 0 | EBase -> VS1 | ELoop -> VPath (VS1, VBase, VBase)
   | ES1Ind e -> inferInd true ctx VS1 e inferS1Ind
@@ -818,15 +863,17 @@ and mem x = function
   | Var (y, _) -> x = y
   | VSig (t, (p, f)) | VPi (t, (p, f)) | VLam (t, (p, f)) ->
     mem x t || mem x (f (Var (p, t)))
+  | VBot   | VKan _ | VPre _ | VHole
   | VS1    | VBase  | VLoop
-  | VKan _ | VPre _ | VHole | VBot
   | VR     | VElem  | VGlue | VRInj
-  | VZ     | VZero  | VSucc | VPred -> false
+  | VN     | VZero  | VSucc
+  | VZ     | VPos   | VNeg
+  | VZSucc | VZPred -> false
 
-  | VFst e    | VSnd e    | VId e    | VRefl e
-  | VJ e      | VIdp e    | VRev e   | VSymm e
-  | VUA e     | VZInd e   | VS1Ind e | VRInd e
-  | VBotRec e | VS1IndS e | VRIndS e -> mem x e
+  | VFst e    | VSnd e    | VId e     | VRefl e
+  | VJ e      | VIdp e    | VRev e    | VSymm e
+  | VUA e     | VNInd e   | VZInd e   | VS1Ind e
+  | VRInd e   | VBotRec e | VS1IndS e | VRIndS e -> mem x e
 
   | VPair (a, b)  | VComp (a, b) | VApp (a, b)
   | VCoe (a, b)   | VCong (a, b) | VTrans (a, b)
@@ -872,10 +919,15 @@ and subst rho = function
   | VUA e                 -> ua (subst rho e)
   | VEquiv (a, b)         -> VEquiv (subst rho a, subst rho b)
   | VMkEquiv (a, b, f, e) -> VMkEquiv (subst rho a, subst rho b, subst rho f, subst rho e)
-  | VZ                    -> VZ
+  | VN                    -> VN
   | VZero                 -> VZero
   | VSucc                 -> VSucc
-  | VPred                 -> VPred
+  | VNInd v               -> VNInd (subst rho v)
+  | VZ                    -> VZ
+  | VPos                  -> VPos
+  | VNeg                  -> VNeg
+  | VZSucc                -> VZSucc
+  | VZPred                -> VZPred
   | VZInd v               -> VZInd (subst rho v)
   | VS1                   -> VS1
   | VBase                 -> VBase

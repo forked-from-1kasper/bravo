@@ -1,83 +1,78 @@
 module reals where
 import experiments/circle
 
-def R-rec (A : U) := R-ind (λ (x : R), A)
+def R-zero := elem Z-zero
 
 def cis := R-rec S¹ (λ (_ : Z), base) (λ (_ : Z), loop)
 
-def center : Π (z : Z), Path R (elem zero) (elem z) :=
-Z-ind (λ (z : Z), Path R (elem zero) (elem z)) (idp (elem zero))
-  (λ (z : Z) (p : Path R (elem zero) (elem z)), p ⬝ glue z)
-  (λ (z : Z) (p : Path R (elem zero) (elem z)), p ⬝ (glue (pred z))⁻¹)
+def center-pos :=
+N-ind (λ (n : N), Path R R-zero (elem (pos n))) (idp R-zero)
+      (λ (n : N) (p : Path R R-zero (elem (pos n))), p ⬝ glue (pos n))
+
+def center-neg :=
+N-ind (λ (n : N), Path R R-zero (elem (neg n))) (glue (neg zero))⁻¹
+      (λ (n : N) (p : Path R R-zero (elem (neg n))), p ⬝ (glue (neg (succ n)))⁻¹)
+
+def center : Π (z : Z), Path R R-zero (elem z) :=
+Z-ind (λ (z : Z), Path R R-zero (elem z)) center-pos center-neg
 
 def vect (u v : Z) : Path R (elem u) (elem v) :=
 (center u)⁻¹ ⬝ center v
 
+def R-contr-glueᵀ (z : Z) :=
+Path (Path R R-zero (elem (Z-succ z)))
+  (subst R (λ (y : R), Path R R-zero y) (elem z) (elem (Z-succ z)) (glue z) (center z))
+  (center (Z-succ z))
+
 def R-contr : is-contr R :=
-(elem zero, R-ind (λ (y : R), Path R (elem zero) y) center
-  (Z-ind (λ (z : Z),
-    Path (Path R (elem zero) (elem (succ z)))
-      (subst R (λ (y : R), Path R (elem zero) y)
-        (elem z) (elem (succ z)) (glue z) (center z))
-      (center (succ z)))
-    (idp (glue zero))
-    (λ (z : Z) (p : Path (Path R (elem zero) (elem (succ z)))
-                         (center z ⬝ glue z) (center z ⬝ glue z)),
-      idp (center z ⬝ glue z ⬝ glue (succ z)))
-    (λ (z : Z) (p : Path (Path R (elem zero) (elem (succ z)))
-                         (center z ⬝ glue z) (center z ⬝ glue z)),
-      idp (center z))))
+(elem Z-zero, R-ind (λ (y : R), Path R R-zero y) center
+  (Z-ind R-contr-glueᵀ
+    (N-ind (λ (n : N), R-contr-glueᵀ (pos n)) (idp (glue Z-zero))
+      (λ (n : N) (p : R-contr-glueᵀ (pos n)), idp (center-pos (succ (succ n)))))
+    (N-ind (λ (n : N), R-contr-glueᵀ (neg n)) (idp (idp R-zero))
+      (λ (n : N) (p : R-contr-glueᵀ (neg n)), idp (center-neg n)))))
 
 def dist : is-prop R := contr-impl-prop R R-contr
 
 def Z-lift (f : Z → Z) : R → R :=
-R-rec R (λ (z : Z), elem (f z)) (λ (z : Z), vect (f z) (f (succ z)))
-
-def Z-con (A : U) (B : A → U) (f g : Π (x : A), B x)
-  (p : Π (x : A), Path (B x) (f x) (g x)) (x : A) : Z → B x :=
-Z-rec (B x) (f x) (λ (_ : B x), g x) (λ (_ : B x), f x)
-
-def R-neg : R → R := Z-lift Z-neg′
-
-def R-con (A : U) (B : A → U) (f g : Π (x : A), B x)
-  (p : Π (x : A), Path (B x) (f x) (g x)) (x : A) : R → B x :=
-R-rec (B x) (Z-con A B f g p x) (Z-ind (λ (z : Z), Path (B x) (Z-con A B f g p x z) (g x))
-  (p x) (λ (z : Z) (_ : Path (B x) (Z-con A B f g p x z) (g x)), idp (g x))
-  (λ (z : Z) (_ : Path (B x) (Z-con A B f g p x z) (g x)), p x))
-
-def funext (A : U) (B : A → U) (f g : Π (x : A), B x)
-  (p : Π (x : A), Path (B x) (f x) (g x)) :=
-ap R (Π (x : A), B x) (λ (z : R) (x : A), R-con A B f g p x z)
-     (elem zero) (elem (succ zero)) (glue zero)
+R-rec R (λ (z : Z), elem (f z)) (λ (z : Z), vect (f z) (f (Z-succ z)))
 
 def Z-lift² (f : Z → Z → Z) : R → R → R :=
 R-rec (R → R) (λ (z : Z), Z-lift (f z))
-  (λ (z : Z), funext R (λ (_ : R), R) (Z-lift (f z)) (Z-lift (f (succ z)))
-    (λ (x : R), dist (Z-lift (f z) x) (Z-lift (f (succ z)) x)))
+  (λ (z : Z), funext R (λ (_ : R), R) (Z-lift (f z)) (Z-lift (f (Z-succ z)))
+    (λ (x : R), dist (Z-lift (f z) x) (Z-lift (f (Z-succ z)) x)))
 
-def R-add := Z-lift² Z-add
+def R-succ := Z-lift Z-succ
+def R-neg  := Z-lift Z-neg′
+def R-add  := Z-lift² Z-add
 
 def reflect (A : U) (a b : A) : Id A a b → Path A a b :=
 idJ A (λ (a b : A) (_ : Id A a b), Path A a b) a (idp a) b
 
-def 0-ineq-1 (p : Path Z zero (succ zero)) : ⊥ :=
-coe (cong (λ (z : Z) (p : ∂ zero (succ zero) z),
-  Z-ind (λ (_ : Z), U) Z (λ (_ : Z) (_ : U), ⊥) (λ (_ : Z) (_ : U), ⊥) z) p) zero
+def minus-1-ineq-0 (p : Path Z (neg zero) Z-zero) : ⊥ :=
+coe (cong (λ (z : Z) (p : ∂ (neg zero) Z-zero z), Z-ind (λ (_ : Z), U) (λ (_ : N), ⊥) (λ (_ : N), N) z) p) zero
 
-def z-ineq-succ-z (z : Z) : Path Z z (succ z) → ⊥ :=
-Z-ind (λ (z : Z), Path Z z (succ z) → ⊥) 0-ineq-1
-  (λ (z : Z) (f : Path Z z (succ z) → ⊥) (p : Path Z (succ z) (succ (succ z))),
-    f (ap Z Z pred (succ z) (succ (succ z)) p))
-  (λ (z : Z) (f : Path Z z (succ z) → ⊥) (p : Path Z (pred z) z),
-    f (ap Z Z succ (pred z) z p)) z
+def 0-ineq-1 (p : Path Z Z-zero Z-one) : ⊥ :=
+minus-1-ineq-0 (ap Z Z Z-pred Z-zero Z-one p)
 
-def z-strict-ineq-succ-z (z : Z) (p : Id Z z (succ z)) : ⊥ :=
-z-ineq-succ-z z (reflect Z z (succ z) p)
+def z-ineq-succ-zᵀ (z : Z) := Path Z z (Z-succ z) → ⊥
 
-def unglue (z : Z) (p : Id R (elem z) (elem (succ z))) : ⊥ :=
-z-strict-ineq-succ-z z (R-inj z (succ z) p)
+def z-ineq-succ-z : Π (z : Z), Path Z z (Z-succ z) → ⊥ :=
+Z-ind z-ineq-succ-zᵀ
+  (N-ind (λ (n : N), z-ineq-succ-zᵀ (pos n)) 0-ineq-1
+    (λ (n : N) (f : z-ineq-succ-zᵀ (pos n)) (p : Path Z (pos (succ n)) (pos (succ (succ n)))),
+       f (ap Z Z Z-pred (pos (succ n)) (pos (succ (succ n))) p)))
+  (N-ind (λ (n : N), z-ineq-succ-zᵀ (neg n)) minus-1-ineq-0
+    (λ (n : N) (f : z-ineq-succ-zᵀ (neg n)) (p : Path Z (neg (succ n)) (neg n)),
+       f (ap Z Z Z-succ (neg (succ n)) (neg n) p)))
 
-def cis-respects-unit : Id S¹ (cis (elem zero)) base := refl base
+def z-strict-ineq-succ-z (z : Z) (p : Id Z z (Z-succ z)) : ⊥ :=
+z-ineq-succ-z z (reflect Z z (Z-succ z) p)
+
+def unglue (z : Z) (p : Id R (elem z) (elem (Z-succ z))) : ⊥ :=
+z-strict-ineq-succ-z z (R-inj z (Z-succ z) p)
+
+def cis-respects-unit : Id S¹ (cis R-zero) base := refl base
 
 def cis-respects-inverse : Π (x : R), Id S¹ (cis (R-neg x)) (ι (cis x)) :=
 R-indˢ (λ (_ : R), S¹) (λ (x : R), cis (R-neg x)) (λ (x : R), ι (cis x)) (λ (_ : Z), refl base)

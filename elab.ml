@@ -49,6 +49,10 @@ let idv t x y = VApp (VApp (VId t, x), y)
 let implv a b = VPi (a, (Irrefutable, fun _ -> b))
 let prodv a b = VSig (a, (Irrefutable, fun _ -> b))
 
+let succv n = VApp (VSucc, n)
+let posv  n = VApp (VPos,  n)
+let negv  n = VApp (VNeg,  n)
+
 let elemv z = VApp (VElem, z)
 
 let impl a b = EPi (a, (Irrefutable, b))
@@ -89,10 +93,15 @@ let rec salt (ns : name Env.t) : exp -> exp = function
   | EUA e                 -> EUA (salt ns e)
   | Equiv (a, b)          -> Equiv (salt ns a, salt ns b)
   | EMkEquiv (a, b, f, e) -> EMkEquiv (salt ns a, salt ns b, salt ns f, salt ns e)
-  | EZ                    -> EZ
+  | EN                    -> EN
   | EZero                 -> EZero
   | ESucc                 -> ESucc
-  | EPred                 -> EPred
+  | ENInd e               -> ENInd (salt ns e)
+  | EZ                    -> EZ
+  | EPos                  -> EPos
+  | ENeg                  -> ENeg
+  | EZSucc                -> EZSucc
+  | EZPred                -> EZPred
   | EZInd e               -> EZInd (salt ns e)
   | ES1                   -> ES1
   | EBase                 -> EBase

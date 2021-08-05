@@ -1,10 +1,13 @@
 module integer where
 import experiments/path
 
-def Z-rec (A : U) (z : A) (s p : A → A) : Z → A :=
-Z-ind (λ (x : Z), A) z (λ (x : Z), s) (λ (x : Z), p)
+def N-rec (A : U) := N-ind (λ (x : N), A)
+def Z-rec (A : U) := Z-ind (λ (x : Z), A)
+
+def Z-zero := pos zero
+def Z-one  := pos (succ zero)
 
 def Z-succ-equiv : Z ≃ Z :=
-mkeqv Z Z succ ((pred, λ (x : Z), idp x), (pred, λ (x : Z), idp x))
+mkeqv Z Z Z-succ ((Z-pred, λ (x : Z), idp x), (Z-pred, λ (x : Z), idp x))
 
-def Z-neg′ : Z → Z := Z-rec Z zero pred succ
+def Z-neg′ : Z → Z := Z-rec Z (N-rec Z Z-zero (λ (n : N) (_ : Z), neg n)) (λ (n : N), pos (succ n))

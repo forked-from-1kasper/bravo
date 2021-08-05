@@ -12,7 +12,8 @@ type exp =
   | EBLeft of exp * exp | EBRight of exp * exp | EBCong of exp * exp * exp         (* ∂ *)
   | EMeet of exp * exp * exp | ECoe of exp * exp | ECong of exp * exp (* Kan operations *)
   | EUA of exp | Equiv of exp * exp | EMkEquiv of exp * exp * exp * exp   (* univalence *)
-  | EZ | EZero | ESucc | EPred | EZInd of exp                                      (* Z *)
+  | EN | EZero | ESucc | ENInd of exp                                              (* N *)
+  | EZ | EPos | ENeg | EZInd of exp | EZSucc | EZPred                              (* Z *)
   | ES1 | EBase | ELoop | ES1Ind of exp | ES1IndS of exp                          (* S¹ *)
   | ER | Elem | EGlue | ERInd of exp | ERIndS of exp | ERInj                       (* R *)
   | EBot | EBotRec of exp                                                          (* ⊥ *)
@@ -33,7 +34,8 @@ type value =
   | VBLeft of value * value | VBRight of value * value | VBCong of value * value * value
   | VMeet of value * value * value | VCoe of value * value | VCong of value * value
   | VUA of value | VEquiv of value * value | VMkEquiv of value * value * value * value
-  | VZ | VZero | VSucc | VPred | VZInd of value
+  | VN | VZero | VSucc | VNInd of value
+  | VZ | VPos | VNeg | VZInd of value | VZSucc | VZPred
   | VS1 | VBase | VLoop | VS1Ind of value | VS1IndS of value
   | VR | VElem | VGlue | VRInd of value | VRIndS of value | VRInj
   | VBot | VBotRec of value
@@ -97,7 +99,9 @@ let rec ppExp paren e = let x = match e with
   | EUA e -> Printf.sprintf "ua %s" (ppExp true e)
   | Equiv (a, b) -> Printf.sprintf "%s ≃ %s" (ppExp true a) (ppExp true b)
   | EMkEquiv (a, b, f, e) -> Printf.sprintf "mkeqv %s %s %s %s" (ppExp true a) (ppExp true b) (ppExp true f) (ppExp true e)
-  | EZ -> "Z" | EZero -> "zero" | ESucc -> "succ" | EPred -> "pred"
+  | EN -> "N" | EZero -> "zero" | ESucc -> "succ"
+  | ENInd e -> Printf.sprintf "N-ind %s" (ppExp true e)
+  | EZ -> "Z" | EPos -> "pos" | ENeg -> "neg" | EZSucc -> "Z-succ" | EZPred -> "Z-pred"
   | EZInd e -> Printf.sprintf "Z-ind %s" (ppExp true e)
   | ES1 -> "S¹" | EBase -> "base" | ELoop -> "loop"
   | ES1Ind e -> Printf.sprintf "S¹-ind %s" (ppExp true e)
@@ -107,11 +111,13 @@ let rec ppExp paren e = let x = match e with
   | ERIndS e -> Printf.sprintf "R-indˢ %s" (ppExp true e) | ERInj -> "R-inj"
   | EBot -> "⊥" | EBotRec e -> Printf.sprintf "⊥-ind %s" (ppExp true e)
   in match e with
-  | EVar _ | EFst _ | ESnd _  | EPre _
-  | EKan _ | EHole  | EPair _ | ERev _
-  | EZ     | EZero  | ESucc   | EPred
-  | ES1    | EBase  | ELoop   | EBot
-  | ER     | Elem   | EGlue -> x
+  | EKan _ | EPre _  | EVar _
+  | EFst _ | ESnd _  | ERev _
+  | EHole  | EPair _ | EBot
+  | EN     | EZero   | ESucc
+  | EZ     | EPos    | ENeg
+  | ES1    | EBase   | ELoop
+  | ER     | Elem    | EGlue -> x
   | _ -> parens paren x
 
 and showExp e = ppExp false e
@@ -154,7 +160,9 @@ let rec ppValue paren v = let x = match v with
   | VUA e -> Printf.sprintf "ua %s" (ppValue true e)
   | VEquiv (a, b) -> Printf.sprintf "%s ≃ %s" (ppValue true a) (ppValue true b)
   | VMkEquiv (a, b, f, v) -> Printf.sprintf "mkeqv %s %s %s %s" (ppValue true a) (ppValue true b) (ppValue true f) (ppValue true v)
-  | VZ -> "Z" | VZero -> "zero" | VSucc -> "succ" | VPred -> "pred"
+  | VN -> "N" | VZero -> "zero" | VSucc -> "succ"
+  | VNInd e -> Printf.sprintf "N-ind %s" (ppValue true e)
+  | VZ -> "Z" | VPos -> "pos" | VNeg -> "neg" | VZSucc -> "Z-succ" | VZPred -> "Z-pred"
   | VZInd e -> Printf.sprintf "Z-ind %s" (ppValue true e)
   | VS1 -> "S¹" | VBase -> "base" | VLoop -> "loop"
   | VS1Ind e -> Printf.sprintf "S¹-ind %s" (ppValue true e)
@@ -164,11 +172,13 @@ let rec ppValue paren v = let x = match v with
   | VRIndS e -> Printf.sprintf "R-indˢ %s" (ppValue true e) | VRInj -> "R-inj"
   | VBot -> "⊥" | VBotRec e -> Printf.sprintf "⊥-ind %s" (ppValue true e)
   in match v with
-  | Var _  | VFst _ | VSnd _  | VPre _
-  | VKan _ | VHole  | VPair _ | VRev _
-  | VZ     | VZero  | VSucc   | VPred
-  | VS1    | VBase  | VLoop   | VBot
-  | VR     | VElem  | VGlue -> x
+  | VKan _ | VPre _  | Var _
+  | VFst _ | VSnd _  | VRev _
+  | VHole  | VPair _ | VBot
+  | VN     | VZero   | VSucc
+  | VZ     | VPos    | VNeg
+  | VS1    | VBase   | VLoop
+  | VR     | VElem   | VGlue -> x
   | _ -> parens paren x
 
 and showValue v = ppValue false v
