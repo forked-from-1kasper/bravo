@@ -76,3 +76,8 @@ def cis-respects-unit : Id S¹ (cis R-zero) base := refl base
 
 def cis-respects-inverse : Π (x : R), Id S¹ (cis (R-neg x)) (ι (cis x)) :=
 R-indˢ (λ (_ : R), S¹) (λ (x : R), cis (R-neg x)) (λ (x : R), ι (cis x)) (λ (_ : Z), refl base)
+
+def cis-respects-add (x y : R) : Id S¹ (cis (R-add x y)) (μ (cis x) (cis y)) :=
+R-indˢ (λ (_ : R), S¹) (λ (x : R), cis (R-add x y)) (λ (x : R), μ (cis x) (cis y))
+  (λ (z : Z), R-indˢ (λ (_ : R), S¹) (λ (y : R), cis (R-add (elem z) y))
+    (λ (y : R), μ base (cis y)) (λ (_ : Z), refl base) y) x
