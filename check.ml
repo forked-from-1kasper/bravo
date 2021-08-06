@@ -406,13 +406,9 @@ and app (f, x) = match f, x with
 
   (* S¹-ind β b ℓ base ~> b *)
   | VApp (VApp (VS1Ind _, b), _), VBase -> b
-  (* S¹-indˢ β f g p base ~> p *)
-  | VApp (VApp (VApp (VS1IndS _, _), _), p), VBase -> p
 
   (* R-ind β cz sz (elem z) ~> cz z *)
   | VApp (VApp (VRInd _, cz), _), VApp (VElem, z) -> app (cz, z)
-  (* R-indˢ β f g p (elem z) ~> p z *)
-  | VApp (VApp (VApp (VRIndS _, _), _), p), VApp (VElem, z) -> app (p, z)
   (* R-inj x x (refl (elem x)) ~> refl x *)
   | VApp (VApp (VRInj, x), _), VRefl _ -> VRefl x
 
@@ -491,13 +487,7 @@ and inferS1Ind v =
     implv (VPath (e VBase, coe (ap VS1 e VBase VBase VLoop) b, b))
           (VPi (VS1, (freshName "x", e)))))
 
-and inferS1IndS v =
-  let e = fun x -> app (v, x) in
-  let f = freshName "f" in let g = freshName "g" in let x = freshName "x" in
-  let t = VPi (VS1, (x, e)) in
-  VPi (t, (f, fun f -> VPi (t, (g, fun g ->
-    implv (idv (e VBase) (app (f, VBase)) (app (g, VBase)))
-      (VPi (VS1, (x, fun x -> idv (e x) (app (f, x)) (app (g, x)))))))))
+and inferS1IndS v = failwith "not implemented yet"
 
 and zsuccv z = app (VZSucc, z)
 
@@ -516,13 +506,7 @@ and inferRInd v =
             (freshName "y", fun _ -> e x))))) (VApp (VGlue, z))) (app (cz, z)), app (cz, zsuccv z)))))
       (VPi (VR, (freshName "z", e)))))
 
-and inferRIndS v =
-  let e = fun x -> app (v, x) in
-  let f = freshName "f" in let g = freshName "g" in let x = freshName "x" in
-  let t = VPi (VR, (x, e)) in
-  VPi (t, (f, fun f -> VPi (t, (g, fun g ->
-    implv (VPi (VZ, (x, fun x -> idv (e (elemv x)) (app (f, elemv x)) (app (g, elemv x)))))
-          (VPi (VR, (x, fun x -> idv (e x) (app (f, x)) (app (g, x)))))))))
+and inferRIndS v = failwith "not implemented yet"
 
 and inferRInj () =
   let x = freshName "x" in let y = freshName "y" in

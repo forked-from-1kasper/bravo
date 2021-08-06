@@ -120,24 +120,20 @@ Z-pred (pos (succ n)) ~> pos n
 Z-succ (Z-pred z) ~> z
 Z-pred (Z-succ z) ~> z
 
-     S¹ : U
-   base : S¹
-   loop : Path S¹ base base
- S¹-ind : Π (A : S¹ → U) (b : A base), Path (A base) (coe (cong A loop) b) b → Π (x : S¹), A x
-S¹-indˢ : Π (A : S¹ → V) (f g : Π (x : S¹), A x), Id (A base) (f base) (g base) → Π (x : S¹), Id (A x) (f x) (g x)
+    S¹ : U
+  base : S¹
+  loop : Path S¹ base base
+S¹-ind : Π (A : S¹ → U) (b : A base), Path (A base) (coe (cong A loop) b) b → Π (x : S¹), A x
 
                 S¹-ind A b ℓ base ~> b
 cong (λ x H, S¹-ind A b ℓ x) loop ~> ℓ[x/base, H/left base base] ⬝ cong (λ x′ H′, b[x/x′, H/H′]) loop
-             S¹-indˢ A f g p base ~> p
 
      R : U
   elem : Z → R
   glue : Π (z : Z), Path R (elem z) (elem (Z-succ z))
  R-ind : Π (A : R → U) (cz : Π z, A (elem z)), (Π z, Path (A (elem (Z-succ z))) (coe (cong A (glue z)) (cz z)) (cz (Z-succ z))) → Π z, A z
-R-indˢ : Π (A : R → V) (f g : Π (z : R), A x), (Π (z : Z), Id (A (elem x)) (f (elem x)) (g (elem x))) → Π (x : R), Id (A x) (f x) (g x)
- R-inj : Π (x y : Z), Id R (elem x) (elem y) → Id Z x y
+R-inj : Π (x y : Z), Id R (elem x) (elem y) → Id Z x y
 
               R-ind A cz sz (elem z) ~> cz z
 cong (λ x H, R-ind A cz sz) (glue z) ~> sz z
-             R-indˢ A f g p (elem z) ~> p z
            R-inj x x (refl (elem x)) ~> refl x
