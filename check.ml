@@ -580,8 +580,7 @@ and rbV v : exp = traceRbV v; match v with
   | VBot                  -> EBot
   | VBotRec v             -> EBotRec (rbV v)
 
-and rbVTele ctor t (p, g) =
-  let x = Var (p, t) in ctor p (rbV t) (rbV (g x))
+and rbVTele ctor t (p, g) = let x = Var (p, t) in ctor p (rbV t) (rbV (g x))
 
 (* Convertibility *)
 and conv v1 v2 : bool = traceConv v1 v2;
@@ -663,8 +662,7 @@ and check ctx (e0 : exp) (t0 : value) =
   traceCheck e0 t0; try match e0, t0 with
   | ELam (a, (p, b)), VPi (t, (_, g)) ->
     ignore (extSet (infer ctx a)); eqNf (eval a ctx) t;
-    let x = Var (p, t) in let ctx' = upLocal ctx p t x in
-    check ctx' b (g x)
+    let x = Var (p, t) in let ctx' = upLocal ctx p t x in check ctx' b (g x)
   | EPair (e1, e2), VSig (t, (_, g)) ->
     ignore (extSet (inferV t));
     check ctx e1 t; check ctx e2 (g (eval e1 ctx))
