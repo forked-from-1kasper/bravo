@@ -83,11 +83,59 @@ and outer languages was continued in 2LTT\footnote{\url{https://arxiv.org/pdf/17
 \end{equation*}
 
 \begin{equation*}
-    \frac{\Gamma \vdash A : \UU \hspace{10pt} \Gamma \vdash a : A \hspace{10pt} \Gamma \vdash b : A \hspace{10pt} \Gamma \vdash c : A \hspace{10pt} \Gamma \vdash p : a = b \hspace{10pt} \Gamma \vdash p : b = c}{\Gamma \vdash p \ct q : a = c}
+    \frac{\Gamma \vdash A : \UU \hspace{10pt} \Gamma \vdash a : A \hspace{10pt} \Gamma \vdash b : A \hspace{10pt} \Gamma \vdash c : A \hspace{10pt} \Gamma \vdash p : a = b \hspace{10pt} \Gamma \vdash q : b = c}{\Gamma \vdash p \ct q : a = c}
+\end{equation*}
+
+\begin{equation*}
+    \frac{\Gamma \vdash A : \UU \hspace{10pt} \Gamma \vdash a : A \hspace{10pt} \Gamma \vdash b : A \hspace{10pt} \Gamma \vdash c : A \hspace{10pt} \Gamma \vdash d : A \hspace{10pt} \Gamma \vdash p : a = b \hspace{10pt} \Gamma \vdash q : b = c \hspace{10pt} \Gamma \vdash r : c = d}{\Gamma \vdash (p \ct q) \ct r \equiv p \ct (q \ct r) : a = d}
+\end{equation*}
+
+\begin{equation*}
+    \frac{\Gamma \vdash A : \UU \hspace{10pt} \Gamma \vdash a : A \hspace{10pt} \Gamma \vdash b : A \hspace{10pt} \Gamma \vdash c : A \hspace{10pt} \Gamma \vdash p : a = b \hspace{10pt} \Gamma \vdash q : b = c}{\Gamma \vdash (p \ct q)^{-1} \equiv q^{-1} \ct p^{-1} : c = a}
+\end{equation*}
+
+\begin{equation*}
+    \frac{\Gamma \vdash A : \UU \hspace{10pt} \Gamma \vdash a : A \hspace{10pt} \Gamma \vdash b : A \hspace{10pt} \Gamma \vdash c : A \hspace{10pt} \Gamma \vdash p : a = b \hspace{10pt} \Gamma \vdash q : b = c}{\Gamma \vdash p \ct (p^{-1} \ct q) \equiv q : b = c}
+\end{equation*}
+
+\begin{equation*}
+    \frac{\Gamma \vdash A : \UU \hspace{10pt} \Gamma \vdash a : A \hspace{10pt} \Gamma \vdash b : A \hspace{10pt} \Gamma \vdash c : A \hspace{10pt} \Gamma \vdash p : a = b \hspace{10pt} \Gamma \vdash q : b = c}{\Gamma \vdash p^{-1} \ct (p \ct q) \equiv q : b = c}
+\end{equation*}
+
+\begin{equation*}
+    \frac{\Gamma \vdash A : \UU \hspace{10pt} \Gamma \vdash a : A \hspace{10pt} \Gamma \vdash b : A \hspace{10pt} \Gamma \vdash p : a = b}{\Gamma \vdash p \ct p^{-1} \equiv \mathrm{idp}_A(a) : a = a}
+\end{equation*}
+
+\begin{equation*}
+    \frac{\Gamma \vdash A : \UU \hspace{10pt} \Gamma \vdash a : A \hspace{10pt} \Gamma \vdash b : A \hspace{10pt} \Gamma \vdash p : a = b}{\Gamma \vdash p^{-1} \ct p \equiv \mathrm{idp}_A(b) : b = b}
+\end{equation*}
+
+\begin{equation*}
+    \frac{\Gamma \vdash A : \UU \hspace{10pt} \Gamma \vdash a : A \hspace{10pt} \Gamma \vdash b : A \hspace{10pt} \Gamma \vdash p : a = b}{\Gamma \vdash (p^{-1})^{-1} \equiv p : a = b}
+\end{equation*}
+
+\begin{equation*}
+    \frac{\Gamma \vdash A : \UU \hspace{10pt} \Gamma \vdash x : A}{\Gamma \vdash (\mathrm{idp}_A(x))^{-1} \equiv \mathrm{idp}_A(x) : x = x}
+\end{equation*}
+
+\begin{equation*}
+    \frac{\Gamma \vdash A : \UU \hspace{10pt} \Gamma \vdash a : A \hspace{10pt} \Gamma \vdash b : A \hspace{10pt} \Gamma \vdash p : a = b}{\Gamma \vdash \mathrm{idp}_A(a) \ct p \equiv p : a = b}
+\end{equation*}
+
+\begin{equation*}
+    \frac{\Gamma \vdash A : \UU \hspace{10pt} \Gamma \vdash a : A \hspace{10pt} \Gamma \vdash b : A \hspace{10pt} \Gamma \vdash p : a = b}{\Gamma \vdash p \ct \mathrm{idp}_A(b) \equiv p : a = b}
 \end{equation*}
 
 \begin{equation*}
     \frac{\Gamma \vdash A : \UU \hspace{10pt} \Gamma \vdash a : A \hspace{10pt} \Gamma \vdash b : A \hspace{10pt} \Gamma \vdash x : A}{\Gamma \vdash \partial_A(a, b, x) : \VV}
+\end{equation*}
+
+\begin{equation*}
+    \frac{\Gamma \vdash A : \UU \hspace{10pt} \Gamma \vdash a : A \hspace{10pt} \Gamma \vdash b : A}{\Gamma \vdash \mathrm{left}_A(a, b) : \partial_A(a, b, a)}
+\end{equation*}
+
+\begin{equation*}
+    \frac{\Gamma \vdash A : \UU \hspace{10pt} \Gamma \vdash a : A \hspace{10pt} \Gamma \vdash b : A}{\Gamma \vdash \mathrm{right}_A(a, b) : \partial_A(a, b, b)}
 \end{equation*}
 
 \section{Lorem ipsum dolor sit amet}
