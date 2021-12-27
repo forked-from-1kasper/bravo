@@ -9,8 +9,8 @@ type exp =
   | EPath of exp * exp * exp | EIdp of exp | ERev of exp | ETrans of exp * exp  (* path *)
   | EBoundary of exp * exp * exp | ELeft of exp * exp | ERight of exp * exp        (* ∂ *)
   | ESymm of exp | EComp of exp * exp                                              (* ∂ *)
-  | EBLeft of exp * exp | EBRight of exp * exp | EBCong of exp * exp * exp         (* ∂ *)
-  | EMeet of exp * exp * exp | ECoe of exp * exp | ECong of exp * exp (* Kan operations *)
+  | EBLeft of exp * exp | EBRight of exp * exp | EBApd of exp * exp * exp * exp    (* ∂ *)
+  | EMeet of exp * exp * exp | ECoe of exp * exp | EApd of exp * exp  (* Kan operations *)
   | EUA of exp | Equiv of exp * exp | EMkEquiv of exp * exp * exp * exp   (* univalence *)
   | EN | EZero | ESucc | ENInd of exp                                              (* N *)
   | EZ | EPos | ENeg | EZInd of exp | EZSucc | EZPred                              (* Z *)
@@ -31,8 +31,8 @@ type value =
   | VPath of value * value * value | VIdp of value | VRev of value | VTrans of value * value
   | VBoundary of value * value * value | VLeft of value * value | VRight of value * value
   | VSymm of value | VComp of value * value
-  | VBLeft of value * value | VBRight of value * value | VBCong of value * value * value
-  | VMeet of value * value * value | VCoe of value * value | VCong of value * value
+  | VBLeft of value * value | VBRight of value * value | VBApd of value * value * value * value
+  | VMeet of value * value * value | VCoe of value * value | VApd of value * value
   | VUA of value | VEquiv of value * value | VMkEquiv of value * value * value * value
   | VN | VZero | VSucc | VNInd of value
   | VZ | VPos | VNeg | VZInd of value | VZSucc | VZPred
@@ -92,10 +92,10 @@ let rec ppExp paren e = let x = match e with
   | EComp (a, b) -> Printf.sprintf "∂-comp %s %s" (ppExp true a) (ppExp true b)
   | EBLeft (a, b) -> Printf.sprintf "∂-left %s %s" (ppExp true a) (ppExp true b)
   | EBRight (a, b) -> Printf.sprintf "∂-right %s %s" (ppExp true a) (ppExp true b)
-  | EBCong (f, x, e) -> Printf.sprintf "∂-cong %s %s %s" (ppExp true f) (ppExp true x) (ppExp true e)
+  | EBApd (f, p, x, e) -> Printf.sprintf "∂-apd %s %s %s %s" (ppExp true f) (ppExp true p) (ppExp true x) (ppExp true e)
   | EMeet (p, x, e) -> Printf.sprintf "meet %s %s %s" (ppExp true p) (ppExp true x) (ppExp true e)
   | ECoe (p, x) -> Printf.sprintf "coe %s %s" (ppExp true p) (ppExp true x)
-  | ECong (a, b) -> Printf.sprintf "cong %s %s" (ppExp true a) (ppExp true b)
+  | EApd (a, b) -> Printf.sprintf "apd %s %s" (ppExp true a) (ppExp true b)
   | EUA e -> Printf.sprintf "ua %s" (ppExp true e)
   | Equiv (a, b) -> Printf.sprintf "%s ≃ %s" (ppExp true a) (ppExp true b)
   | EMkEquiv (a, b, f, e) -> Printf.sprintf "mkeqv %s %s %s %s" (ppExp true a) (ppExp true b) (ppExp true f) (ppExp true e)
@@ -153,10 +153,10 @@ let rec ppValue paren v = let x = match v with
   | VComp (a, b) -> Printf.sprintf "∂-comp %s %s" (ppValue true a) (ppValue true b)
   | VBLeft (a, b) -> Printf.sprintf "∂-left %s %s" (ppValue true a) (ppValue true b)
   | VBRight (a, b) -> Printf.sprintf "∂-right %s %s" (ppValue true a) (ppValue true b)
-  | VBCong (f, x, v) -> Printf.sprintf "∂-cong %s %s %s" (ppValue true f) (ppValue true x) (ppValue true v)
+  | VBApd (f, p, x, v) -> Printf.sprintf "∂-apd %s %s %s %s" (ppValue true f) (ppValue true p) (ppValue true x) (ppValue true v)
   | VMeet (p, x, v) -> Printf.sprintf "meet %s %s %s" (ppValue true p) (ppValue true x) (ppValue true v)
   | VCoe (p, x) -> Printf.sprintf "coe %s %s" (ppValue true p) (ppValue true x)
-  | VCong (a, b) -> Printf.sprintf "cong %s %s" (ppValue true a) (ppValue true b)
+  | VApd (a, b) -> Printf.sprintf "apd %s %s" (ppValue true a) (ppValue true b)
   | VUA e -> Printf.sprintf "ua %s" (ppValue true e)
   | VEquiv (a, b) -> Printf.sprintf "%s ≃ %s" (ppValue true a) (ppValue true b)
   | VMkEquiv (a, b, f, v) -> Printf.sprintf "mkeqv %s %s %s %s" (ppValue true a) (ppValue true b) (ppValue true f) (ppValue true v)

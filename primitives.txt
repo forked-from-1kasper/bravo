@@ -21,8 +21,12 @@ idp a ⬝ p     ~> p
  ∂-comp : Π {α : U} {a b x y : α}, ∂ a b x → ∂ x b y → ∂ a b y
  ∂-left : Π {α : U} {a b c x : α}, ∂ a b x → a = c → ∂ c b x
 ∂-right : Π {α : U} {a b c x : α}, ∂ a b x → b = c → ∂ a c x
- ∂-cong : Π {α β : U} {a b : α} (f : Π (x : α), ∂ a b x → β)
-            (x : α) (H : ∂ a b x), ∂ (f a (left a b)) (f b (right a b)) (f x H)
+  ∂-apd : Π {α : U} {a b : α} {β : Π (x : α), ∂ a b x → U}
+            (f : Π (x : α) (H : ∂ a b x), β x H)
+            (p : a = b) (x : α) (H : ∂ a b x),
+            ∂ (coe (apd β p) (f a (left a b))) (f b (right a b))
+              (coe (apd (λ (x′ : α) (H′ : ∂ x b x′), B x′ (∂-comp H H′))
+                        (meet p⁻¹ x (∂-symm H)).2⁻¹) (f x H))
 
 Maybe these rules for ∂-symm and ∂-comp are not necessary
 due to proof-irrelevance, but they should improve efficiency.
@@ -31,8 +35,8 @@ due to proof-irrelevance, but they should improve efficiency.
 ∂-symm (right a b) ~> left  b a
  ∂-symm (∂-symm H) ~> H
 
- ∂-cong f a (left a b) ~> left (f a (left a b)) (f b (right a b))
-∂-cong f b (right a b) ~> right (f a (left a b)) (f b (right a b))
+∂-apd f p a (left a b) ~> left (coe (apd β p) (f a (left a b))) (f b (right a b))
+∂-apd f p b (right a b) ~> right (coe (apd β p) (f a (left a b))) (f b (right a b))
 
 “∂-comp u v, ∂-left H p, ∂-right right : ∂ a b x” should evaluate to “left a b”
 when a ≡ x and to “right a b” when b ≡ x.
@@ -126,6 +130,7 @@ Z-pred (Z-succ z) ~> z
 S¹-ind : Π (A : S¹ → U) (b : A base), Path (A base) (coe (cong A loop) b) b → Π (x : S¹), A x
 
                 S¹-ind A b ℓ base ~> b
+???
 cong (λ x H, S¹-ind A b ℓ x) loop ~> ℓ[x/base, H/left base base] ⬝ cong (λ x′ H′, b[x/x′, H/H′]) loop
 
      R : U

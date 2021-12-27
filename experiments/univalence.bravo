@@ -3,7 +3,7 @@ import experiments/equiv
 
 def ua′ (A B : U) (e : A ≃ B) : Path U A B := ua e
 def ideqv (A B : U) (p : Path U A B) : A ≃ B :=
-coe (cong (λ (X : U) (H : ∂ A B X), A ≃ X) p) (equiv-id A)
+coe (apd (λ (X : U) (H : ∂ A B X), A ≃ X) p) (equiv-id A)
 
 def uaβ (A B : U) (e : A ≃ B) (x : A) : Path B (coe (ua e) x) (e.1 x) :=
 idp (e.1 x)
@@ -23,5 +23,5 @@ idp (ua e₁ ⬝ ua e₂)
 
 -- it’s surprisingly slow
 def ua-ideqv (A B : U) (p : Path U A B) : Path (Path U A B) (ua (ideqv A B p)) p :=
-coe (cong (λ (X : U) (H : ∂ A B X), Path (Path U A X)
+coe (apd (λ (X : U) (H : ∂ A B X), Path (Path U A X)
   (ua (ideqv A X (meet p X H).2)) (meet p X H).2) p) (idp (idp A))

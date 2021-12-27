@@ -19,9 +19,9 @@ S¹-ind (λ (x : S¹), Path S¹ (triv x) x) (idp base) (idp (idp base))
 def rot (x : S¹) : Path S¹ x x :=
 S¹-ind (λ (y : S¹), Path S¹ y y) loop (idp loop) x
 
-def S¹-cong (β : U) (b : Π (x : S¹), ∂ base base x → β)
+def S¹-apd (β : U) (b : Π (x : S¹), ∂ base base x → β)
   (ℓ : Π (x : S¹) (H : ∂ base base x), Path β (b x H) (b x H)) :=
-cong (λ (x : S¹) (H : ∂ base base x), S¹-rec β (b x H) (ℓ x H) x) loop
+apd (λ (x : S¹) (H : ∂ base base x), S¹-rec β (b x H) (ℓ x H) x) loop
 
 def μ (x : S¹) : S¹ → S¹ := S¹-rec S¹ x (rot x)
 def σ (x : S¹) := μ x x
@@ -83,7 +83,7 @@ def π₁S¹ : ∞-group :=
  λ (x y z : Ω¹S¹), idp (x ⬝ y ⬝ z), λ (x : Ω¹S¹), idp x, λ (x : Ω¹S¹), idp (idp base))
 
 def integer : ∞-group :=
-(Z, coe (cong (λ (X : U) (H : ∂ Ω¹S¹ Z X), is-∞-group X) (ua fundamental-group)) π₁S¹.2)
+(Z, coe (apd (λ (X : U) (H : ∂ Ω¹S¹ Z X), is-∞-group X) (ua fundamental-group)) π₁S¹.2)
 
 def Z-add : Z → Z → Z := op∞ integer
 def Z-assoc : Π (x y z : Z), Path Z (Z-add x (Z-add y z)) (Z-add (Z-add x y) z) := assoc∞ integer

@@ -17,21 +17,14 @@ def contr-impl-prop (A : U) (z : is-contr A) : is-prop A :=
 λ (a b : A), (z.2 a)⁻¹ ⬝ z.2 b
 
 def subst (A : U) (P : A → U) (a b : A) (p : Path A a b) (x : P a) : P b :=
-coe (cong (λ (x : A) (H : ∂ a b x), P x) p) x
+coe (apd (λ (x : A) (H : ∂ a b x), P x) p) x
 
 def ap (A B : U) (f : A → B) (a b : A) (p : Path A a b) : Path B (f a) (f b) :=
-cong (λ (x : A) (H : ∂ a b x), f x) p
-
-def apd (A : U) (a b : A) (B : Π (x : A), ∂ a b x → U)
-  (f : Π (x : A) (H : ∂ a b x), B x H) (p : Path A a b) :
-  Path (B b (right a b)) (coe (cong B p) (f a (left a b))) (f b (right a b)) :=
-cong (λ (x : A) (H : ∂ a b x),
-  coe (cong (λ (y : A) (H′ : ∂ x b y), B y (∂-comp H H′))
-    ((meet p⁻¹ x (∂-symm H)).2)⁻¹) (f x H)) p
+apd (λ (x : A) (H : ∂ a b x), f x) p
 
 def J (A : U) (P : Π (a b : A), Path A a b → U)
   (a : A) (d : P a a (idp a)) (b : A) (p : Path A a b) : P a b p :=
-coe (cong (λ (x : A) (H : ∂ a b x), P a x (meet p x H).2) p) d
+coe (apd (λ (x : A) (H : ∂ a b x), P a x (meet p x H).2) p) d
 
 def bimap (A B C : U) (a b : A) (a′ b′ : B) (f : A → B → C)
   (p : Path A a b) (q : Path B a′ b′) : Path C (f a a′) (f b b′) :=
@@ -58,7 +51,7 @@ J A (λ (a b : A) (p : Path A a b), Path (Path B (f a a) (f b b)) (bimap A A B a
 
 def J′ (A : U) (a : A) (P : Π (b : A), Path A a b → U)
   (d : P a (idp a)) (b : A) (p : Path A a b) : P b p :=
-coe (cong (λ (x : A) (H : ∂ a b x), P x (meet p x H).2) p) d
+coe (apd (λ (x : A) (H : ∂ a b x), P x (meet p x H).2) p) d
 
 def singl (A : U) (a : A) := Σ (b : A), Path A a b
 def contr-singl (A : U) (a : A) : is-contr (singl A a) :=
@@ -75,5 +68,5 @@ def Σ-eq (A : U) (B : A → U) (a b : A) (p : Path A a b) (u : B a) (v : B b)
   (q : PathP A B a b p u v) : Path (Σ (x : A), B x) (a, u) (b, v) :=
 J A (λ (a b : A) (p : Path A a b), Π (u : B a) (v : B b)
   (q : PathP A B a b p u v), Path (Σ (x : A), B x) (a, u) (b, v)) a
-  (λ (u v : B a) (q : Path (B a) u v), cong (λ (x : B a) (H : ∂ u v x), Σ-mk A B a x) q)
+  (λ (u v : B a) (q : Path (B a) u v), apd (λ (x : B a) (H : ∂ u v x), Σ-mk A B a x) q)
   b p u v q

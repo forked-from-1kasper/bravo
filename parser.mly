@@ -50,8 +50,8 @@
 %token SIGMA PI OPTION
 %token ID REFL IDJ
 %token PATH IDP REV TRANS
-%token BOUNDARY LEFT RIGHT SYMM COMP BLEFT BRIGHT BCONG
-%token MEET COE CONG
+%token BOUNDARY LEFT RIGHT SYMM COMP BLEFT BRIGHT BAPD
+%token MEET COE APD
 %token UA EQUIV MKEQV
 %token NIND ZIND S1IND S1INDS RIND RINDS BOTREC
 
@@ -106,9 +106,9 @@ exp5 :
   | BRIGHT exp6 exp6 { EBRight ($2, $3) }
   | COMP exp6 exp6 { EComp ($2, $3) }
   | MEET exp6 exp6 exp6 { EMeet ($2, $3, $4) }
-  | BCONG exp6 exp6 exp6 { EBCong ($2, $3, $4) }
+  | BAPD exp6 exp6 exp6 exp6 { EBApd ($2, $3, $4, $5) }
   | COE exp6 exp6 { ECoe ($2, $3) }
-  | CONG exp6 exp6 { ECong ($2, $3) }
+  | APD exp6 exp6 { EApd ($2, $3) }
   | UA exp6 { EUA $2 }
   | MKEQV exp6 exp6 exp6 exp6 { EMkEquiv ($2, $3, $4, $5) }
   | exp6 EQUIV exp6 { Equiv ($1, $3) }
