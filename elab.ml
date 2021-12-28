@@ -18,11 +18,11 @@ let extEquiv : value -> value * value = function
   | VEquiv (a, b) -> (a, b)
   | u -> raise (ExpectedEquiv u)
 
-let extSet : value -> int = function
+let extSet : value -> Z.t = function
   | VPre n | VKan n -> n
   | v               -> raise (ExpectedVSet v)
 
-let extKan : value -> int = function
+let extKan : value -> Z.t = function
   | VKan n -> n
   | v      -> raise (ExpectedFibrant v)
 

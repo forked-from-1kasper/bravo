@@ -19,9 +19,23 @@ S¹-ind (λ (x : S¹), Path S¹ (triv x) x) (idp base) (idp (idp base))
 def rot (x : S¹) : Path S¹ x x :=
 S¹-ind (λ (y : S¹), Path S¹ y y) loop (idp loop) x
 
-def S¹-apd (β : U) (b : Π (x : S¹), ∂ base base x → β)
-  (ℓ : Π (x : S¹) (H : ∂ base base x), Path β (b x H) (b x H)) :=
-apd (λ (x : S¹) (H : ∂ base base x), S¹-rec β (b x H) (ℓ x H) x) loop
+def S¹-apd (β : Π (x : S¹), ∂ base base x → S¹ → U) (b : Π (x : S¹) (H : ∂ base base x), β x H base)
+  (ℓ : Π (x : S¹) (H : ∂ base base x), Path (β x H base) (coe (apd (λ (x′ : S¹) (H′ : ∂ base base x′), β x H x′) loop) (b x H)) (b x H))
+  (f : Π (x : S¹), ∂ base base x → S¹) :
+   Path (β base (right base base) (f base (right base base)))
+        (coe (apd (λ (x : S¹), λ (H : ∂ base base x), β x H (f x H)) loop)
+               (S¹-ind (β base (left base base)) (b base (left base base)) (ℓ base (left base base)) (f base (left base base))))
+             (S¹-ind (β base (right base base)) (b base (right base base)) (ℓ base (right base base)) (f base (right base base))) :=
+?
+
+def S¹-apd′ (β : Π (x : S¹), ∂ base base x → S¹ → U) (b : Π (x : S¹) (H : ∂ base base x), β x H base)
+  (ℓ : Π (x : S¹) (H : ∂ base base x), Path (β x H base) (coe (apd (λ (x′ : S¹) (H′ : ∂ base base x′), β x H x′) loop) (b x H)) (b x H))
+  (f : Π (x : S¹), ∂ base base x → S¹) :
+   Path (β base (right base base) (f base (right base base)))
+        (coe (apd (λ (x : S¹), λ (H : ∂ base base x), β x H (f x H)) loop)
+               (S¹-ind (β base (left base base)) (b base (left base base)) (ℓ base (left base base)) (f base (left base base))))
+             (S¹-ind (β base (right base base)) (b base (right base base)) (ℓ base (right base base)) (f base (right base base))) :=
+apd (λ (x : S¹) (H : ∂ base base x), S¹-ind (β x H) (b x H) (ℓ x H) (f x H)) loop
 
 def μ (x : S¹) : S¹ → S¹ := S¹-rec S¹ x (rot x)
 def σ (x : S¹) := μ x x

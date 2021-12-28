@@ -41,8 +41,8 @@
 %}
 
 %token <string> IDENT
-%token <int> KAN
-%token <int> PRE
+%token <Z.t> KAN
+%token <Z.t> PRE
 %token LPARENS RPARENS
 %token COMMA COLON IRREF EOF HOLE
 %token DEFEQ PROD ARROW FST SND LAM DEF

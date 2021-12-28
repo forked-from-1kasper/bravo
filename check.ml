@@ -440,22 +440,22 @@ and inferV v = traceInferV v; match v with
   | VIdp v -> VPath (inferV v, v, v)
   | VRev p -> let (v, a, b) = extPath (inferV p) in VPath (v, b, a)
   | VTrans (p, q) -> let (t, a, _) = extPath (inferV p) in let (_, _, c) = extPath (inferV q) in VPath (t, a, c)
-  | VPre n -> VPre (n + 1)
-  | VKan n -> VKan (n + 1)
+  | VPre n -> VPre (Z.succ n)
+  | VKan n -> VKan (Z.succ n)
   | VPath (v, _, _) -> inferV v
   | VBoundary (v, _, _) -> let n = extSet (inferV (inferV v)) in VPre n
   | VUA e -> let (a, b) = extEquiv (inferV e) in VPath (inferV a, a, b)
   | VEquiv (a, _) -> inferV a
   | VMkEquiv (a, b, _, _) -> VEquiv (a, b)
-  | VN -> VKan 0 | VZero -> VN | VSucc -> implv VN VN
+  | VN -> VKan Z.zero | VZero -> VN | VSucc -> implv VN VN
   | VNInd v -> inferNInd v
-  | VZ -> VKan 0 | VPos -> implv VN VZ | VNeg -> implv VN VZ
+  | VZ -> VKan Z.zero | VPos -> implv VN VZ | VNeg -> implv VN VZ
   | VZSucc -> implv VZ VZ | VZPred -> implv VZ VZ | VZInd v -> inferZInd v
-  | VS1 -> VKan 0 | VBase -> VS1 | VLoop -> VPath (VS1, VBase, VBase)
+  | VS1 -> VKan Z.zero | VBase -> VS1 | VLoop -> VPath (VS1, VBase, VBase)
   | VS1Ind v -> inferS1Ind v | VS1IndS v -> inferS1IndS v
-  | VR -> VKan 0 | VElem -> implv VZ VR | VGlue -> inferGlue ()
+  | VR -> VKan Z.zero | VElem -> implv VZ VR | VGlue -> inferGlue ()
   | VRInd v -> inferRInd v | VRIndS v -> inferRIndS v | VRInj -> inferRInj ()
-  | VBot -> VKan 0 | VBotRec v -> implv VBot v
+  | VBot -> VKan Z.zero | VBotRec v -> implv VBot v
   | v -> raise (InferVError v)
 
 and inferVApd f p t1 t2 =
@@ -694,7 +694,7 @@ and check ctx (e0 : exp) (t0 : value) =
 
 and infer ctx e : value = traceInfer e; try match e with
   | EVar x -> lookup x ctx
-  | EKan u -> VKan (u + 1)
+  | EKan u -> VKan (Z.succ u)
   | ESig (a, (p, b)) | EPi (a, (p, b)) -> inferTele ctx p a b
   | ELam (a, (p, b)) -> inferLam ctx p a b
   | EApp (f, x) -> begin match infer ctx f with
@@ -703,7 +703,7 @@ and infer ctx e : value = traceInfer e; try match e with
   end
   | EFst e -> inferFst (infer ctx e)
   | ESnd e -> inferSnd (vfst (eval e ctx)) (infer ctx e)
-  | EPre u -> VPre (u + 1)
+  | EPre u -> VPre (Z.succ u)
   | EPath (e, a, b) -> let t = eval e ctx in check ctx a t; check ctx b t; infer ctx e
   | EId e -> let v = eval e ctx in let n = extSet (infer ctx e) in implv v (implv v (VPre n))
   | ERefl e -> let v = eval e ctx in idv (infer ctx e) v v
@@ -736,19 +736,19 @@ and infer ctx e : value = traceInfer e; try match e with
   | EUA e -> inferUA ctx e
   | Equiv (a, b) -> let t1 = infer ctx a in let t2 = infer ctx b in ignore (extSet t1); eqNf t1 t2; t1
   | EMkEquiv (a, b, f, e) -> inferMkEquiv ctx a b f e
-  | EN -> VKan 0 | EZero -> VN | ESucc -> implv VN VN
+  | EN -> VKan Z.zero | EZero -> VN | ESucc -> implv VN VN
   | ENInd e -> inferInd false ctx VN e inferNInd
-  | EZ -> VKan 0 | EPos -> implv VN VZ | ENeg -> implv VN VZ
+  | EZ -> VKan Z.zero | EPos -> implv VN VZ | ENeg -> implv VN VZ
   | EZSucc -> implv VZ VZ | EZPred -> implv VZ VZ
   | EZInd e -> inferInd false ctx VZ e inferZInd
-  | ES1 -> VKan 0 | EBase -> VS1 | ELoop -> VPath (VS1, VBase, VBase)
+  | ES1 -> VKan Z.zero | EBase -> VS1 | ELoop -> VPath (VS1, VBase, VBase)
   | ES1Ind e -> inferInd true ctx VS1 e inferS1Ind
   | ES1IndS e -> inferInd false ctx VS1 e inferS1IndS
-  | ER -> VKan 0 | Elem -> implv VZ VR | EGlue -> inferGlue ()
+  | ER -> VKan Z.zero | Elem -> implv VZ VR | EGlue -> inferGlue ()
   | ERInd e -> inferInd true ctx VR e inferRInd
   | ERIndS e -> inferInd false ctx VR e inferRIndS
   | ERInj -> inferRInj ()
-  | EBot -> VKan 0 | EBotRec e -> ignore (extSet (infer ctx e)); implv VBot (eval e ctx)
+  | EBot -> VKan Z.zero | EBotRec e -> ignore (extSet (infer ctx e)); implv VBot (eval e ctx)
   | e -> raise (InferError e)
   with ex -> Printf.printf "When trying to infer type of\n  %s\n" (showExp e); raise ex
 

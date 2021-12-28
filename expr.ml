@@ -1,7 +1,7 @@
 open Ident
 
 type exp =
-  | EPre of int | EKan of int                                                 (* cosmos *)
+  | EPre of Z.t | EKan of Z.t                                                 (* cosmos *)
   | EVar of name | EHole                                                   (* variables *)
   | EPi of exp * (name * exp) | ELam of exp * (name * exp) | EApp of exp * exp     (* Π *)
   | ESig of exp * (name * exp) | EPair  of exp * exp | EFst of exp | ESnd of exp   (* Σ *)
@@ -23,7 +23,7 @@ type tele = name * exp
 type scope = Local | Global
 
 type value =
-  | VKan of int | VPre of int
+  | VKan of Z.t | VPre of Z.t
   | Var of name * value | VHole
   | VPi of value * clos | VLam of value * clos | VApp of value * value
   | VSig of value * clos | VPair of value * value | VFst of value | VSnd of value
