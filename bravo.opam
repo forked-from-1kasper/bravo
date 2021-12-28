@@ -6,13 +6,14 @@ authors: [
   "Namdak Tonpa @5HT"
   "Siegmentation Fault @siegment"
 ]
-homepage: "https://github.com/forked-from-1kasper/castle_bravo"
-bug-reports: "https://github.com/forked-from-1kasper/castle_bravo/issues"
-dev-repo: "git+https://github.com/forked-from-1kasper/castle_bravo"
+homepage: "https://github.com/groupoid/castle.bravo"
+bug-reports: "https://github.com/groupoid/castle.bravo/issues"
+dev-repo: "git+https://github.com/groupoid/castle.bravo"
 synopsis: "HoTT-∂ Type System with definitional Path-β "
 license: "ISC"
 depends: [
   "dune" {>= "2.0"}
+  "zarith" {>= "1.12"}
   "ocaml" {>= "4.10"}
   "menhir" {>= "20200123"}
 ]

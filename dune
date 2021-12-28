@@ -1,7 +1,7 @@
 (env (dev (flags (:standard -warn-error -A))))
 (ocamllex lexer)
 (menhir (modules parser))
-(executable (name bravo) (package bravo) (public_name bravo))
+(executable (name bravo) (libraries zarith) (package bravo) (public_name bravo))
 (install (files experiments/N3000.bravo    experiments/cat.bravo
                 experiments/circle.bravo   experiments/equiv.bravo
                 experiments/fiber.bravo    experiments/path.bravo
