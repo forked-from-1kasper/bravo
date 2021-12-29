@@ -435,6 +435,8 @@ and inferV v = traceInferV v; match v with
   | VBApd (f, p, x, y) -> inferVBApd f p (inferV p) x y
   | VComp (u, v) -> let (a, b, _) = extBoundary (inferV u) in
     let (_, _, y) = extBoundary (inferV v) in VBoundary (a, b, y)
+  | VId t -> let n = extSet (inferV t) in implv t (implv t (VPre n))
+  | VJ t -> inferJ (inferV t)
   | VApp (f, x) -> let (_, (_, g)) = extPi (inferV f) in g x
   | VRefl v -> idv (inferV v) v v
   | VIdp v -> VPath (inferV v, v, v)
@@ -456,7 +458,21 @@ and inferV v = traceInferV v; match v with
   | VR -> VKan Z.zero | VElem -> implv VZ VR | VGlue -> inferGlue ()
   | VRInd v -> inferRInd v | VRIndS v -> inferRIndS v | VRInj -> inferRInj ()
   | VBot -> VKan Z.zero | VBotRec v -> implv VBot v
-  | v -> raise (InferVError v)
+  | VPair _ | VHole -> raise (InferVError v)
+
+and inferJ v = let n = extSet v in
+  let x = freshName "x" in let y = freshName "y" in
+  let pi = freshName "P" in let p = freshName "p" in
+
+  let t = VPi (v, (x, fun x ->
+    VPi (v, (y, fun y -> implv (idv v x y) (VPre n))))) in
+
+  VPi (t, (pi, fun pi ->
+    VPi (v, (x, fun x ->
+      implv (app (app (app (pi, x), x), VRefl x))
+            (VPi (v, (y, fun y ->
+              VPi (idv v x y, (p, fun p ->
+                app (app (app (pi, x), y), p))))))))))
 
 and inferVApd f p t1 t2 =
   let (t, a, b) = extPath t1 in
@@ -707,7 +723,7 @@ and infer ctx e : value = traceInfer e; try match e with
   | EPath (e, a, b) -> let t = eval e ctx in check ctx a t; check ctx b t; infer ctx e
   | EId e -> let v = eval e ctx in let n = extSet (infer ctx e) in implv v (implv v (VPre n))
   | ERefl e -> let v = eval e ctx in idv (infer ctx e) v v
-  | EJ e -> inferJ ctx e
+  | EJ e -> inferJ (infer ctx e)
   | EIdp e -> let v = eval e ctx in let t = infer ctx e in VPath (t, v, v)
   | ERev p -> let (v, a, b) = extPath (infer ctx p) in VPath (v, b, a)
   | ETrans (p, q) -> let (u, a, x) = extPath (infer ctx p) in let (v, y, c) = extPath (infer ctx q) in
@@ -749,7 +765,7 @@ and infer ctx e : value = traceInfer e; try match e with
   | ERIndS e -> inferInd false ctx VR e inferRIndS
   | ERInj -> inferRInj ()
   | EBot -> VKan Z.zero | EBotRec e -> ignore (extSet (infer ctx e)); implv VBot (eval e ctx)
-  | e -> raise (InferError e)
+  | EPair _ | EHole -> raise (InferError e)
   with ex -> Printf.printf "When trying to infer type of\n  %s\n" (showExp e); raise ex
 
 and inferInd fibrant ctx t e f =
@@ -766,20 +782,6 @@ and inferLam ctx p a e =
   ignore (extSet (infer ctx a)); let t = eval a ctx in
   ignore (infer (upLocal ctx p t (Var (p, t))) e);
   VPi (t, (p, fun x -> infer (upLocal ctx p t x) e))
-
-and inferJ ctx e =
-  let n = extSet (infer ctx e) in let x = freshName "x" in let y = freshName "y" in
-  let pi = freshName "P" in let p = freshName "p" in
-
-  let v = eval e ctx in let t = VPi (v, (x, fun x ->
-    VPi (v, (y, fun y -> implv (idv v x y) (VPre n))))) in
-
-  VPi (t, (pi, fun pi ->
-    VPi (v, (x, fun x ->
-      implv (app (app (app (pi, x), x), VRefl x))
-            (VPi (v, (y, fun y ->
-              VPi (idv v x y, (p, fun p ->
-                app (app (app (pi, x), y), p))))))))))
 
 and inferSymm ctx e =
   let (a, b, x) = extBoundary (infer ctx e) in VBoundary (b, a, x)
