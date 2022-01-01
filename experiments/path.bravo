@@ -26,6 +26,9 @@ def J (A : U) (P : Π (a b : A), Path A a b → U)
   (a : A) (d : P a a (idp a)) (b : A) (p : Path A a b) : P a b p :=
 coe (apd (λ (x : A) (H : ∂ a b x), P a x (meet p x H).2) p) d
 
+def ap′ (A B : U) (f : A → B) (a b : A) (p : Path A a b) : Path B (f a) (f b) :=
+J A (λ (a b : A) (p : Path A a b), Path B (f a) (f b)) a (idp (f a)) b p
+
 def bimap (A B C : U) (a b : A) (a′ b′ : B) (f : A → B → C)
   (p : Path A a b) (q : Path B a′ b′) : Path C (f a a′) (f b b′) :=
 J A (λ (a b : A) (p : Path A a b), Path C (f a a′) (f b b′))
@@ -36,8 +39,7 @@ def bimap′ (A B C : U) (a b : A) (a′ b′ : B) (f : A → B → C)
 J B (λ (a′ b′ : B) (p : Path B a′ b′), Path C (f a a′) (f b b′))
   a′ (ap A C (λ (x : A), f x a′) a b p) b′ q
 
-def bimap-eq-bimap′ (A B C : U) (a b : A) (a′ b′ : B) (f : A → B → C)
-  (p : Path A a b) (q : Path B a′ b′) :
+def bimap-eq-bimap′ (A B C : U) (a b : A) (a′ b′ : B) (f : A → B → C) (p : Path A a b) (q : Path B a′ b′) :
   Path (Path C (f a a′) (f b b′)) (bimap A B C a b a′ b′ f p q) (bimap′ A B C a b a′ b′ f p q) :=
 J A (λ (a b : A) (p : Path A a b),
   Path (Path C (f a a′) (f b b′)) (bimap A B C a b a′ b′ f p q)
