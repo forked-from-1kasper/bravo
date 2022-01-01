@@ -2,6 +2,7 @@
 \bibliographystyle{plainurl}
 
 \usepackage{mathtools}
+\usepackage{amsmath}
 
 \newcommand{\UU}{\ensuremath{\mathcal{U}}}
 \newcommand{\VV}{\ensuremath{\mathcal{V}}}
@@ -74,106 +75,139 @@ and outer languages was continued in 2LTT\footnote{\url{https://arxiv.org/pdf/17
 
 \begin{equation*}
     \frac{}{\Gamma \vdash \UU_i : \UU_{i + 1}}
-\end{equation*}
-
-\begin{equation*}
+    \quad
     \frac{}{\Gamma \vdash \VV_i : \VV_{i + 1}}
+    \quad
+    \frac{\Gamma \vdash A : \UU_i}{\Gamma \vdash A : \VV_i}
 \end{equation*}
 
 \begin{equation*}
-    \frac{\Gamma \vdash A : \UU}{\Gamma \vdash A : \VV}
+    \frac{\Gamma \vdash A : \UU \hspace{10pt} \Gamma \vdash a : A \hspace{10pt} \Gamma \vdash b : A}
+         {\Gamma \vdash a = b : \UU}
+    \quad
+    \frac{\Gamma \vdash A : \UU \hspace{10pt} \Gamma \vdash a : A}
+         {\Gamma \vdash \mathrm{idp}_A(a) : a = a}
 \end{equation*}
 
 \begin{equation*}
-    \frac{\Gamma \vdash A : \UU \hspace{10pt} \Gamma \vdash a : A \hspace{10pt} \Gamma \vdash b : A}{\Gamma \vdash a = b : \UU}
+    \frac{\begin{matrix}
+            \Gamma \vdash A : \UU \hspace{10pt} \Gamma \vdash a : A \hspace{10pt} \Gamma \vdash b : A \\
+            \Gamma \vdash p : a = b
+          \end{matrix}}
+         {\Gamma \vdash p^{-1} : b = a}
+    \quad
+    \frac{\begin{matrix}
+            \Gamma \vdash A : \UU \hspace{10pt} \Gamma \vdash a : A \hspace{10pt} \Gamma \vdash b : A \hspace{10pt} \Gamma \vdash c : A \\
+            \Gamma \vdash p : a = b \hspace{10pt} \Gamma \vdash q : b = c
+          \end{matrix}}
+         {\Gamma \vdash p \ct q : a = c}
 \end{equation*}
 
 \begin{equation*}
-    \frac{\Gamma \vdash A : \UU \hspace{10pt} \Gamma \vdash a : A}{\Gamma \vdash \mathrm{idp}_A(a) : a = a}
+    \frac{\begin{matrix}
+            \Gamma \vdash A : \UU \hspace{10pt} \Gamma \vdash a : A \hspace{10pt} \Gamma \vdash b : A \hspace{10pt} \Gamma \vdash c : A \hspace{10pt} \Gamma \vdash d : A \\
+            \Gamma \vdash p : a = b \hspace{10pt} \Gamma \vdash q : b = c \hspace{10pt} \Gamma \vdash r : c = d
+          \end{matrix}}
+         {\Gamma \vdash (p \ct q) \ct r \equiv p \ct (q \ct r) : a = d}
 \end{equation*}
 
 \begin{equation*}
-    \frac{\Gamma \vdash A : \UU \hspace{10pt} \Gamma \vdash a : A \hspace{10pt} \Gamma \vdash b : A \hspace{10pt} \Gamma \vdash p : a = b}{\Gamma \vdash p^{-1} : b = a}
+    \frac{\Gamma \vdash A : \UU \hspace{10pt} \Gamma \vdash a : A \hspace{10pt} \Gamma \vdash b : A \hspace{10pt} \Gamma \vdash c : A \hspace{10pt} \Gamma \vdash p : a = b \hspace{10pt} \Gamma \vdash q : b = c}
+         {\Gamma \vdash (p \ct q)^{-1} \equiv q^{-1} \ct p^{-1} : c = a}
 \end{equation*}
 
 \begin{equation*}
-    \frac{\Gamma \vdash A : \UU \hspace{10pt} \Gamma \vdash a : A \hspace{10pt} \Gamma \vdash b : A \hspace{10pt} \Gamma \vdash c : A \hspace{10pt} \Gamma \vdash p : a = b \hspace{10pt} \Gamma \vdash q : b = c}{\Gamma \vdash p \ct q : a = c}
+    \frac{\Gamma \vdash A : \UU \hspace{10pt} \Gamma \vdash a : A \hspace{10pt} \Gamma \vdash b : A \hspace{10pt} \Gamma \vdash c : A \hspace{10pt} \Gamma \vdash p : a = b \hspace{10pt} \Gamma \vdash q : b = c}
+         {\Gamma \vdash p \ct (p^{-1} \ct q) \equiv q : b = c}
 \end{equation*}
 
 \begin{equation*}
-    \frac{\Gamma \vdash A : \UU \hspace{10pt} \Gamma \vdash a : A \hspace{10pt} \Gamma \vdash b : A \hspace{10pt} \Gamma \vdash c : A \hspace{10pt} \Gamma \vdash d : A \hspace{10pt} \Gamma \vdash p : a = b \hspace{10pt} \Gamma \vdash q : b = c \hspace{10pt} \Gamma \vdash r : c = d}{\Gamma \vdash (p \ct q) \ct r \equiv p \ct (q \ct r) : a = d}
+    \frac{\Gamma \vdash A : \UU \hspace{10pt} \Gamma \vdash a : A \hspace{10pt} \Gamma \vdash b : A \hspace{10pt} \Gamma \vdash c : A \hspace{10pt} \Gamma \vdash p : a = b \hspace{10pt} \Gamma \vdash q : b = c}
+         {\Gamma \vdash p^{-1} \ct (p \ct q) \equiv q : b = c}
 \end{equation*}
 
 \begin{equation*}
-    \frac{\Gamma \vdash A : \UU \hspace{10pt} \Gamma \vdash a : A \hspace{10pt} \Gamma \vdash b : A \hspace{10pt} \Gamma \vdash c : A \hspace{10pt} \Gamma \vdash p : a = b \hspace{10pt} \Gamma \vdash q : b = c}{\Gamma \vdash (p \ct q)^{-1} \equiv q^{-1} \ct p^{-1} : c = a}
+    \frac{\Gamma \vdash A : \UU \hspace{10pt} \Gamma \vdash a : A \hspace{10pt} \Gamma \vdash b : A \hspace{10pt} \Gamma \vdash p : a = b}
+         {\Gamma \vdash p \ct p^{-1} \equiv \mathrm{idp}_A(a) : a = a}
 \end{equation*}
 
 \begin{equation*}
-    \frac{\Gamma \vdash A : \UU \hspace{10pt} \Gamma \vdash a : A \hspace{10pt} \Gamma \vdash b : A \hspace{10pt} \Gamma \vdash c : A \hspace{10pt} \Gamma \vdash p : a = b \hspace{10pt} \Gamma \vdash q : b = c}{\Gamma \vdash p \ct (p^{-1} \ct q) \equiv q : b = c}
+    \frac{\begin{matrix}
+            \Gamma \vdash A : \UU \hspace{10pt} \Gamma \vdash a : A \hspace{10pt} \Gamma \vdash b : A \\
+            \Gamma \vdash p : a = b
+          \end{matrix}}
+         {\Gamma \vdash p^{-1} \ct p \equiv \mathrm{idp}_A(b) : b = b}
+    \quad
+    \frac{\begin{matrix}
+            \Gamma \vdash A : \UU \hspace{10pt} \Gamma \vdash a : A \hspace{10pt} \Gamma \vdash b : A \\
+            \Gamma \vdash p : a = b
+          \end{matrix}}
+         {\Gamma \vdash (p^{-1})^{-1} \equiv p : a = b}
 \end{equation*}
 
 \begin{equation*}
-    \frac{\Gamma \vdash A : \UU \hspace{10pt} \Gamma \vdash a : A \hspace{10pt} \Gamma \vdash b : A \hspace{10pt} \Gamma \vdash c : A \hspace{10pt} \Gamma \vdash p : a = b \hspace{10pt} \Gamma \vdash q : b = c}{\Gamma \vdash p^{-1} \ct (p \ct q) \equiv q : b = c}
+    \frac{\Gamma \vdash A : \UU \hspace{10pt} \Gamma \vdash x : A}
+         {\Gamma \vdash (\mathrm{idp}_A(x))^{-1} \equiv \mathrm{idp}_A(x) : x = x}
 \end{equation*}
 
 \begin{equation*}
-    \frac{\Gamma \vdash A : \UU \hspace{10pt} \Gamma \vdash a : A \hspace{10pt} \Gamma \vdash b : A \hspace{10pt} \Gamma \vdash p : a = b}{\Gamma \vdash p \ct p^{-1} \equiv \mathrm{idp}_A(a) : a = a}
+    \frac{\begin{matrix}
+            \Gamma \vdash A : \UU \hspace{10pt} \Gamma \vdash a : A \hspace{10pt} \Gamma \vdash b : A \\
+            \Gamma \vdash p : a = b
+          \end{matrix}}
+         {\Gamma \vdash \mathrm{idp}_A(a) \ct p \equiv p : a = b}
+    \quad
+    \frac{\begin{matrix}
+            \Gamma \vdash A : \UU \hspace{10pt} \Gamma \vdash a : A \hspace{10pt} \Gamma \vdash b : A \\
+            \Gamma \vdash p : a = b
+          \end{matrix}}
+         {\Gamma \vdash p \ct \mathrm{idp}_A(b) \equiv p : a = b}
 \end{equation*}
 
 \begin{equation*}
-    \frac{\Gamma \vdash A : \UU \hspace{10pt} \Gamma \vdash a : A \hspace{10pt} \Gamma \vdash b : A \hspace{10pt} \Gamma \vdash p : a = b}{\Gamma \vdash p^{-1} \ct p \equiv \mathrm{idp}_A(b) : b = b}
+    \frac{\Gamma \vdash A : \UU \hspace{10pt} \Gamma \vdash a : A \hspace{10pt} \Gamma \vdash b : A \hspace{10pt} \Gamma \vdash x : A}
+         {\Gamma \vdash \partial_A(a, b, x) : \VV}
 \end{equation*}
 
 \begin{equation*}
-    \frac{\Gamma \vdash A : \UU \hspace{10pt} \Gamma \vdash a : A \hspace{10pt} \Gamma \vdash b : A \hspace{10pt} \Gamma \vdash p : a = b}{\Gamma \vdash (p^{-1})^{-1} \equiv p : a = b}
+    \frac{\begin{matrix}
+            \Gamma \vdash A : \UU \hspace{10pt} \Gamma \vdash a : A \hspace{10pt} \Gamma \vdash b : A \hspace{10pt} \Gamma \vdash x : A \\
+            \Gamma \vdash p : \partial_A(a, b, x) \hspace{10pt} \Gamma \vdash q : \partial_A(a, b, x)
+          \end{matrix}}
+         {\Gamma \vdash p \equiv q}
 \end{equation*}
 
 \begin{equation*}
-    \frac{\Gamma \vdash A : \UU \hspace{10pt} \Gamma \vdash x : A}{\Gamma \vdash (\mathrm{idp}_A(x))^{-1} \equiv \mathrm{idp}_A(x) : x = x}
+    \frac{\Gamma \vdash A : \UU \hspace{10pt} \Gamma \vdash a : A \hspace{10pt} \Gamma \vdash b : A}
+         {\Gamma \vdash \mathrm{left}_A(a, b) : \partial_A(a, b, a)}
+    \quad
+    \frac{\Gamma \vdash A : \UU \hspace{10pt} \Gamma \vdash a : A \hspace{10pt} \Gamma \vdash b : A}
+         {\Gamma \vdash \mathrm{right}_A(a, b) : \partial_A(a, b, b)}
 \end{equation*}
 
 \begin{equation*}
-    \frac{\Gamma \vdash A : \UU \hspace{10pt} \Gamma \vdash a : A \hspace{10pt} \Gamma \vdash b : A \hspace{10pt} \Gamma \vdash p : a = b}{\Gamma \vdash \mathrm{idp}_A(a) \ct p \equiv p : a = b}
+    \frac{\Gamma \vdash A : \UU \hspace{10pt} \Gamma \vdash a : A \hspace{10pt} \Gamma \vdash b : A \hspace{10pt} \Gamma \vdash x : A}
+         {\Gamma \vdash \partial_{\mathrm{symm}} : \partial_A(a, b, x) \rightarrow \partial_A(b, a, x)}
 \end{equation*}
 
 \begin{equation*}
-    \frac{\Gamma \vdash A : \UU \hspace{10pt} \Gamma \vdash a : A \hspace{10pt} \Gamma \vdash b : A \hspace{10pt} \Gamma \vdash p : a = b}{\Gamma \vdash p \ct \mathrm{idp}_A(b) \equiv p : a = b}
+    \frac{\Gamma \vdash A : \UU \hspace{10pt} \Gamma \vdash a : A \hspace{10pt} \Gamma \vdash b : A \hspace{10pt} \Gamma \vdash x : A \hspace{10pt} \Gamma \vdash y : A}
+         {\Gamma \vdash \partial_{\mathrm{comp}} : \partial_A(a, b, x) \rightarrow \partial_A(x, b, y) \rightarrow \partial_A(a, b, y)}
 \end{equation*}
 
 \begin{equation*}
-    \frac{\Gamma \vdash A : \UU \hspace{10pt} \Gamma \vdash a : A \hspace{10pt} \Gamma \vdash b : A \hspace{10pt} \Gamma \vdash x : A}{\Gamma \vdash \partial_A(a, b, x) : \VV}
+    \frac{\Gamma \vdash A : \UU \hspace{10pt} \Gamma \vdash a : A \hspace{10pt} \Gamma \vdash b : A \hspace{10pt} \Gamma \vdash c : A \hspace{10pt} \Gamma \vdash x : A}
+         {\Gamma \vdash \partial_{\mathrm{left}} : \partial_A(a, b, x) \rightarrow a = c \rightarrow \partial_A(c, b, x)}
 \end{equation*}
 
 \begin{equation*}
-    \frac{\Gamma \vdash A : \UU \hspace{10pt} \Gamma \vdash a : A \hspace{10pt} \Gamma \vdash b : A \hspace{10pt} \Gamma \vdash x : A \hspace{10pt} \Gamma \vdash p : \partial_A(a, b, x) \hspace{10pt} \Gamma \vdash q : \partial_A(a, b, x)}{\Gamma \vdash p \equiv q}
+    \frac{\Gamma \vdash A : \UU \hspace{10pt} \Gamma \vdash \Gamma a : A \hspace{10pt} \Gamma \vdash b : A \hspace{10pt} \Gamma \vdash c : A \hspace{10pt} \Gamma \vdash x : A}
+         {\Gamma \vdash \partial_{\mathrm{right}} : \partial_A(a, b, x) \rightarrow b = c \rightarrow \partial_A(a, c, x)}
 \end{equation*}
 
 \begin{equation*}
-    \frac{\Gamma \vdash A : \UU \hspace{10pt} \Gamma \vdash a : A \hspace{10pt} \Gamma \vdash b : A}{\Gamma \vdash \mathrm{left}_A(a, b) : \partial_A(a, b, a)}
-\end{equation*}
-
-\begin{equation*}
-    \frac{\Gamma \vdash A : \UU \hspace{10pt} \Gamma \vdash a : A \hspace{10pt} \Gamma \vdash b : A}{\Gamma \vdash \mathrm{right}_A(a, b) : \partial_A(a, b, b)}
-\end{equation*}
-
-\begin{equation*}
-    \frac{\Gamma \vdash A : \UU \hspace{10pt} \Gamma \vdash a : A \hspace{10pt} \Gamma \vdash b : A \hspace{10pt} \Gamma \vdash x : A}{\Gamma \vdash \partial_{\mathrm{symm}} : \partial_A(a, b, x) \rightarrow \partial_A(b, a, x)}
-\end{equation*}
-
-\begin{equation*}
-    \frac{\Gamma \vdash A : \UU \hspace{10pt} \Gamma \vdash a : A \hspace{10pt} \Gamma \vdash b : A \hspace{10pt} \Gamma \vdash x : A \hspace{10pt} \Gamma \vdash y : A}{\Gamma \vdash \partial_{\mathrm{comp}} : \partial_A(a, b, x) \rightarrow \partial_A(x, b, y) \rightarrow \partial_A(a, b, y)}
-\end{equation*}
-
-\begin{equation*}
-    \frac{\Gamma \vdash A : \UU \hspace{10pt} \Gamma \vdash a : A \hspace{10pt} \Gamma \vdash b : A \hspace{10pt} \Gamma \vdash c : A \hspace{10pt} \Gamma \vdash x : A}{\Gamma \vdash \partial_{\mathrm{left}} : \partial_A(a, b, x) \rightarrow a = c \rightarrow \partial_A(c, b, x)}
-\end{equation*}
-
-\begin{equation*}
-    \frac{\Gamma \vdash A : \UU \hspace{10pt} \Gamma \vdash a : A \hspace{10pt} \Gamma \vdash b : A \hspace{10pt} \Gamma \vdash c : A \hspace{10pt} \Gamma \vdash x : A}{\Gamma \vdash \partial_{\mathrm{right}} : \partial_A(a, b, x) \rightarrow b = c \rightarrow \partial_A(a, c, x)}
-\end{equation*}
-
-\begin{equation*}
-    \frac{\Gamma \vdash A : \UU \hspace{10pt} \Gamma \vdash B : \UU}{\Gamma \vdash \mathrm{coe} : A = B \rightarrow A \rightarrow B}
+    \frac{\Gamma \vdash A : \UU \hspace{10pt} \Gamma \vdash B : \UU}
+         {\Gamma \vdash \mathrm{coe} : A = B \rightarrow A \rightarrow B}
 \end{equation*}
 
 \begin{equation*}
@@ -181,39 +215,54 @@ and outer languages was continued in 2LTT\footnote{\url{https://arxiv.org/pdf/17
 \end{equation*}
 
 \begin{equation*}
-    \frac{\Gamma \vdash A : \UU \hspace{10pt} \Gamma \vdash a : A \hspace{10pt} \Gamma \vdash b : A \hspace{10pt} \Gamma \vdash p : a = b \hspace{10pt} \Gamma \vdash x : A \hspace{10pt} \Gamma \vdash H : \partial_A(a, b, x)}{\Gamma \vdash \mathrm{meet}(p, x, H) : \mathrm{singl}(A, a)}
+    \frac{\Gamma \vdash A : \UU \hspace{10pt} \Gamma \vdash a : A \hspace{10pt} \Gamma \vdash b : A \hspace{10pt} \Gamma \vdash p : a = b \hspace{10pt} \Gamma \vdash x : A \hspace{10pt} \Gamma \vdash H : \partial_A(a, b, x)}
+         {\Gamma \vdash \mathrm{meet}(p, x, H) : \mathrm{singl}(A, a)}
 \end{equation*}
 
 \begin{equation*}
-    \frac{\Gamma \vdash A : \UU \hspace{10pt} \Gamma \vdash a : A \hspace{10pt} \Gamma \vdash b : A \hspace{10pt} \Gamma \vdash p : a = b \hspace{10pt} \Gamma \vdash a \not\equiv b}{\Gamma \vdash \mathrm{meet}(p, a, \mathrm{left}(a, b)) \equiv (a, \mathrm{idp}_A(a))}
+    \frac{\Gamma \vdash A : \UU \hspace{10pt} \Gamma \vdash a : A \hspace{10pt} \Gamma \vdash b : A \hspace{10pt} \Gamma \vdash p : a = b \hspace{10pt} \Gamma \vdash a \not\equiv b}
+         {\Gamma \vdash \mathrm{meet}(p, a, \mathrm{left}(a, b)) \equiv (a, \mathrm{idp}_A(a))}
 \end{equation*}
 
 \begin{equation*}
-    \frac{\Gamma \vdash A : \UU \hspace{10pt} \Gamma \vdash a : A \hspace{10pt} \Gamma \vdash b : A \hspace{10pt} \Gamma \vdash p : a = b \hspace{10pt} \Gamma \vdash a \not\equiv b}{\Gamma \vdash \mathrm{meet}(p, a, \mathrm{right}(a, b)) \equiv (b, p)}
+    \frac{\Gamma \vdash A : \UU \hspace{10pt} \Gamma \vdash a : A \hspace{10pt} \Gamma \vdash b : A \hspace{10pt} \Gamma \vdash p : a = b \hspace{10pt} \Gamma \vdash a \not\equiv b}
+         {\Gamma \vdash \mathrm{meet}(p, a, \mathrm{right}(a, b)) \equiv (b, p)}
 \end{equation*}
 
 \begin{equation*}
-    \frac{\Gamma \vdash A : \UU \hspace{10pt} \Gamma \vdash a : A \hspace{10pt} \Gamma \vdash b : A \hspace{10pt} \Gamma \vdash p : a = b \hspace{10pt} \Gamma \vdash H : \partial_A(a, b, a) \hspace{10pt} \Gamma \vdash a \equiv b}{\Gamma \vdash \mathrm{meet}(p, a, H) \equiv (a, \mathrm{idp}_A(a))}
+    \frac{\Gamma \vdash A : \UU \hspace{10pt} \Gamma \vdash a : A \hspace{10pt} \Gamma \vdash b : A \hspace{10pt} \Gamma \vdash p : a = b \hspace{10pt} \Gamma \vdash H : \partial_A(a, b, a) \hspace{10pt} \Gamma \vdash a \equiv b}
+         {\Gamma \vdash \mathrm{meet}(p, a, H) \equiv (a, \mathrm{idp}_A(a))}
 \end{equation*}
 
 \begin{equation*}
-    \frac{\Gamma \vdash A : \UU \hspace{10pt} \Gamma \vdash a : A \hspace{10pt} \Gamma \vdash b : A \hspace{10pt} \Gamma \vdash p : a = b \hspace{10pt} \Gamma \vdash H : \partial_A(a, b, b) \hspace{10pt} \Gamma \vdash a \equiv b}{\Gamma \vdash \mathrm{meet}(p, b, H) \equiv (a, \mathrm{idp}_A(a))}
+    \frac{\Gamma \vdash A : \UU \hspace{10pt} \Gamma \vdash a : A \hspace{10pt} \Gamma \vdash b : A \hspace{10pt} \Gamma \vdash p : a = b \hspace{10pt} \Gamma \vdash H : \partial_A(a, b, b) \hspace{10pt} \Gamma \vdash a \equiv b}
+         {\Gamma \vdash \mathrm{meet}(p, b, H) \equiv (a, \mathrm{idp}_A(a))}
 \end{equation*}
 
 \begin{equation*}
-    \frac{\Gamma \vdash A : \UU \hspace{10pt} \Gamma \vdash a : A \hspace{10pt} \Gamma \vdash b : A \hspace{10pt} \Gamma \vdash p : a = b \hspace{10pt} \Gamma \vdash x : A \hspace{10pt} \Gamma \vdash H : \partial_A(a, b, x)}{\Gamma \vdash (\mathrm{meet}(p, x, H)).1 \equiv x}
+    \frac{\Gamma \vdash A : \UU \hspace{10pt} \Gamma \vdash a : A \hspace{10pt} \Gamma \vdash b : A \hspace{10pt} \Gamma \vdash p : a = b \hspace{10pt} \Gamma \vdash x : A \hspace{10pt} \Gamma \vdash H : \partial_A(a, b, x)}
+         {\Gamma \vdash (\mathrm{meet}(p, x, H)).1 \equiv x}
 \end{equation*}
 
 \begin{equation*}
-    \frac{\Gamma \vdash A : \UU \hspace{10pt} \Gamma \vdash a : A \hspace{10pt} \Gamma \vdash b : A \hspace{10pt} \Gamma \vdash B : \prod_{x : A} \partial_A(a, b, x) \rightarrow \UU \hspace{10pt} \Gamma \vdash f : \prod_{x : A} \prod_{H : \partial_A(a, b, x)} B(x, H)}{\Gamma \vdash \mathrm{apd}(f, p) : \mathrm{coe}(\mathrm{apd}(B, p), f(a, \mathrm{left}(a, b))) = f(b, \mathrm{right}(a, b))}
+    \frac{\begin{matrix}
+            \Gamma \vdash A : \UU \hspace{10pt} \Gamma \vdash a : A \hspace{10pt} \Gamma \vdash b : A \\
+            \Gamma \vdash B : \prod_{x : A} \partial_A(a, b, x) \rightarrow \UU \hspace{10pt} \Gamma \vdash f : \prod_{x : A} \prod_{H : \partial_A(a, b, x)} B(x, H)
+          \end{matrix}}
+         {\Gamma \vdash \mathrm{apd}(f, p) : \mathrm{coe}(\mathrm{apd}(B, p), f(a, \mathrm{left}(a, b))) = f(b, \mathrm{right}(a, b))}
 \end{equation*}
 
 \begin{equation*}
-    \frac{\Gamma \vdash A : \UU \hspace{10pt} \Gamma \vdash a : A \hspace{10pt} \Gamma \vdash B : \prod_{x : A} \partial_A(a, a, x) \rightarrow \UU \hspace{10pt} \Gamma \vdash f : \prod_{x : A} \prod_{H : \partial_A(a, a, x)} B(x, H)}{\Gamma \vdash \mathrm{apd}(f, \mathrm{idp}_A(a)) \equiv \mathrm{idp}_{B(a, \mathrm{left}(a, a))}(f(a, \mathrm{left}(a, a)))}
+    \frac{\begin{matrix}
+            \Gamma \vdash A : \UU \hspace{10pt} \Gamma \vdash a : A \\
+            \Gamma \vdash B : \prod_{x : A} \partial_A(a, a, x) \rightarrow \UU \hspace{10pt} \Gamma \vdash f : \prod_{x : A} \prod_{H : \partial_A(a, a, x)} B(x, H)
+          \end{matrix}}
+         {\Gamma \vdash \mathrm{apd}(f, \mathrm{idp}_A(a)) \equiv \mathrm{idp}_{B(a, \mathrm{left}(a, a))}(f(a, \mathrm{left}(a, a)))}
 \end{equation*}
 
 \begin{equation*}
-    \frac{\Gamma \vdash A : \UU \hspace{10pt} \Gamma \vdash a : A \hspace{10pt} \Gamma \vdash b : A \hspace{10pt} \Gamma \vdash B : \UU \hspace{10pt} \Gamma \vdash x : B \hspace{10pt} y, H \notin \mathrm{FV}(B) \cup \mathrm{FV}(x)}{\Gamma \vdash \mathrm{apd}(\lambda y.\lambda H.x, p) \equiv \mathrm{idp}_B(x)}
+    \frac{\Gamma \vdash A : \UU \hspace{10pt} \Gamma \vdash a : A \hspace{10pt} \Gamma \vdash b : A \hspace{10pt} \Gamma \vdash B : \UU \hspace{10pt} \Gamma \vdash x : B \hspace{10pt} y, H \notin \mathrm{FV}(B) \cup \mathrm{FV}(x)}
+         {\Gamma \vdash \mathrm{apd}(\lambda y.\lambda H.x, p) \equiv \mathrm{idp}_B(x)}
 \end{equation*}
 
 
