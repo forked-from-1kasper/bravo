@@ -447,7 +447,7 @@ and inferV v = traceInferV v; match v with
   | VPath (v, _, _) -> inferV v
   | VBoundary (v, _, _) -> let n = extSet (inferV (inferV v)) in VPre n
   | VUA e -> let (a, b) = extEquiv (inferV e) in VPath (inferV a, a, b)
-  | VEquiv (a, _) -> inferV a
+  | VEquiv (a, _) -> inferV (inferV a)
   | VMkEquiv (a, b, _, _) -> VEquiv (a, b)
   | VN -> VKan Z.zero | VZero -> VN | VSucc -> implv VN VN
   | VNInd v -> inferNInd v
@@ -750,7 +750,7 @@ and infer ctx e : value = traceInfer e; try match e with
   | ECoe (p, x) -> let (e, a, b) = extPath (infer ctx p) in ignore (extKan e); check ctx x a; b
   | EApd (f, p) -> inferApd ctx f p
   | EUA e -> inferUA ctx e
-  | Equiv (a, b) -> let t1 = infer ctx a in let t2 = infer ctx b in ignore (extSet t1); eqNf t1 t2; t1
+  | Equiv (a, b) -> let t1 = infer ctx a in let t2 = infer ctx b in ignore (extSet t1); eqNf t1 t2; inferV t1
   | EMkEquiv (a, b, f, e) -> inferMkEquiv ctx a b f e
   | EN -> VKan Z.zero | EZero -> VN | ESucc -> implv VN VN
   | ENInd e -> inferInd false ctx VN e inferNInd
