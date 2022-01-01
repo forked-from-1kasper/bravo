@@ -1,6 +1,8 @@
 \documentclass[a4paper,UKenglish,cleveref, autoref, thm-restate]{lipics-v2021}
 \bibliographystyle{plainurl}
 
+\usepackage{mathtools}
+
 \newcommand{\UU}{\ensuremath{\mathcal{U}}}
 \newcommand{\VV}{\ensuremath{\mathcal{V}}}
 
@@ -71,6 +73,18 @@ and outer languages was continued in 2LTT\footnote{\url{https://arxiv.org/pdf/17
 \label{sec:typesetting-summary}
 
 \begin{equation*}
+    \frac{}{\Gamma \vdash \UU_i : \UU_{i + 1}}
+\end{equation*}
+
+\begin{equation*}
+    \frac{}{\Gamma \vdash \VV_i : \VV_{i + 1}}
+\end{equation*}
+
+\begin{equation*}
+    \frac{\Gamma \vdash A : \UU}{\Gamma \vdash A : \VV}
+\end{equation*}
+
+\begin{equation*}
     \frac{\Gamma \vdash A : \UU \hspace{10pt} \Gamma \vdash a : A \hspace{10pt} \Gamma \vdash b : A}{\Gamma \vdash a = b : \UU}
 \end{equation*}
 
@@ -131,12 +145,65 @@ and outer languages was continued in 2LTT\footnote{\url{https://arxiv.org/pdf/17
 \end{equation*}
 
 \begin{equation*}
+    \frac{\Gamma \vdash A : \UU \hspace{10pt} \Gamma \vdash a : A \hspace{10pt} \Gamma \vdash b : A \hspace{10pt} \Gamma \vdash x : A \hspace{10pt} \Gamma \vdash p : \partial_A(a, b, x) \hspace{10pt} \Gamma \vdash q : \partial_A(a, b, x)}{\Gamma \vdash p \equiv q}
+\end{equation*}
+
+\begin{equation*}
     \frac{\Gamma \vdash A : \UU \hspace{10pt} \Gamma \vdash a : A \hspace{10pt} \Gamma \vdash b : A}{\Gamma \vdash \mathrm{left}_A(a, b) : \partial_A(a, b, a)}
 \end{equation*}
 
 \begin{equation*}
     \frac{\Gamma \vdash A : \UU \hspace{10pt} \Gamma \vdash a : A \hspace{10pt} \Gamma \vdash b : A}{\Gamma \vdash \mathrm{right}_A(a, b) : \partial_A(a, b, b)}
 \end{equation*}
+
+\begin{equation*}
+    \frac{\Gamma \vdash A : \UU \hspace{10pt} \Gamma \vdash a : A \hspace{10pt} \Gamma \vdash b : A \hspace{10pt} \Gamma \vdash x : A}{\Gamma \vdash \partial_{\mathrm{symm}} : \partial_A(a, b, x) \rightarrow \partial_A(b, a, x)}
+\end{equation*}
+
+\begin{equation*}
+    \frac{\Gamma \vdash A : \UU \hspace{10pt} \Gamma \vdash a : A \hspace{10pt} \Gamma \vdash b : A \hspace{10pt} \Gamma \vdash x : A \hspace{10pt} \Gamma \vdash y : A}{\Gamma \vdash \partial_{\mathrm{comp}} : \partial_A(a, b, x) \rightarrow \partial_A(x, b, y) \rightarrow \partial_A(a, b, y)}
+\end{equation*}
+
+\begin{equation*}
+    \frac{\Gamma \vdash A : \UU \hspace{10pt} \Gamma \vdash a : A \hspace{10pt} \Gamma \vdash b : A \hspace{10pt} \Gamma \vdash c : A \hspace{10pt} \Gamma \vdash x : A}{\Gamma \vdash \partial_{\mathrm{left}} : \partial_A(a, b, x) \rightarrow a = c \rightarrow \partial_A(c, b, x)}
+\end{equation*}
+
+\begin{equation*}
+    \frac{\Gamma \vdash A : \UU \hspace{10pt} \Gamma \vdash a : A \hspace{10pt} \Gamma \vdash b : A \hspace{10pt} \Gamma \vdash c : A \hspace{10pt} \Gamma \vdash x : A}{\Gamma \vdash \partial_{\mathrm{right}} : \partial_A(a, b, x) \rightarrow b = c \rightarrow \partial_A(a, c, x)}
+\end{equation*}
+
+\begin{equation*}
+    \frac{\Gamma \vdash A : \UU \hspace{10pt} \Gamma \vdash B : \UU}{\Gamma \vdash \mathrm{coe} : A = B \rightarrow A \rightarrow B}
+\end{equation*}
+
+\begin{equation*}
+    \mathrm{singl}(A, a) \coloneqq \sum_{b : A} a = b
+\end{equation*}
+
+\begin{equation*}
+    \frac{\Gamma \vdash A : \UU \hspace{10pt} \Gamma \vdash a : A \hspace{10pt} \Gamma \vdash b : A \hspace{10pt} \Gamma \vdash p : a = b \hspace{10pt} \Gamma \vdash x : A \hspace{10pt} \Gamma \vdash H : \partial_A(a, b, x)}{\Gamma \vdash \mathrm{meet}(p, x, H) : \mathrm{singl}(A, a)}
+\end{equation*}
+
+\begin{equation*}
+    \frac{\Gamma \vdash A : \UU \hspace{10pt} \Gamma \vdash a : A \hspace{10pt} \Gamma \vdash b : A \hspace{10pt} \Gamma \vdash p : a = b \hspace{10pt} \Gamma \vdash a \not\equiv b}{\Gamma \vdash \mathrm{meet}(p, a, \mathrm{left}(a, b)) \equiv (a, \mathrm{idp}_A(a))}
+\end{equation*}
+
+\begin{equation*}
+    \frac{\Gamma \vdash A : \UU \hspace{10pt} \Gamma \vdash a : A \hspace{10pt} \Gamma \vdash b : A \hspace{10pt} \Gamma \vdash p : a = b \hspace{10pt} \Gamma \vdash a \not\equiv b}{\Gamma \vdash \mathrm{meet}(p, a, \mathrm{right}(a, b)) \equiv (b, p)}
+\end{equation*}
+
+\begin{equation*}
+    \frac{\Gamma \vdash A : \UU \hspace{10pt} \Gamma \vdash a : A \hspace{10pt} \Gamma \vdash b : A \hspace{10pt} \Gamma \vdash p : a = b \hspace{10pt} \Gamma \vdash H : \partial_A(a, b, a) \hspace{10pt} \Gamma \vdash a \equiv b}{\Gamma \vdash \mathrm{meet}(p, a, H) \equiv (a, \mathrm{idp}_A(a))}
+\end{equation*}
+
+\begin{equation*}
+    \frac{\Gamma \vdash A : \UU \hspace{10pt} \Gamma \vdash a : A \hspace{10pt} \Gamma \vdash b : A \hspace{10pt} \Gamma \vdash p : a = b \hspace{10pt} \Gamma \vdash H : \partial_A(a, b, b) \hspace{10pt} \Gamma \vdash a \equiv b}{\Gamma \vdash \mathrm{meet}(p, b, H) \equiv (a, \mathrm{idp}_A(a))}
+\end{equation*}
+
+\begin{equation*}
+    \frac{\Gamma \vdash A : \UU \hspace{10pt} \Gamma \vdash a : A \hspace{10pt} \Gamma \vdash b : A \hspace{10pt} \Gamma \vdash p : a = b \hspace{10pt} \Gamma \vdash x : A \hspace{10pt} \Gamma \vdash H : \partial_A(a, b, x)}{\Gamma \vdash (\mathrm{meet}(p, x, H)).1 \equiv x}
+\end{equation*}
+
 
 \section{Lorem ipsum dolor sit amet}
 
