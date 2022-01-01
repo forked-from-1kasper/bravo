@@ -204,6 +204,18 @@ and outer languages was continued in 2LTT\footnote{\url{https://arxiv.org/pdf/17
     \frac{\Gamma \vdash A : \UU \hspace{10pt} \Gamma \vdash a : A \hspace{10pt} \Gamma \vdash b : A \hspace{10pt} \Gamma \vdash p : a = b \hspace{10pt} \Gamma \vdash x : A \hspace{10pt} \Gamma \vdash H : \partial_A(a, b, x)}{\Gamma \vdash (\mathrm{meet}(p, x, H)).1 \equiv x}
 \end{equation*}
 
+\begin{equation*}
+    \frac{\Gamma \vdash A : \UU \hspace{10pt} \Gamma \vdash a : A \hspace{10pt} \Gamma \vdash b : A \hspace{10pt} \Gamma \vdash B : \prod_{x : A} \partial_A(a, b, x) \rightarrow \UU \hspace{10pt} \Gamma \vdash f : \prod_{x : A} \prod_{H : \partial_A(a, b, x)} B(x, H)}{\Gamma \vdash \mathrm{apd}(f, p) : \mathrm{coe}(\mathrm{apd}(B, p), f(a, \mathrm{left}(a, b))) = f(b, \mathrm{right}(a, b))}
+\end{equation*}
+
+\begin{equation*}
+    \frac{\Gamma \vdash A : \UU \hspace{10pt} \Gamma \vdash a : A \hspace{10pt} \Gamma \vdash B : \prod_{x : A} \partial_A(a, a, x) \rightarrow \UU \hspace{10pt} \Gamma \vdash f : \prod_{x : A} \prod_{H : \partial_A(a, a, x)} B(x, H)}{\Gamma \vdash \mathrm{apd}(f, \mathrm{idp}_A(a)) \equiv \mathrm{idp}_{B(a, \mathrm{left}(a, a))}(f(a, \mathrm{left}(a, a)))}
+\end{equation*}
+
+\begin{equation*}
+    \frac{\Gamma \vdash A : \UU \hspace{10pt} \Gamma \vdash a : A \hspace{10pt} \Gamma \vdash b : A \hspace{10pt} \Gamma \vdash B : \UU \hspace{10pt} \Gamma \vdash x : B \hspace{10pt} y, H \notin \mathrm{FV}(B) \cup \mathrm{FV}(x)}{\Gamma \vdash \mathrm{apd}(\lambda y.\lambda H.x, p) \equiv \mathrm{idp}_B(x)}
+\end{equation*}
+
 
 \section{Lorem ipsum dolor sit amet}
 
