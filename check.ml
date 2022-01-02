@@ -30,9 +30,9 @@ let rec eval (e0 : exp) (ctx : ctx) = traceEval e0; match e0 with
   | EKan u                -> VKan u
   | EVar x                -> getRho ctx x
   | EHole                 -> VHole
-  | EPi  (a, (p, b))      -> let t = eval a ctx in VPi (t, (p, closByVal ctx p t b))
-  | ESig (a, (p, b))      -> let t = eval a ctx in VSig (t, (p, closByVal ctx p t b))
-  | ELam (a, (p, b))      -> let t = eval a ctx in VLam (t, (p, closByVal ctx p t b))
+  | EPi  (a, (p, b))      -> let t = eval a ctx in VPi (t, (fresh p, closByVal ctx p t b))
+  | ESig (a, (p, b))      -> let t = eval a ctx in VSig (t, (fresh p, closByVal ctx p t b))
+  | ELam (a, (p, b))      -> let t = eval a ctx in VLam (t, (fresh p, closByVal ctx p t b))
   | EApp (f, x)           -> app (eval f ctx, eval x ctx)
   | EPair (e1, e2)        -> VPair (eval e1 ctx, eval e2 ctx)
   | EFst e                -> vfst (eval e ctx)
