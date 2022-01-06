@@ -543,66 +543,6 @@ and inferSnd v = function
   | VEquiv (a, b)    -> biinv a b v
   | u                -> raise (ExpectedSig u)
 
-(* Readback *)
-and rbV v : exp = traceRbV v; match v with
-  | VLam (t, g)           -> rbVTele eLam t g
-  | VPair (u, v)          -> EPair (rbV u, rbV v)
-  | VKan u                -> EKan u
-  | VPi (t, g)            -> rbVTele ePi t g
-  | VSig (t, g)           -> rbVTele eSig t g
-  | VPre u                -> EPre u
-  | Var (x, _)            -> EVar x
-  | VApp (f, x)           -> EApp (rbV f, rbV x)
-  | VFst k                -> EFst (rbV k)
-  | VSnd k                -> ESnd (rbV k)
-  | VHole                 -> EHole
-  | VId v                 -> EId (rbV v)
-  | VRefl v               -> ERefl (rbV v)
-  | VJ v                  -> EJ (rbV v)
-  | VPath (v, a, b)       -> EPath (rbV v, rbV a, rbV b)
-  | VIdp v                -> EIdp (rbV v)
-  | VRev p                -> ERev (rbV p)
-  | VTrans (p, q)         -> ETrans (rbV p, rbV q)
-  | VBoundary (a, b, x)   -> EBoundary (rbV a, rbV b, rbV x)
-  | VLeft (a, b)          -> ELeft (rbV a, rbV b)
-  | VRight (a, b)         -> ERight (rbV a, rbV b)
-  | VSymm v               -> ESymm (rbV v)
-  | VBLeft (v, p)         -> EBLeft (rbV v, rbV p)
-  | VBRight (v, p)        -> EBRight (rbV v, rbV p)
-  | VBApd (f, p, x, y)    -> EBApd (rbV f, rbV p, rbV x, rbV y)
-  | VComp (u, v)          -> EComp (rbV u, rbV v)
-  | VMeet (p, x, v)       -> EMeet (rbV p, rbV x, rbV v)
-  | VCoe (p, x)           -> ECoe (rbV p, rbV x)
-  | VApd (f, p)           -> EApd (rbV f, rbV p)
-  | VUA e                 -> EUA (rbV e)
-  | VEquiv (a, b)         -> Equiv (rbV a, rbV b)
-  | VMkEquiv (a, b, f, v) -> EMkEquiv (rbV a, rbV b, rbV f, rbV v)
-  | VN                    -> EN
-  | VZero                 -> EZero
-  | VSucc                 -> ESucc
-  | VNInd v               -> ENInd (rbV v)
-  | VZ                    -> EZ
-  | VPos                  -> EPos
-  | VNeg                  -> ENeg
-  | VZSucc                -> EZSucc
-  | VZPred                -> EZPred
-  | VZInd v               -> EZInd (rbV v)
-  | VS1                   -> ES1
-  | VBase                 -> EBase
-  | VLoop                 -> ELoop
-  | VS1Ind v              -> ES1Ind (rbV v)
-  | VS1IndS v             -> ES1IndS (rbV v)
-  | VR                    -> ER
-  | VElem                 -> Elem
-  | VGlue                 -> EGlue
-  | VRInd v               -> ERInd (rbV v)
-  | VRIndS v              -> ERIndS (rbV v)
-  | VRInj                 -> ERInj
-  | VBot                  -> EBot
-  | VBotRec v             -> EBotRec (rbV v)
-
-and rbVTele ctor t (p, g) = let x = Var (p, t) in ctor p (rbV t) (rbV (g x))
-
 (* Convertibility *)
 and conv v1 v2 : bool = traceConv v1 v2;
   v1 == v2 || begin match v1, v2 with
