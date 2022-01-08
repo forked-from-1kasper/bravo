@@ -205,78 +205,75 @@ and coe p x = match p, x with
             app (f x, symm h))))), rev r)) v
       | _ -> VCoe (p, v)
     end
-  | VApd (VLam (t, (x, f)), r), v ->
-    let g = f (Var (x, t)) in let (k, _) = extPi (inferV g) in
-    let (a, b, _) = extBoundary k in let y = freshName "σ" in let y' = Var (y, k) in
-    begin match app (g, y') with
-      | VPath _ ->
-        let t' x h = let (v, _, _) = extPath (app (f x, h)) in v in
-        let f' x h = let (_, v, _) = extPath (app (f x, h)) in v in
-        let g' x h = let (_, _, v) = extPath (app (f x, h)) in v in
-
-        let p1 = apd (VLam (t, (freshName "x", fun x ->
-          VLam (VBoundary (a, b, x), (freshName "H", f' x))))) r in
-        let p3 = apd (VLam (t, (freshName "x", fun x ->
-          VLam (VBoundary (a, b, x), (freshName "H", g' x))))) r in
-
-        let x = freshName "x" in let h = freshName "σ" in
-        let p2 = ap (t' a (VLeft (a, b)))
-          (coe (apd (VLam (t, (x, fun x ->
-            VLam (VBoundary (a, b, x), (h, fun h -> t' x h))))) r))
-          (f' a (VLeft (a, b))) (g' a (VLeft (a, b))) v in
-
-        trans (rev p1, trans (p2, p3))
-
-      | VPi _ ->
-        let t' x h = let (v, _) = extPi (app (f x, h)) in v in
-        let f' x h = let (_, (_, v)) = extPi (app (f x, h)) in v in
-
-        let x = freshName "x" in
-        let y1 = freshName "y" in let y2 = freshName "y′" in
-        let h1 = freshName "σ" in let h2 = freshName "σ′" in
-
-        let phi x =
-          coe (apd (VLam (t, (y1, fun y1 ->
-            VLam (VBoundary (a, b, y1), (h1, fun h1 ->
-              f' y1 h1 (coe (apd (VLam (t, (y2, fun y2 ->
-                VLam (VBoundary (b, y1, y2), (h2, fun h2 ->
-                  t' y2 (bcomp h1 (symm h2)))))))
-                (vsnd (meet (rev r) y1 (symm h1)))) x)))))) r)
-            (app (v, coe (apd
-              (VLam (t, (y1, fun y ->
-                VLam (VBoundary (b, a, y), (h1, fun h ->
-                  t' y (symm h)))))) (rev r)) x)) in
-        VLam (t' b (VRight (a, b)), (x, phi))
-
-      | VSig _ ->
-        let t' x h = let (v, _) = extSig (app (f x, h)) in v in
-        let f' x h = let (_, (_, v)) = extSig (app (f x, h)) in v in
-
-        let y1 = freshName "y" in let y2 = freshName "y′" in
-        let h1 = freshName "σ" in let h2 = freshName "σ′" in
-
-        let fst = coe (apd (VLam (t, (y1, fun y1 ->
-          VLam (VBoundary (a, b, y1), (h1, t' y1))))) r) (vfst v) in
-
-        let snd = coe (apd (VLam (t, (y1, fun y1 ->
-          VLam (VBoundary (a, b, y1), (h1, fun h1 ->
-            f' y1 h1 (coe (apd (VLam (t, (y2, fun y2 ->
-              VLam (VBoundary (a, y1, y2), (h2, fun h2 ->
-                t' y2 (symm (bcomp (symm h1) (symm h2))))))))
-                (vsnd (meet r y1 h1))) (vfst v))))))) r) (vsnd v) in
-        VPair (fst, snd)
-
-      | VEquiv _ ->
-        let x = freshName "x" in let sigma = freshName "σ" in let phi = freshName "f" in
-        let (fst, snd) = extPair (coe (VApd (VLam (t, (x,
-          fun x -> VLam (VBoundary (a, b, x), (sigma, fun h ->
-            let (t1, t2) = extEquiv (app (f x, h)) in
-            VSig (implv t1 t2, (phi, biinv t1 t2)))))), r)) v) in
-        let (t1', t2') = extEquiv (app (f b, VRight (a, b))) in
-        VMkEquiv (t1', t2', fst, snd)
-      | _ -> VCoe (p, v)
-    end
+  | VApd (VLam (t, (x, f)), r), v -> let g = f (Var (x, t)) in
+    let (k, _) = extPi (inferV g) in let (a, b, _) = extBoundary k in
+    let y = freshName "σ" in let y' = Var (y, k) in
+    transport r t a b x y (app (g, y')) v
   | _, _ -> VCoe (p, x)
+
+and transport p t a b x y g v = match g with
+  | VPath (k, f, g) ->
+    let k' x' y' = subst (rho2 x x' y y') k in
+    let f' x' y' = subst (rho2 x x' y y') f in
+    let g' x' y' = subst (rho2 x x' y y') g in
+
+    let p1 = apd (VLam (t, (freshName "x", fun x' ->
+      VLam (VBoundary (a, b, x'), (freshName "H", f' x'))))) p in
+    let p3 = apd (VLam (t, (freshName "x", fun x' ->
+      VLam (VBoundary (a, b, x'), (freshName "H", g' x'))))) p in
+
+    let p2 = ap (k' a (VLeft (a, b))) (transport p t a b x y k)
+      (f' a (VLeft (a, b))) (g' a (VLeft (a, b))) v in
+
+    trans (rev p1, trans (p2, p3))
+
+  | VPi (k, (_, f)) ->
+    let k' x' y' = subst (rho2 x x' y y') k in
+    let f' x' y' z = subst (rho2 x x' y y') (f z) in
+
+    let y1 = freshName "y" in let y2 = freshName "y′" in let y3 = freshName "y″" in
+    let h1 = freshName "σ" in let h2 = freshName "σ′" in let h3 = freshName "σ″" in
+
+    let y1' = Var (y1, t) in let h1' = Var (h1, VBoundary (a, b, y1')) in
+    let y2' = Var (y2, t) in let h2' = Var (h2, VBoundary (b, y1', y2')) in
+    let y3' = Var (y3, t) in let h3' = Var (h3, VBoundary (b, a, y3')) in
+
+    let phi x =
+      transport p t a b y1 h1
+        (f' y1' h1' (transport (vsnd (meet (rev p) y1' (symm h1')))
+          t b y1' y2 h2 (k' y2' (bcomp h1' (symm h2'))) x))
+        (app (v, transport (rev p) t b a y3 h3 (k' y3' (symm h3')) x)) in
+
+    VLam (k' b (VRight (a, b)), (freshName "x", phi))
+
+  | VSig (k, (_, f)) ->
+    let k' x' y' = subst (rho2 x x' y y') k in
+    let f' x' y' z = subst (rho2 x x' y y') (f z) in
+
+    let y1 = freshName "y" in let y2 = freshName "y′" in
+    let h1 = freshName "σ" in let h2 = freshName "σ′" in
+
+    let y1' = Var (y1, t) in let h1' = Var (h1, VBoundary (a, b, y1')) in
+    let y2' = Var (y2, t) in let h2' = Var (h2, VBoundary (a, y1', y2')) in
+
+    let fst = transport p t a b x y k (vfst v) in
+
+    let snd = transport p t a b y1 h1
+      (f' y1' h1' (transport (vsnd (meet p y1' h1')) t a y1' y2 h2
+        (k' y2' (symm (bcomp (symm h1') (symm h2')))) (vfst v))) (vsnd v) in
+
+    VPair (fst, snd)
+
+  | VEquiv (t1, t2) ->
+    let (fst, snd) = extPair (transport p t a b x y
+      (VSig (implv t1 t2, (freshName "e", biinv t1 t2))) v) in
+
+    let rho = rho2 x b y (VRight (a, b)) in
+    VMkEquiv (subst rho t1, subst rho t2, fst, snd)
+
+  | _ -> VCoe (apd (VLam (t, (x, fun x' ->
+    VLam (VBoundary (a, b, x'), (y, fun y' ->
+      subst (rho2 x x' y y') g))))) p, v)
 
 and closByVal ctx p t e v = traceClos e p v;
   (* dirty hack to handle free variables introduced by type checker *)
