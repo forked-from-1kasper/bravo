@@ -15,3 +15,17 @@ def Z-three := coe (Z-succ-path ⬝ Z-succ-path ⬝ Z-succ-path) Z-zero
 def Z-minus-three := coe (Z-succ-path ⬝ Z-succ-path ⬝ Z-succ-path)⁻¹ Z-zero
 
 def Z-neg′ : Z → Z := Z-rec Z (N-rec Z Z-zero (λ (n : N) (_ : Z), neg n)) (λ (n : N), pos (succ n))
+
+def is-succ-pred-alg (A : U) :=
+Σ (f g : A → A), Π (x : A), Path A (f (g x)) x
+
+def succ-pred-alg := Σ (A : U), is-succ-pred-alg A
+
+def Z-succ-pred : succ-pred-alg :=
+(Z, Z-succ, Z-pred, λ (x : Z), idp x)
+
+def Z-succ-path′ : succ-pred-alg :=
+(Z, coe (apd (λ (X : U) (H : ∂ Z Z X), is-succ-pred-alg X) Z-succ-path) Z-succ-pred.2)
+
+def bad-refl : Path Z (pos zero) (pos zero) :=
+Z-succ-path′.2.2.2 (pos zero)
