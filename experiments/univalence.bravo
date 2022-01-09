@@ -21,7 +21,6 @@ def equiv-trans-test (A B C : U) (e₁ : A ≃ B) (e₂ : B ≃ C) :
   Path (Path U A C) (ua (equiv-trans A B C e₁ e₂)) (ua e₁ ⬝ ua e₂) :=
 idp (ua e₁ ⬝ ua e₂)
 
--- it’s surprisingly slow
 def ua-ideqv (A B : U) (p : Path U A B) : Path (Path U A B) (ua (ideqv A B p)) p :=
 coe (apd (λ (X : U) (H : ∂ A B X), Path (Path U A X)
   (ua (ideqv A X (meet p X H).2)) (meet p X H).2) p) (idp (idp A))
