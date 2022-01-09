@@ -151,15 +151,6 @@ def apd-trans-is-correct (A : U) (a b c : A) (B : Π (x : A), ∂ a c x → U)
        (apd-trans A a b c B p q f) (apd-trans′ A a b c B p q f) :=
 idp (apd-trans A a b c B p q f)
 
-def ap-trans (A B : U) (f : A → B) (a b c : A) (p : Path A a b) (q : Path A b c) :
-  Path (Path B (f a) (f c)) (ap A B f a c (p ⬝ q)) ((ap A B f a b p) ⬝ (ap A B f b c q)) :=
-idp (ap A B f a c (p ⬝ q))
-
-def subst-trans (A : U) (P : A → U) (a b c : A)
-  (p : Path A a b) (q : Path A b c) (x : P a) :
-  Path (P c) (subst A P a c (p ⬝ q) x) (subst A P b c q (subst A P a b p x)) :=
-idp (subst A P a c (p ⬝ q) x)
-
 def apd-symm (A : U) (a b : A) (B : Π (x : A), ∂ b a x → U)
   (f : Π (x : A) (H : ∂ b a x), B x H) (p : Path A a b) :
   Path (B a (right b a)) (coe (apd B p⁻¹) (f b (left b a))) (f a (right b a)) :=
@@ -205,6 +196,15 @@ def apd-comp-is-correct (A : U) (a b : A) (p : Path A a b) (B : Π (x : A), ∂ 
              (f (g b (right a b)) (right (coe (apd B p) (g a (left a b))) (g b (right a b)))))
        (apd-comp A a b p B g C f) (apd-comp′ A a b p B g C f) :=
 idp (apd-comp A a b p B g C f)
+
+def ap-trans (A B : U) (f : A → B) (a b c : A) (p : Path A a b) (q : Path A b c) :
+  Path (Path B (f a) (f c)) (ap A B f a c (p ⬝ q)) ((ap A B f a b p) ⬝ (ap A B f b c q)) :=
+idp (ap A B f a c (p ⬝ q))
+
+def subst-trans (A : U) (P : A → U) (a b c : A)
+  (p : Path A a b) (q : Path A b c) (x : P a) :
+  Path (P c) (subst A P a c (p ⬝ q) x) (subst A P b c q (subst A P a b p x)) :=
+idp (subst A P a c (p ⬝ q) x)
 
 def ap-comp (A B C : U) (f : A → B) (g : B → C) (a b : A) (p : Path A a b) :
   Path (Path C (g (f a)) (g (f b))) (ap B C g (f a) (f b) (ap A B f a b p))

@@ -159,13 +159,13 @@ and symm = function
   | v -> VSymm v
 
 and bapdleft f p t a b =
-  coe (apd (apdlam t a b (fun x y ->
+  coe (apd (apdlam t a b (freshName "x") (freshName "σ") (fun x y ->
     inferV (app2 f x y))) p) (app2 f a (VLeft (a, b)))
 
 and bapdright f a b = app2 f b (VRight (a, b))
 
 and bapdcenter f p t b x y =
-  coe (apd (apdlam t x b (fun x' y' ->
+  coe (apd (apdlam t x b (freshName "x") (freshName "σ") (fun x' y' ->
     inferV (app2 f x' (bcomp y y'))))
       (rev (vsnd (meet (rev p) x (symm y))))) (app2 f x y)
 
@@ -181,11 +181,8 @@ and reduceBoundary v =
   if conv a x then VLeft (a, b)
   else if conv b x then VRight (a, b) else v
 
-and ap t f a b p =
-  let x = freshName "x" in
-  let h = freshName "σ" in
-  apd (VLam (t, (x, fun x ->
-    VLam (VBoundary (a, b, x), (h, fun _ -> f x))))) p
+and ap t f a b p = let x = freshName "x" in
+  congr t a b x Irrefutable (f (Var (x, t))) p
 
 and coe p x = match p, x with
   (* coe (idp α) x ~> x *)
@@ -194,40 +191,36 @@ and coe p x = match p, x with
   | VTrans (q, p), _ -> coe p (coe q x)
   (* coe (ua e) x ~> e.1 x *)
   | VUA e, _ -> app (vfst e, x)
-  | VRev (VApd (VLam (t, (x, f)), r)), v ->
-    let g = f (Var (x, t)) in let (k, _) = extPi (inferV g) in
-    let (a, b, _) = extBoundary k in let y = freshName "σ" in let y' = Var (y, k) in
-    begin match app (g, y') with
+  | VRev (VApd (VLam (t, (x, f)), q)), v -> let g = f (Var (x, t)) in
+    let (k, _) = extPi (inferV g) in let (a, b, _) = extBoundary k in let y = freshName "σ" in
+    let y' = Var (y, VBoundary (b, a, Var (x, t))) in let h = app (g, symm y') in
+    begin match h with
       | VPath _ | VPi _ | VSig _ | VEquiv _ ->
-        let x = freshName "x" in let h = freshName "σ" in
-        coe (VApd (VLam (t, (x, fun x ->
-          VLam (VBoundary (b, a, x), (h, fun h ->
-            app (f x, symm h))))), rev r)) v
+        transport (rev q) t b a x y h v
       | _ -> VCoe (p, v)
     end
-  | VApd (VLam (t, (x, f)), r), v -> let g = f (Var (x, t)) in
+  | VApd (VLam (t, (x, f)), q), v -> let g = f (Var (x, t)) in
     let (k, _) = extPi (inferV g) in let (a, b, _) = extBoundary k in
     let y = freshName "σ" in let y' = Var (y, k) in
-    transport r t a b x y (app (g, y')) v
+    transport q t a b x y (app (g, y')) v
   | _, _ -> VCoe (p, x)
 
-and transport p t a b x y g v = match g with
-  | VPath (k, f, g) ->
+and transport p t a b x y g v = match p, g with
+  | VIdp _, _ -> v
+  | _, VPath (k, f, g) ->
     let k' x' y' = subst (rho2 x x' y y') k in
     let f' x' y' = subst (rho2 x x' y y') f in
     let g' x' y' = subst (rho2 x x' y y') g in
 
-    let p1 = apd (VLam (t, (freshName "x", fun x' ->
-      VLam (VBoundary (a, b, x'), (freshName "H", f' x'))))) p in
-    let p3 = apd (VLam (t, (freshName "x", fun x' ->
-      VLam (VBoundary (a, b, x'), (freshName "H", g' x'))))) p in
+    let p1 = congr t a b x y f p in
+    let p3 = congr t a b x y g p in
 
     let p2 = ap (k' a (VLeft (a, b))) (transport p t a b x y k)
       (f' a (VLeft (a, b))) (g' a (VLeft (a, b))) v in
 
     trans (rev p1, trans (p2, p3))
 
-  | VPi (k, (_, f)) ->
+  | _, VPi (k, (_, f)) ->
     let k' x' y' = subst (rho2 x x' y y') k in
     let f' x' y' z = subst (rho2 x x' y y') (f z) in
 
@@ -246,7 +239,7 @@ and transport p t a b x y g v = match g with
 
     VLam (k' b (VRight (a, b)), (freshName "x", phi))
 
-  | VSig (k, (_, f)) ->
+  | _, VSig (k, (_, f)) ->
     let k' x' y' = subst (rho2 x x' y y') k in
     let f' x' y' z = subst (rho2 x x' y y') (f z) in
 
@@ -264,16 +257,15 @@ and transport p t a b x y g v = match g with
 
     VPair (fst, snd)
 
-  | VEquiv (t1, t2) ->
+  | _, VEquiv (t1, t2) ->
     let (fst, snd) = extPair (transport p t a b x y
       (VSig (implv t1 t2, (freshName "e", biinv t1 t2))) v) in
 
     let rho = rho2 x b y (VRight (a, b)) in
     VMkEquiv (subst rho t1, subst rho t2, fst, snd)
 
-  | _ -> VCoe (apd (VLam (t, (x, fun x' ->
-    VLam (VBoundary (a, b, x'), (y, fun y' ->
-      subst (rho2 x x' y y') g))))) p, v)
+  | _, _ -> let q = congr t a b x y g p in
+    if isCoeNeut q then VCoe (q, v) else coe q v
 
 and closByVal ctx p t e v = traceClos e p v;
   (* dirty hack to handle free variables introduced by type checker *)
@@ -299,65 +291,84 @@ and extCongLam t =
   let cod = g (Var (y, n)) in
   (dom, cod, x, y, extBoundary n)
 
-and apd f p =
-  let (t, _) = extPi (inferV f) in
-  let x = freshName "x" in let x' = Var (x, t) in
-  let g = app (f, x') in let (k, _) = extPi (inferV g) in
-  let y = freshName "σ" in let y' = Var (y, k) in let v = app (g, y') in
-  (* cong id p ~> p *)
-  if convVar x v then p
-  (* cong (λ _, x) p ~> idp x *)
-  else if not (mem x v || mem y v) then VIdp v
-  else match v, f, p with
+and congr t a b x y g p =
+  (* apd id p ~> p *)
+  if convVar x g then p
+  (* apd (λ _, x) p ~> idp x *)
+  else if not (mem x g || mem y g) then VIdp g
+  else match g, p with
   (* apd f (idp x) ~> idp (f x) *)
-  | _, _, VIdp x -> VIdp (app (app (f, x), VLeft (x, x)))
-  (* cong f p⁻¹ ~> (cong f p)⁻¹ *)
-  | _, _, VRev p ->
-    let k x h = inferV (app2 f x h) in
-    let (t, a, b) = extPath (inferV p) in
+  | _, VIdp z -> VIdp (subst (rho2 x z y (VLeft (z, z))) g)
 
-    let g = apdlam t a b (fun x y ->
-      coe (apd (apdlam t x a (fun x' y' -> k x' (bcomp (symm y) y')))
-            (rev (vsnd (meet p x y))))
-        (app2 f x (symm y))) in
-    rev (apd g p)
+  (* apd f p⁻¹ ~> (apd f p)⁻¹ *)
+  | _, VRev p -> let k x' y' = inferV (subst (rho2 x x' y y') g) in
+    let x1 = freshName "y"  in let y1 = freshName "σ"  in
+    let x2 = freshName "y′" in let y2 = freshName "σ′" in
+
+    let x1' = Var (x1, t) in let y1' = Var (y1, VBoundary (b, a, x1')) in
+    let x2' = Var (x2, t) in let y2' = Var (y2, VBoundary (x1', b, x2')) in
+
+    rev (congr t b a x1 y1 (transport (rev (vsnd (meet p x1' y1'))) t x1' b
+      x2 y2 (k x2' (bcomp (symm y1') y2')) (subst (rho2 x x1' y (symm y1')) g)) p)
+
   (* apd f (p ⬝ q) ~> apd f p ⬝ apd f q *)
-  | _, _, VTrans (p, q) ->
-    let (t1, a1, b1) = extPath (inferV p) in
-    let (t2, a2, b2) = extPath (inferV q) in
+  | _, VTrans (p, q) ->
+    let (_, a, b) = extPath (inferV p) in
+    let (_, _, c) = extPath (inferV q) in
 
-    let b x h = inferV (app2 f x h) in let prev = rev p in
+    let g' x' y' = subst (rho2 x x' y y') g in
+    let k x' y' = inferV (g' x' y') in
 
-    let p1 = apd (apdlam t1 a1 b1 (fun x y -> app2 f x (bright y q))) p in
-    let p2 = apd (apdlam t2 a2 b2 (fun x y -> app2 f x (bleft y prev))) q in
+    let x1 = freshName "y"  in let y1 = freshName "σ"  in
+    let x2 = freshName "y′" in let y2 = freshName "σ′" in
+    let x3 = freshName "y″" in let y3 = freshName "σ″" in
+    let x4 = freshName "y‴" in let y4 = freshName "σ‴" in
 
-    let g = apdlam (b b1 (bright (VRight (a1, b1)) q))
-      (coe (apd (apdlam t1 a1 b1 (fun x y -> b x (bright y q))) p)
-        (app2 f a1 (bright (VLeft (a1, b1)) q)))
-      (app2 f b1 (bright (VRight (a1, b1)) q))
-      (fun z _ -> coe (apd (apdlam t2 a2 b2 (fun x y -> b x (bleft y prev))) q) z) in
+    let x1' = Var (x1, t) in let y1' = Var (y1, VBoundary (a, b, x1')) in
+    let x2' = Var (x2, t) in let y2' = Var (y2, VBoundary (a, b, x2')) in
+    let x3' = Var (x3, t) in let y3' = Var (y3, VBoundary (b, c, x3')) in
+    let x4' = Var (x4, t) in let y4' = Var (y4, VBoundary (b, c, x4')) in
 
-    trans (apd g p1, p2)
+    let p1 = congr t a b x1 y1 (g' x1' (bright y1' q)) p in
+    let p2 = congr (k b (bright (VRight (a, b)) q))
+      (transport p t a b x2 y2 (k x2' (bright y2' q))
+        (g' a (bright (VLeft (a, b)) q))) (g' b (bright (VRight (a, b)) q)) x1 y1
+      (transport q t b c x3 y3 (k x3' (bleft y3' (rev p))) x1') p1 in
+    let p3 = congr t b c x4 y4 (g' x4' (bleft y4' (rev p))) q in
+
+    trans (p2, p3)
+
   (* apd f (apd g p) ~> apd (f ∘ g) p *)
-  | _, _, VApd (g, p) ->
+  | _, VApd (h, p) ->
     let (t, a, b) = extPath (inferV p) in
-    apd (apdlam t a b (fun x y ->
-      app2 f (coe (apd (apdlam t x b (fun x' y' ->
-        inferV (app2 g x' (bcomp y y'))))
-          (rev (vsnd (meet (rev p) x (symm y)))))
-        (app2 g x y)) (bapd g p x y))) p
-  | VApp (VApp (VApp (VS1Ind k, b), l), z), _, VLoop ->
-    if not (mem2 x y k || mem2 x y b || mem2 x y l) then l
-    else VApd (f, p)
-  | VApp (VApp (VApp (VRInd k, cz), sz), z), _, VApp (VGlue, z') ->
+    let x1 = freshName "y" in let y1 = freshName "σ" in
+
+    let x' = Var (x, t) in let y' = Var (y, VBoundary (a, b, x')) in
+    let x1' = Var (x1, t) in let y1' = Var (y1, VBoundary (x', b, x1')) in
+
+    congr t a b x y
+      (subst (rho2 x (transport (rev (vsnd (meet (rev p) x' (symm y')))) t x' b
+        x1 y1 (inferV (app2 h x1' (bcomp y' y1'))) (app2 h x' y'))
+      y (bapd h p x' y')) g) p
+
+  | VApp (VApp (VApp (VS1Ind k, b), l), z), VLoop ->
+    if convVar x z && not (mem2 x y k || mem2 x y b || mem2 x y l) then l
+    else VApd (apdlam t a b x y (fun x' y' -> subst (rho2 x x' y y') g), p)
+
+  | VApp (VApp (VApp (VRInd k, cz), sz), z), VApp (VGlue, z') ->
     if convVar x z && not (mem2 x y k || mem2 x y cz || mem2 x y sz) then
       app (sz, z')
-    else VApd (f, p)
-  | _, _, _ -> VApd (f, p)
+    else VApd (apdlam t a b x y (fun x' y' -> subst (rho2 x x' y y') g), p)
 
-and apdlam t a b f =
-  let x = freshName "x" in let y = freshName "σ" in
-  VLam (t, (x, fun x -> VLam (VBoundary (a, b, x), (y, f x))))
+  | _, _ -> VApd (apdlam t a b x y (fun x' y' -> subst (rho2 x x' y y') g), p)
+
+and apd f p = let (t, a, b) = extPath (inferV p) in
+  let x = freshName "x" in let x' = Var (x, t) in
+  let g = app (f, x') in let (k, _) = extPi (inferV g) in
+  let y = freshName "σ" in let h = app (g, Var (y, k)) in
+  congr t a b x y h p
+
+and apdlam t a b x y g = VLam (t, (x, fun x -> VLam (VBoundary (a, b, x), (y, g x))))
 
 and ua e =
   match vfst e with
@@ -637,7 +648,6 @@ and check ctx (e0 : exp) (t0 : value) =
     | t -> raise (Ineq (VPre u, t))
   end
   | EUA e, t -> checkUA ctx e t
-  (*| ECong (f, p), q -> checkCong ctx f p q*)
   | ECoe (p, x), t2 ->
     let t1 = infer ctx x in let u1 = inferV t1 in let u2 = inferV t2 in
     eqNf u1 u2; ignore (extKan (inferV t1));

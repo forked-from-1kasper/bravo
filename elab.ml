@@ -127,3 +127,8 @@ let convVar p = function
   | _          -> false
 
 let rho2 x x' y y' = Env.add y y' (Env.add x x' Env.empty)
+
+let isCoeNeut = function
+  | VIdp _ | VRev _
+  | VTrans _ | VUA _ -> false
+  | _ -> true
