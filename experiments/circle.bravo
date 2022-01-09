@@ -101,3 +101,7 @@ def integer : ∞-group :=
 
 def Z-add : Z → Z → Z := op∞ integer
 def Z-assoc : Π (x y z : Z), Path Z (Z-add x (Z-add y z)) (Z-add (Z-add x y) z) := assoc∞ integer
+
+-- :-(
+def Z-zero-eq-zero : Path Z (pos zero) (pos zero) :=
+Z-assoc (pos zero) (pos zero) (pos zero)
