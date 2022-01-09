@@ -24,8 +24,8 @@ def succ-pred-alg := Σ (A : U), is-succ-pred-alg A
 def Z-succ-pred : succ-pred-alg :=
 (Z, Z-succ, Z-pred, λ (x : Z), idp x)
 
-def Z-succ-path′ : succ-pred-alg :=
+def Z-succ-pred′ : succ-pred-alg :=
 (Z, coe (apd (λ (X : U) (H : ∂ Z Z X), is-succ-pred-alg X) Z-succ-path) Z-succ-pred.2)
 
 def bad-refl : Path Z (pos zero) (pos zero) :=
-Z-succ-path′.2.2.2 (pos zero)
+Z-succ-pred′.2.2.2 (pos zero)
