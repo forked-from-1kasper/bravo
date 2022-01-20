@@ -11,7 +11,8 @@ type exp =
   | ESymm of exp | EComp of exp * exp                                              (* ∂ *)
   | EBLeft of exp * exp | EBRight of exp * exp | EBApd of exp * exp * exp * exp    (* ∂ *)
   | EMeet of exp * exp * exp | ECoe of exp * exp | EApd of exp * exp  (* Kan operations *)
-  | EUA of exp | Equiv of exp * exp | EMkEquiv of exp * exp * exp * exp   (* univalence *)
+  | EUAWeak of exp * exp * exp * exp * exp * exp                          (* univalence *)
+  | Equiv of exp * exp | EMkEquiv of exp * exp * exp * exp               (* equivalence *)
   | EN | EZero | ESucc | ENInd of exp                                              (* N *)
   | EZ | EPos | ENeg | EZInd of exp | EZSucc | EZPred                              (* Z *)
   | ES1 | EBase | ELoop | ES1Ind of exp | ES1IndS of exp                          (* S¹ *)
@@ -33,7 +34,8 @@ type value =
   | VSymm of value | VComp of value * value
   | VBLeft of value * value | VBRight of value * value | VBApd of value * value * value * value
   | VMeet of value * value * value | VCoe of value * value | VApd of value * value
-  | VUA of value | VEquiv of value * value | VMkEquiv of value * value * value * value
+  | VUAWeak of value * value * value * value * value * value
+  | VEquiv of value * value | VMkEquiv of value * value * value * value
   | VN | VZero | VSucc | VNInd of value
   | VZ | VPos | VNeg | VZInd of value | VZSucc | VZPred
   | VS1 | VBase | VLoop | VS1Ind of value | VS1IndS of value
@@ -96,7 +98,7 @@ let rec ppExp paren e = let x = match e with
   | EMeet (p, x, e) -> Printf.sprintf "meet %s %s %s" (ppExp true p) (ppExp true x) (ppExp true e)
   | ECoe (p, x) -> Printf.sprintf "coe %s %s" (ppExp true p) (ppExp true x)
   | EApd (a, b) -> Printf.sprintf "apd %s %s" (ppExp true a) (ppExp true b)
-  | EUA e -> Printf.sprintf "ua %s" (ppExp true e)
+  | EUAWeak (a, b, f, g, mu, nu) -> Printf.sprintf "ua-weak %s %s %s %s %s %s" (ppExp true a) (ppExp true b) (ppExp true f) (ppExp true g) (ppExp true mu) (ppExp true nu)
   | Equiv (a, b) -> Printf.sprintf "%s ≃ %s" (ppExp true a) (ppExp true b)
   | EMkEquiv (a, b, f, e) -> Printf.sprintf "mkeqv %s %s %s %s" (ppExp true a) (ppExp true b) (ppExp true f) (ppExp true e)
   | EN -> "N" | EZero -> "zero" | ESucc -> "succ"
@@ -157,7 +159,7 @@ let rec ppValue paren v = let x = match v with
   | VMeet (p, x, v) -> Printf.sprintf "meet %s %s %s" (ppValue true p) (ppValue true x) (ppValue true v)
   | VCoe (p, x) -> Printf.sprintf "coe %s %s" (ppValue true p) (ppValue true x)
   | VApd (a, b) -> Printf.sprintf "apd %s %s" (ppValue true a) (ppValue true b)
-  | VUA e -> Printf.sprintf "ua %s" (ppValue true e)
+  | VUAWeak (a, b, f, g, mu, nu) -> Printf.sprintf "ua-weak %s %s %s %s %s %s" (ppValue true a) (ppValue true b) (ppValue true f) (ppValue true g) (ppValue true mu) (ppValue true nu)
   | VEquiv (a, b) -> Printf.sprintf "%s ≃ %s" (ppValue true a) (ppValue true b)
   | VMkEquiv (a, b, f, v) -> Printf.sprintf "mkeqv %s %s %s %s" (ppValue true a) (ppValue true b) (ppValue true f) (ppValue true v)
   | VN -> "N" | VZero -> "zero" | VSucc -> "succ"

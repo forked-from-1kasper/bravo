@@ -1,26 +1,31 @@
 module univalence where
 import experiments/equiv
 
-def ua′ (A B : U) (e : A ≃ B) : Path U A B := ua e
+def ua (A B : U) (e : A ≃ B) : Path U A B :=
+ua-weak A B e.1 e.2.2.1 (linv-inv A B e.1 e.2.1.1 e.2.2.1 e.2.1.2 e.2.2.2) e.2.2.2
+
 def ideqv (A B : U) (p : Path U A B) : A ≃ B :=
 coe (apd (λ (X : U) (H : ∂ A B X), A ≃ X) p) (equiv-id A)
 
-def uaβ (A B : U) (e : A ≃ B) (x : A) : Path B (coe (ua e) x) (e.1 x) :=
+def uaβ (A B : U) (e : A ≃ B) (x : A) : Path B (coe (ua A B e) x) (e.1 x) :=
 idp (e.1 x)
 
 def equiv-symm′ (A B : U) (e : A ≃ B) : B ≃ A :=
-ideqv B A (ua e)⁻¹
+ideqv B A (ua A B e)⁻¹
 
 def equiv-trans′ (A B C : U) (e₁ : A ≃ B) (e₂ : B ≃ C) : A ≃ C :=
-ideqv A C (ua e₁ ⬝ ua e₂)
+ideqv A C (ua A B e₁ ⬝ ua B C e₂)
 
-def equiv-symm-test (A B : U) (e : A ≃ B) : Path (Path U B A) (ua (equiv-symm A B e)) (ua e)⁻¹ :=
-idp (ua e)⁻¹
-
-def equiv-trans-test (A B C : U) (e₁ : A ≃ B) (e₂ : B ≃ C) :
-  Path (Path U A C) (ua (equiv-trans A B C e₁ e₂)) (ua e₁ ⬝ ua e₂) :=
-idp (ua e₁ ⬝ ua e₂)
-
-def ua-ideqv (A B : U) (p : Path U A B) : Path (Path U A B) (ua (ideqv A B p)) p :=
+def ua-ideqv (A B : U) (p : Path U A B) : Path (Path U A B) (ua A B (ideqv A B p)) p :=
 coe (apd (λ (X : U) (H : ∂ A B X), Path (Path U A X)
-  (ua (ideqv A X (meet p X H).2)) (meet p X H).2) p) (idp (idp A))
+  (ua A X (ideqv A X (meet p X H).2)) (meet p X H).2) p) (idp (idp A))
+
+def idiso (A B : U) (p : Path U A B) : iso A B :=
+coe (apd (λ (X : U) (H : ∂ A B X), iso A X) p) (iso-id A)
+
+def ua-weak-symm (A B : U) (e : iso A B) : iso B A :=
+idiso B A (ua-weak A B e.1 e.2.1 e.2.2.1 e.2.2.2)⁻¹
+
+def ua-weak-trans (A B C : U) (e₁ : iso A B) (e₂ : iso B C) : iso A C :=
+idiso A C (ua-weak A B e₁.1 e₁.2.1 e₁.2.2.1 e₁.2.2.2 ⬝
+           ua-weak B C e₂.1 e₂.2.1 e₂.2.2.1 e₂.2.2.2)

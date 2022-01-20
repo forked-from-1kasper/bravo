@@ -28,5 +28,5 @@ def decode-encode (B : U) (F : family B) (y : B) (x : fiber (total B F) B (trivi
 
 def fiber-eq-Π-param (B : U) (F : family B) (y : B)
   : Path U (fiber (total B F) B (trivial B F) y) (F y)
- := ua (mkeqv (fiber (total B F) B (trivial B F) y) (F y) (encode B F y)
-              ((decode B F y, decode-encode B F y), (decode B F y, encode-decode B F y)))
+ := ua-weak (fiber (total B F) B (trivial B F) y) (F y) (encode B F y)
+            (decode B F y) (decode-encode B F y) (encode-decode B F y)

@@ -53,7 +53,7 @@ def ι : S¹ → S¹ := S¹-rec S¹ base loop⁻¹
 def ι-test := ap S¹ S¹ ι base base (loop ⬝ loop ⬝ loop)
 
 def helix : S¹ → U :=
-S¹-ind (λ (x : S¹), U) Z (ua Z-succ-equiv)
+S¹-ind (λ (x : S¹), U) Z Z-succ-path
 
 def encode (x : S¹) (p : Path S¹ base x) : helix x :=
 subst S¹ helix base x p Z-zero
@@ -97,7 +97,7 @@ def π₁S¹ : ∞-group :=
  λ (x y z : Ω¹S¹), idp (x ⬝ y ⬝ z), λ (x : Ω¹S¹), idp x, λ (x : Ω¹S¹), idp (idp base))
 
 def integer : ∞-group :=
-(Z, coe (apd (λ (X : U) (H : ∂ Ω¹S¹ Z X), is-∞-group X) (ua fundamental-group)) π₁S¹.2)
+(Z, coe (apd (λ (X : U) (H : ∂ Ω¹S¹ Z X), is-∞-group X) (ua Ω¹S¹ Z fundamental-group)) π₁S¹.2)
 
 def Z-add : Z → Z → Z := op∞ integer
 def Z-assoc : Π (x y z : Z), Path Z (Z-add x (Z-add y z)) (Z-add (Z-add x y) z) := assoc∞ integer

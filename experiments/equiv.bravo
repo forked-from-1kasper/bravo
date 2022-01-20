@@ -13,6 +13,19 @@ def rinv (A B : U) (f : A → B) :=
 def qinv (A B : U) (f : A → B) :=
 Σ (g : B → A), (Π (x : A), Path A (g (f x)) x) × (Π (x : B), Path B (f (g x)) x)
 
+def iso (A B : U) := Σ (f : A → B), qinv A B f
+
+def iso-id (A : U) : iso A A :=
+(idfun A, idfun A, λ (x : A), idp x, λ (x : A), idp x)
+
+def iso-inv (A B : U) (e : iso A B) : iso B A :=
+(e.2.1, e.1, e.2.2.2, e.2.2.1)
+
+def iso-trans (A B C : U) (e₁ : iso A B) (e₂ : iso B C) : iso A C :=
+(∘ A B C e₂.1 e₁.1, ∘ C B A e₁.2.1 e₂.2.1,
+  λ (a : A), ap B A e₁.2.1 (e₂.2.1 (e₂.1 (e₁.1 a))) (e₁.1 a) (e₂.2.2.1 (e₁.1 a)) ⬝ e₁.2.2.1 a,
+  λ (c : C), ap B C e₂.1 (e₁.1 (e₁.2.1 (e₂.2.1 c))) (e₂.2.1 c) (e₁.2.2.2 (e₂.2.1 c)) ⬝ e₂.2.2.2 c)
+
 def linv-inv (A B : U) (f : A → B) (g h : B → A)
   (G : Π (x : A), Path A (g (f x)) x) (H : Π (x : B), Path B (f (h x)) x) :
   Π (x : A), Path A (h (f x)) x :=

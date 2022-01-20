@@ -1,5 +1,5 @@
 module integer where
-import experiments/path
+import experiments/univalence
 
 def N-rec (A : U) := N-ind (λ (x : N), A)
 def Z-rec (A : U) := Z-ind (λ (x : Z), A)
@@ -10,7 +10,8 @@ def Z-one  := pos (succ zero)
 def Z-succ-equiv : Z ≃ Z :=
 mkeqv Z Z Z-succ ((Z-pred, λ (x : Z), idp x), (Z-pred, λ (x : Z), idp x))
 
-def Z-succ-path : Path U Z Z := ua Z-succ-equiv
+def Z-succ-path : Path U Z Z := ua Z Z Z-succ-equiv
+
 def Z-three := coe (Z-succ-path ⬝ Z-succ-path ⬝ Z-succ-path) Z-zero
 def Z-minus-three := coe (Z-succ-path ⬝ Z-succ-path ⬝ Z-succ-path)⁻¹ Z-zero
 

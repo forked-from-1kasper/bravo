@@ -23,7 +23,7 @@ let tokenToString : token -> string = function
   | MEET       -> "MEET"        | COE        -> "COE"
   | APD        -> "APD"         | ID         -> "ID"
   | REFL       -> "REFL"        | IDJ        -> "IDJ"
-  | IMPORT     -> "IMPORT"      | UA         -> "UA"
+  | IMPORT     -> "IMPORT"      | UAWEAK     -> "UAWEAK"
   | EQUIV      -> "EQUIV"       | MKEQV      -> "MKEQV"
   | NIND       -> "NIND"        | ZIND       -> "ZIND"
   | S1IND      -> "S1IND"       | S1INDS     -> "S1INDS"

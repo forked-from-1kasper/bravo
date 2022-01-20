@@ -52,7 +52,7 @@
 %token PATH IDP REV TRANS
 %token BOUNDARY LEFT RIGHT SYMM COMP BLEFT BRIGHT BAPD
 %token MEET COE APD
-%token UA EQUIV MKEQV
+%token UAWEAK EQUIV MKEQV
 %token NIND ZIND S1IND S1INDS RIND RINDS BOTREC
 
 %right ARROW PROD
@@ -109,7 +109,7 @@ exp5 :
   | BAPD exp6 exp6 exp6 exp6 { EBApd ($2, $3, $4, $5) }
   | COE exp6 exp6 { ECoe ($2, $3) }
   | APD exp6 exp6 { EApd ($2, $3) }
-  | UA exp6 { EUA $2 }
+  | UAWEAK exp6 exp6 exp6 exp6 exp6 exp6 { EUAWeak ($2, $3, $4, $5, $6, $7) }
   | MKEQV exp6 exp6 exp6 exp6 { EMkEquiv ($2, $3, $4, $5) }
   | exp6 EQUIV exp6 { Equiv ($1, $3) }
   | NIND exp6 { ENInd $2 }

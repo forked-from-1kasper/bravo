@@ -101,7 +101,7 @@ rule main = parse
 | "apd"      { APD }         | symm       { SYMM }
 | bleft      { BLEFT }       | bright     { BRIGHT }
 | bapd       { BAPD }        | comp       { COMP }
-| "ua"       { UA }          | equiv      { EQUIV }
+| "ua-weak"  { UAWEAK }      | equiv      { EQUIV }
 | nind       { NIND }        | zind       { ZIND }
 | s1ind      { S1IND }       | s1inds     { S1INDS }
 | rind       { RIND }        | rinds      { RINDS }

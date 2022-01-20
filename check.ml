@@ -26,61 +26,61 @@ let vsnd : value -> value = function
 
 (* Evaluator *)
 let rec eval (e0 : exp) (ctx : ctx) = traceEval e0; match e0 with
-  | EPre u                -> VPre u
-  | EKan u                -> VKan u
-  | EVar x                -> getRho ctx x
-  | EHole                 -> VHole
-  | EPi  (a, (p, b))      -> let t = eval a ctx in VPi (t, (fresh p, closByVal ctx p t b))
-  | ESig (a, (p, b))      -> let t = eval a ctx in VSig (t, (fresh p, closByVal ctx p t b))
-  | ELam (a, (p, b))      -> let t = eval a ctx in VLam (t, (fresh p, closByVal ctx p t b))
-  | EApp (f, x)           -> app (eval f ctx, eval x ctx)
-  | EPair (e1, e2)        -> VPair (eval e1 ctx, eval e2 ctx)
-  | EFst e                -> vfst (eval e ctx)
-  | ESnd e                -> vsnd (eval e ctx)
-  | EId e                 -> VId (eval e ctx)
-  | ERefl e               -> VRefl (eval e ctx)
-  | EJ e                  -> VJ (eval e ctx)
-  | EPath (e, a, b)       -> VPath (eval e ctx, eval a ctx, eval b ctx)
-  | EIdp e                -> VIdp (eval e ctx)
-  | ERev p                -> rev (eval p ctx)
-  | ETrans (p, q)         -> trans (eval p ctx, eval q ctx)
-  | EBoundary (a, b, x)   -> VBoundary (eval a ctx, eval b ctx, eval x ctx)
-  | ELeft (a, b)          -> VLeft (eval a ctx, eval b ctx)
-  | ERight (a, b)         -> VRight (eval a ctx, eval b ctx)
-  | ESymm e               -> symm (eval e ctx)
-  | EComp (a, b)          -> bcomp (eval a ctx) (eval b ctx)
-  | EBLeft (e, p)         -> bleft (eval e ctx) (eval p ctx)
-  | EBRight (e, p)        -> bright (eval e ctx) (eval p ctx)
-  | EBApd (f, p, x, e)    -> bapd (eval f ctx) (eval p ctx) (eval x ctx) (eval e ctx)
-  | EMeet (p, x, e)       -> meet (eval p ctx) (eval x ctx) (eval e ctx)
-  | ECoe (p, x)           -> coe (eval p ctx) (eval x ctx)
-  | EApd (f, p)           -> apd (eval f ctx) (eval p ctx)
-  | EUA e                 -> ua (eval e ctx)
-  | Equiv (a, b)          -> VEquiv (eval a ctx, eval b ctx)
-  | EMkEquiv (a, b, f, e) -> VMkEquiv (eval a ctx, eval b ctx, eval f ctx, eval e ctx)
-  | EN                    -> VN
-  | EZero                 -> VZero
-  | ESucc                 -> VSucc
-  | ENInd e               -> VNInd (eval e ctx)
-  | EZ                    -> VZ
-  | EPos                  -> VPos
-  | ENeg                  -> VNeg
-  | EZSucc                -> VZSucc
-  | EZPred                -> VZPred
-  | EZInd e               -> VZInd (eval e ctx)
-  | ES1                   -> VS1
-  | EBase                 -> VBase
-  | ELoop                 -> VLoop
-  | ES1Ind e              -> VS1Ind (eval e ctx)
-  | ES1IndS e             -> VS1IndS (eval e ctx)
-  | ER                    -> VR
-  | Elem                  -> VElem
-  | EGlue                 -> VGlue
-  | ERInd e               -> VRInd (eval e ctx)
-  | ERIndS e              -> VRIndS (eval e ctx)
-  | ERInj                 -> VRInj
-  | EBot                  -> VBot
-  | EBotRec e             -> VBotRec (eval e ctx)
+  | EPre u                       -> VPre u
+  | EKan u                       -> VKan u
+  | EVar x                       -> getRho ctx x
+  | EHole                        -> VHole
+  | EPi  (a, (p, b))             -> let t = eval a ctx in VPi (t, (fresh p, closByVal ctx p t b))
+  | ESig (a, (p, b))             -> let t = eval a ctx in VSig (t, (fresh p, closByVal ctx p t b))
+  | ELam (a, (p, b))             -> let t = eval a ctx in VLam (t, (fresh p, closByVal ctx p t b))
+  | EApp (f, x)                  -> app (eval f ctx, eval x ctx)
+  | EPair (e1, e2)               -> VPair (eval e1 ctx, eval e2 ctx)
+  | EFst e                       -> vfst (eval e ctx)
+  | ESnd e                       -> vsnd (eval e ctx)
+  | EId e                        -> VId (eval e ctx)
+  | ERefl e                      -> VRefl (eval e ctx)
+  | EJ e                         -> VJ (eval e ctx)
+  | EPath (e, a, b)              -> VPath (eval e ctx, eval a ctx, eval b ctx)
+  | EIdp e                       -> VIdp (eval e ctx)
+  | ERev p                       -> rev (eval p ctx)
+  | ETrans (p, q)                -> trans (eval p ctx, eval q ctx)
+  | EBoundary (a, b, x)          -> VBoundary (eval a ctx, eval b ctx, eval x ctx)
+  | ELeft (a, b)                 -> VLeft (eval a ctx, eval b ctx)
+  | ERight (a, b)                -> VRight (eval a ctx, eval b ctx)
+  | ESymm e                      -> symm (eval e ctx)
+  | EComp (a, b)                 -> bcomp (eval a ctx) (eval b ctx)
+  | EBLeft (e, p)                -> bleft (eval e ctx) (eval p ctx)
+  | EBRight (e, p)               -> bright (eval e ctx) (eval p ctx)
+  | EBApd (f, p, x, e)           -> bapd (eval f ctx) (eval p ctx) (eval x ctx) (eval e ctx)
+  | EMeet (p, x, e)              -> meet (eval p ctx) (eval x ctx) (eval e ctx)
+  | ECoe (p, x)                  -> coe (eval p ctx) (eval x ctx)
+  | EApd (f, p)                  -> apd (eval f ctx) (eval p ctx)
+  | EUAWeak (a, b, f, g, mu, nu) -> uaweak (eval a ctx) (eval b ctx) (eval f ctx) (eval g ctx) (eval mu ctx) (eval nu ctx)
+  | Equiv (a, b)                 -> VEquiv (eval a ctx, eval b ctx)
+  | EMkEquiv (a, b, f, e)        -> VMkEquiv (eval a ctx, eval b ctx, eval f ctx, eval e ctx)
+  | EN                           -> VN
+  | EZero                        -> VZero
+  | ESucc                        -> VSucc
+  | ENInd e                      -> VNInd (eval e ctx)
+  | EZ                           -> VZ
+  | EPos                         -> VPos
+  | ENeg                         -> VNeg
+  | EZSucc                       -> VZSucc
+  | EZPred                       -> VZPred
+  | EZInd e                      -> VZInd (eval e ctx)
+  | ES1                          -> VS1
+  | EBase                        -> VBase
+  | ELoop                        -> VLoop
+  | ES1Ind e                     -> VS1Ind (eval e ctx)
+  | ES1IndS e                    -> VS1IndS (eval e ctx)
+  | ER                           -> VR
+  | Elem                         -> VElem
+  | EGlue                        -> VGlue
+  | ERInd e                      -> VRInd (eval e ctx)
+  | ERIndS e                     -> VRIndS (eval e ctx)
+  | ERInj                        -> VRInj
+  | EBot                         -> VBot
+  | EBotRec e                    -> VBotRec (eval e ctx)
 
 and bcomp a b  = reduceBoundary (VComp (a, b))
 and bleft v p  = reduceBoundary (VBLeft (v, p))
@@ -93,60 +93,29 @@ and trans = function
   | p, VTrans (VRev q, r)  -> if conv p q then r else VTrans (p, VTrans (VRev q, r))
   | VRev p, q              -> if conv p q then let (_, _, v) = extPath (inferV p) in VIdp v else VTrans (VRev p, q)
   | p, VRev q              -> if conv p q then let (_, v, _) = extPath (inferV p) in VIdp v else VTrans (p, VRev q)
-  | VUA e1, VUA e2         ->
-    let f1 = vfst e1 in let f2 = vfst e2 in
+  | VUAWeak (a, b, f1, g1, mu1, nu1), VUAWeak (_, c, f2, g2, mu2, nu2) ->
 
-    let (t1, _) = extPi (inferV f1) in
-    let (t2, (p, t3')) = extPi (inferV f2) in
-    let t3 = t3' (Var (p, t2)) in
+    let f = VLam (a, (freshName "x", fun x -> app (f2, app (f1, x)))) in
+    let g = VLam (c, (freshName "x", fun x -> app (g1, app (g2, x)))) in
 
-    let g1 = vfst (vfst (vsnd e1)) in let g2 = vfst (vfst (vsnd e2)) in
-    let h1 = vfst (vsnd (vsnd e1)) in let h2 = vfst (vsnd (vsnd e2)) in
+    let mu = VLam (a, (freshName "x", fun x ->
+      trans (ap b (fun y -> app (g1, y))
+        (app (g2, app (f2, app (f1, x)))) (app (f1, x))
+        (app (mu2, app (f1, x))), app (mu1, x)))) in
 
-    let p1 = vsnd (vfst (vsnd e1)) in let q1 = vsnd (vfst (vsnd e2)) in
-    let p2 = vsnd (vsnd (vsnd e1)) in let q2 = vsnd (vsnd (vsnd e2)) in
+    let nu = VLam (c, (freshName "x", fun x ->
+      trans (ap b (fun y -> app (f2, y))
+          (app (f1, (app (g1, (app (g2, x)))))) (app (g2, x))
+          (app (nu1, app (g2, x))), app (nu2, x)))) in
 
-    let x = freshName "x" in
-    let f = VLam (t1, (x, fun x -> app (f2, app (f1, x)))) in
-    let g = VLam (t3, (x, fun x -> app (g1, app (g2, x)))) in
-    let h = VLam (t3, (x, fun x -> app (h1, app (h2, x)))) in
-
-    let r1 = VLam (t1, (x, fun x ->
-      trans (ap t2 (fun y -> app (g1, y))
-        (app (g2, app (f2, app (f1, x))))
-        (app (f1, x)) (app (q1, app (f1, x))), app (p1, x)))) in
-
-    let r2 = VLam (t3, (x, fun x ->
-      trans (ap t2 (fun y -> app (f2, y))
-          (app (f1, (app (h1, (app (h2, x)))))) (app (h2, x))
-          (app (p2, app (h2, x))), app (q2, x)))) in
-
-    VUA (VMkEquiv (t1, t3, f, VPair (VPair (g, r1), VPair (h, r2))))
-  | p, q                   -> VTrans (p, q)
+    VUAWeak (a, c, f, g, mu, nu)
+  | p, q -> VTrans (p, q)
 
 and rev : value -> value = function
+  | VUAWeak (a, b, f, g, mu, nu) -> VUAWeak (b, a, g, f, nu, mu)
   | VRev p        -> p
   | VIdp v        -> VIdp v
   | VTrans (p, q) -> trans (rev q, rev p)
-  (* (ua e)⁻¹ ~> ua e⁻¹ *)
-  | VUA e         ->
-    let f = vfst e in let (t1, (p, t2')) = extPi (inferV f) in
-    let t2 = t2' (Var (p, t1)) in
-
-    let g = vfst (vfst (vsnd e)) in
-    let h = vfst (vsnd (vsnd e)) in
-
-    let p1 = vsnd (vfst (vsnd e)) in
-    let p2 = vsnd (vsnd (vsnd e)) in
-
-    let linvinv =
-      VLam (t1, (freshName "x", fun x ->
-        trans (rev (app (p1, app (h, app (f, x)))),
-          trans (ap t2 (fun x -> app (g, x))
-              (app (f, app (h, app (f, x)))) (app (f, x))
-              (app (p2, app (f, x))), app (p1, x))))) in
-
-    VUA (VMkEquiv (t2, t1, h, VPair (VPair (f, p2), VPair (f, linvinv))))
   | v             -> VRev v
 
 and symm = function
@@ -189,8 +158,8 @@ and coe p x = match p, x with
   | VIdp _, _ -> x
   (* coe (p ⬝ q) x ~> coe q (coe p x) *)
   | VTrans (q, p), _ -> coe p (coe q x)
-  (* coe (ua e) x ~> e.1 x *)
-  | VUA e, _ -> app (vfst e, x)
+  (* coe (ua-weak a b f g α β) x ~> f x *)
+  | VUAWeak (_, _, f, _, _, _), _ -> app (f, x)
   | VRev (VApd (VLam (t, (x, f)), q)), v -> let g = f (Var (x, t)) in
     let (k, _) = extPi (inferV g) in let (a, b, _) = extBoundary k in let y = freshName "σ" in
     let y' = Var (y, VBoundary (b, a, Var (x, t))) in let h = app (g, symm y') in
@@ -370,13 +339,18 @@ and apd f p = let (t, a, b) = extPath (inferV p) in
 
 and apdlam t a b x y g = VLam (t, (x, fun x -> VLam (VBoundary (a, b, x), (y, g x))))
 
-and ua e =
-  match vfst e with
-  | VLam (a, (p, f)) ->
-    (* ua (ideqv α) ~> idp α *)
-    if convVar p (f (Var (p, a)))
-    then VIdp a else VUA e
-  | _ -> VUA e
+and uaweak a b f g mu nu =
+  match f, g, mu, nu with
+  | VLam (_, (x, f')), VLam (_, (y, g')),
+    VLam (_, (n, mu')), VLam (_, (m, nu')) ->
+    let v = Var (n, a) in let w = Var (m, b) in
+
+    (* ua-weak (idfun A) (idfun A) idp idp ~> idp A *)
+    if convVar x (f' (Var (x, a))) &&
+       convVar y (g' (Var (y, b))) &&
+       conv (VIdp v) (mu' v) && conv (VIdp w) (nu' w)
+    then VIdp a else VUAWeak (a, b, f, g, mu, nu)
+  | _ -> VUAWeak (a, b, f, g, mu, nu)
 
 and app (f, x) = match f, x with
   (* (λ (x : t), f) v ~> f[x/v] *)
@@ -454,7 +428,7 @@ and inferV v = traceInferV v; match v with
   | VKan n -> VKan (Z.succ n)
   | VPath (v, _, _) -> inferV v
   | VBoundary (v, _, _) -> let n = extSet (inferV (inferV v)) in VPre n
-  | VUA e -> let (a, b) = extEquiv (inferV e) in VPath (inferV a, a, b)
+  | VUAWeak (a, b, _, _, _, _) -> VPath (inferV a, a, b)
   | VEquiv (a, _) -> inferV (inferV a)
   | VMkEquiv (a, b, _, _) -> VEquiv (a, b)
   | VN -> VKan Z.zero | VZero -> VN | VSucc -> implv VN VN
@@ -581,7 +555,8 @@ and conv v1 v2 : bool = traceConv v1 v2;
     | VMeet (p1, x1, v1), VMeet (p2, x2, v2) -> conv p1 p2 && conv x1 x2 && conv v1 v2
     | VCoe (p1, x1), VCoe (p2, x2) -> conv p1 p2 && conv x1 x2
     | VApd (f1, p1), VApd (f2, p2) -> conv f1 f2 && conv p1 p2
-    | VUA e1, VUA e2 -> conv e1 e2
+    | VUAWeak (a1, b1, f1, g1, mu1, nu1), VUAWeak (a2, b2, f2, g2, mu2, nu2) ->
+      conv a1 a2 && conv b1 b2 && conv f1 f2 && conv g1 g2 && conv mu1 mu2 && conv nu1 nu2
     | VEquiv (a1, b1), VEquiv (a2, b2) -> conv a1 a2 && conv b1 b2
     | VMkEquiv (_, _, f1, v1), VMkEquiv (_, _, f2, v2) -> conv f1 f2 && conv v1 v2
     | VMkEquiv (_, _, f, v), u | u, VMkEquiv (_, _, f, v) -> conv (vfst u) f && conv (vsnd u) v
@@ -647,7 +622,6 @@ and check ctx (e0 : exp) (t0 : value) =
     | VKan v | VPre v -> if ieq u v then () else raise (Ineq (VPre u, VPre v))
     | t -> raise (Ineq (VPre u, t))
   end
-  | EUA e, t -> checkUA ctx e t
   | ECoe (p, x), t2 ->
     let t1 = infer ctx x in let u1 = inferV t1 in let u2 = inferV t2 in
     eqNf u1 u2; ignore (extKan (inferV t1));
@@ -696,7 +670,7 @@ and infer ctx e : value = traceInfer e; try match e with
   | EMeet (p, x, e) -> inferMeet ctx p x e
   | ECoe (p, x) -> let (e, a, b) = extPath (infer ctx p) in ignore (extKan e); check ctx x a; b
   | EApd (f, p) -> inferApd ctx f p
-  | EUA e -> inferUA ctx e
+  | EUAWeak (a, b, f, g, mu, nu) -> inferUAWeak ctx a b f g mu nu
   | Equiv (a, b) -> let t1 = infer ctx a in let t2 = infer ctx b in ignore (extSet t1); eqNf t1 t2; inferV t1
   | EMkEquiv (a, b, f, e) -> inferMkEquiv ctx a b f e
   | EN -> VKan Z.zero | EZero -> VN | ESucc -> implv VN VN
@@ -757,10 +731,6 @@ and rinv a b f =
 
 and biinv a b f = prodv (linv a b f) (rinv a b f)
 
-and checkUA ctx e p =
-  let (t, a, b) = extPath p in ignore (extKan t);
-  check ctx e (VEquiv (a, b))
-
 and inferApd ctx f p =
   let t1 = infer ctx p in
   let t2 = infer ctx f in
@@ -774,9 +744,19 @@ and inferApd ctx f p =
 
   inferVApd (eval f ctx) (eval p ctx) t1 t2
 
-and inferUA ctx e =
-  let (a, b) = extEquiv (infer ctx e) in
-  let t = inferV a in ignore (extKan t); VPath (t, a, b)
+and inferUAWeak ctx a b f g mu nu =
+  let t = infer ctx a in let t' = infer ctx b in eqNf t t';
+  let a' = eval a ctx in let b' = eval b ctx in
+  check ctx f (implv a' b'); check ctx g (implv b' a');
+
+  let f' = eval f ctx in let g' = eval g ctx in
+
+  check ctx mu (VPi (a', (freshName "x", fun x ->
+    VPath (a', app (g', app (f', x)), x))));
+  check ctx nu (VPi (b', (freshName "x", fun x ->
+    VPath (b', app (f', app (g', x)), x))));
+
+  VPath (t, a', b')
 
 and inferMkEquiv ctx a b f e =
   let t1 = infer ctx a in let t2 = infer ctx b in eqNf t1 t2;
@@ -796,10 +776,11 @@ and mem x = function
   | VZ     | VPos   | VNeg
   | VZSucc | VZPred -> false
 
-  | VFst e    | VSnd e    | VId e     | VRefl e
-  | VJ e      | VIdp e    | VRev e    | VSymm e
-  | VUA e     | VNInd e   | VZInd e   | VS1Ind e
-  | VRInd e   | VBotRec e | VS1IndS e | VRIndS e -> mem x e
+  | VFst e    | VSnd e    | VId e
+  | VRefl e   | VJ e      | VIdp e
+  | VRev e    | VSymm e   | VNInd e
+  | VZInd e   | VS1Ind e  | VRInd e
+  | VBotRec e | VS1IndS e | VRIndS e -> mem x e
 
   | VPair (a, b)  | VComp (a, b) | VApp (a, b)
   | VCoe (a, b)   | VApd (a, b)  | VTrans (a, b)
@@ -810,64 +791,66 @@ and mem x = function
 
   | VBApd (a, b, c, d) | VMkEquiv (a, b, c, d) -> mem x a || mem x b || mem x c || mem x d
 
+  | VUAWeak (a, b, f, g, mu, nu) -> mem x a || mem x b || mem x f || mem x g || mem x mu || mem x nu
+
 and mem2 x y v = mem x v || mem y v
 
 and subst rho = function
-  | VPre n                -> VPre n
-  | VKan n                -> VKan n
-  | VHole                 -> VHole
-  | VApp (f, x)           -> app (subst rho f, subst rho x)
-  | VPi (t, (p, f))       -> VPi (subst rho t, (p, fun x -> subst rho (f x)))
-  | VSig (t, (p, f))      -> VSig (subst rho t, (p, fun x -> subst rho (f x)))
-  | VLam (t, (p, f))      -> VLam (subst rho t, (p, fun x -> subst rho (f x)))
-  | VPair (a, b)          -> VPair (subst rho a, subst rho b)
-  | VFst v                -> vfst (subst rho v)
-  | VSnd v                -> vsnd (subst rho v)
-  | VId v                 -> VId (subst rho v)
-  | VRefl v               -> VRefl (subst rho v)
-  | VJ v                  -> VJ (subst rho v)
-  | VPath (e, a, b)       -> VPath (subst rho e, subst rho a, subst rho b)
-  | VIdp e                -> VIdp (subst rho e)
-  | VRev p                -> rev (subst rho p)
-  | VTrans (p, q)         -> trans (subst rho p, subst rho q)
-  | VBoundary (a, b, x)   -> VBoundary (subst rho a, subst rho b, subst rho x)
-  | VLeft (a, b)          -> VLeft (subst rho a, subst rho b)
-  | VRight (a, b)         -> VRight (subst rho a, subst rho b)
-  | VSymm e               -> symm (subst rho e)
-  | VComp (a, b)          -> bcomp (subst rho a) (subst rho b)
-  | VBLeft (e, p)         -> bleft (subst rho e) (subst rho p)
-  | VBRight (e, p)        -> bright (subst rho e) (subst rho p)
-  | VBApd (f, p, x, e)    -> bapd (subst rho f) (subst rho p) (subst rho x) (subst rho e)
-  | VMeet (p, x, e)       -> meet (subst rho p) (subst rho x) (subst rho e)
-  | VCoe (p, x)           -> coe (subst rho p) (subst rho x)
-  | VApd (f, p)           -> apd (subst rho f) (subst rho p)
-  | VUA e                 -> ua (subst rho e)
-  | VEquiv (a, b)         -> VEquiv (subst rho a, subst rho b)
-  | VMkEquiv (a, b, f, e) -> VMkEquiv (subst rho a, subst rho b, subst rho f, subst rho e)
-  | VN                    -> VN
-  | VZero                 -> VZero
-  | VSucc                 -> VSucc
-  | VNInd v               -> VNInd (subst rho v)
-  | VZ                    -> VZ
-  | VPos                  -> VPos
-  | VNeg                  -> VNeg
-  | VZSucc                -> VZSucc
-  | VZPred                -> VZPred
-  | VZInd v               -> VZInd (subst rho v)
-  | VS1                   -> VS1
-  | VBase                 -> VBase
-  | VLoop                 -> VLoop
-  | VS1Ind v              -> VS1Ind (subst rho v)
-  | VS1IndS v             -> VS1IndS (subst rho v)
-  | VR                    -> VR
-  | VElem                 -> VElem
-  | VGlue                 -> VGlue
-  | VRInd v               -> VRInd (subst rho v)
-  | VRIndS v              -> VRIndS (subst rho v)
-  | VRInj                 -> VRInj
-  | VBot                  -> VBot
-  | VBotRec v             -> VBotRec (subst rho v)
-  | Var (x, t)            -> begin match Env.find_opt x rho with
+  | VPre n                       -> VPre n
+  | VKan n                       -> VKan n
+  | VHole                        -> VHole
+  | VApp (f, x)                  -> app (subst rho f, subst rho x)
+  | VPi (t, (p, f))              -> VPi (subst rho t, (p, fun x -> subst rho (f x)))
+  | VSig (t, (p, f))             -> VSig (subst rho t, (p, fun x -> subst rho (f x)))
+  | VLam (t, (p, f))             -> VLam (subst rho t, (p, fun x -> subst rho (f x)))
+  | VPair (a, b)                 -> VPair (subst rho a, subst rho b)
+  | VFst v                       -> vfst (subst rho v)
+  | VSnd v                       -> vsnd (subst rho v)
+  | VId v                        -> VId (subst rho v)
+  | VRefl v                      -> VRefl (subst rho v)
+  | VJ v                         -> VJ (subst rho v)
+  | VPath (e, a, b)              -> VPath (subst rho e, subst rho a, subst rho b)
+  | VIdp e                       -> VIdp (subst rho e)
+  | VRev p                       -> rev (subst rho p)
+  | VTrans (p, q)                -> trans (subst rho p, subst rho q)
+  | VBoundary (a, b, x)          -> VBoundary (subst rho a, subst rho b, subst rho x)
+  | VLeft (a, b)                 -> VLeft (subst rho a, subst rho b)
+  | VRight (a, b)                -> VRight (subst rho a, subst rho b)
+  | VSymm e                      -> symm (subst rho e)
+  | VComp (a, b)                 -> bcomp (subst rho a) (subst rho b)
+  | VBLeft (e, p)                -> bleft (subst rho e) (subst rho p)
+  | VBRight (e, p)               -> bright (subst rho e) (subst rho p)
+  | VBApd (f, p, x, e)           -> bapd (subst rho f) (subst rho p) (subst rho x) (subst rho e)
+  | VMeet (p, x, e)              -> meet (subst rho p) (subst rho x) (subst rho e)
+  | VCoe (p, x)                  -> coe (subst rho p) (subst rho x)
+  | VApd (f, p)                  -> apd (subst rho f) (subst rho p)
+  | VUAWeak (a, b, f, g, mu, nu) -> uaweak (subst rho a) (subst rho b) (subst rho f) (subst rho g) (subst rho mu) (subst rho nu)
+  | VEquiv (a, b)                -> VEquiv (subst rho a, subst rho b)
+  | VMkEquiv (a, b, f, e)        -> VMkEquiv (subst rho a, subst rho b, subst rho f, subst rho e)
+  | VN                           -> VN
+  | VZero                        -> VZero
+  | VSucc                        -> VSucc
+  | VNInd v                      -> VNInd (subst rho v)
+  | VZ                           -> VZ
+  | VPos                         -> VPos
+  | VNeg                         -> VNeg
+  | VZSucc                       -> VZSucc
+  | VZPred                       -> VZPred
+  | VZInd v                      -> VZInd (subst rho v)
+  | VS1                          -> VS1
+  | VBase                        -> VBase
+  | VLoop                        -> VLoop
+  | VS1Ind v                     -> VS1Ind (subst rho v)
+  | VS1IndS v                    -> VS1IndS (subst rho v)
+  | VR                           -> VR
+  | VElem                        -> VElem
+  | VGlue                        -> VGlue
+  | VRInd v                      -> VRInd (subst rho v)
+  | VRIndS v                     -> VRIndS (subst rho v)
+  | VRInj                        -> VRInj
+  | VBot                         -> VBot
+  | VBotRec v                    -> VBotRec (subst rho v)
+  | Var (x, t)                   -> begin match Env.find_opt x rho with
     | Some v -> v
     | None   -> Var (x, t)
   end
