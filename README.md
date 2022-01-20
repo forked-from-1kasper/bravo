@@ -3,7 +3,7 @@
 
 [![Actions](https://github.com/groupoid/castle.bravo/workflows/OCaml/badge.svg)](https://github.com/groupoid/castle.bravo/actions)
 
-Minimal Implementation of HoTT-∂ Type System with definitional Path-β
+Experimental Implementation of HoTT-∂ Type System with definitional Path-β
 
 ```OCaml
 type exp =
