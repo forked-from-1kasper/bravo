@@ -26,7 +26,3 @@ type exp =
   | EBot | EBotRec of exp                                                          (* ⊥ *)
 ```
 
-HoTT-∂
-------
-
-* Siegmentation Fault
