@@ -1,9 +1,9 @@
-🧊 Castle Bravo
+Castle Bravo
 ===============
 
 [![Actions](https://github.com/groupoid/castle.bravo/workflows/OCaml/badge.svg)](https://github.com/groupoid/castle.bravo/actions)
 
-Experimental Implementation of HoTT-∂ Type System with definitional Path-β
+Experimental Implementation of HoTT-∂ Type System.
 
 ```OCaml
 type exp =
