@@ -1,7 +1,7 @@
 Castle Bravo
 ===============
 
-[![Actions](https://github.com/groupoid/castle.bravo/workflows/OCaml/badge.svg)](https://github.com/groupoid/castle.bravo/actions)
+[![Actions](https://github.com/forked-from-1kasper/bravo/workflows/OCaml/badge.svg)](https://github.com/forked-from-1kasper/bravo/actions)
 
 Experimental Implementation of HoTT-∂ Type System.
 
