@@ -20,6 +20,9 @@ def ua-ideqv (A B : U) (p : Path U A B) : Path (Path U A B) (ua A B (ideqv A B p
 coe (apd (λ (X : U) (H : ∂ A B X), Path (Path U A X)
   (ua A X (ideqv A X (meet p X H).2)) (meet p X H).2) p) (idp (idp A))
 
+def ideqv-ua₁ (A B : U) (e : A ≃ B) : Path (A → B) (ideqv A B (ua A B e)).1 e.1 := idp e.1
+def ideqv-ua₂ (A B : U) (e : A ≃ B) : Path (B → A) (ideqv A B (ua A B e)).2.2.1 e.2.2.1 := idp e.2.2.1
+
 def idiso (A B : U) (p : Path U A B) : iso A B :=
 coe (apd (λ (X : U) (H : ∂ A B X), iso A X) p) (iso-id A)
 
