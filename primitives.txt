@@ -14,71 +14,8 @@ p⁻¹ ⬝ p       ~> idp b
 p ⬝ idp b     ~> p
 idp a ⬝ p     ~> p
 
-      ∂ : Π {α : U}, α → α → α → Prop
-   left : Π {α : U} (a b : α), ∂ a b a
-  right : Π {α : U} (a b : α), ∂ a b b
- ∂-symm : Π {α : U} {a b x : α}, ∂ a b x → ∂ b a x
- ∂-comp : Π {α : U} {a b x y : α}, ∂ a b x → ∂ x b y → ∂ a b y
- ∂-left : Π {α : U} {a b c x : α}, ∂ a b x → a = c → ∂ c b x
-∂-right : Π {α : U} {a b c x : α}, ∂ a b x → b = c → ∂ a c x
-  ∂-apd : Π {α : U} {a b : α} {β : Π (x : α), ∂ a b x → U}
-            (f : Π (x : α) (H : ∂ a b x), β x H)
-            (p : a = b) (x : α) (H : ∂ a b x),
-            ∂ (coe (apd β p) (f a (left a b))) (f b (right a b))
-              (coe (apd (λ (x′ : α) (H′ : ∂ x b x′), B x′ (∂-comp H H′))
-                        (meet p⁻¹ x (∂-symm H)).2⁻¹) (f x H))
-
-Maybe these rules for ∂-symm and ∂-comp are not necessary
-due to proof-irrelevance, but they should improve efficiency.
-
-∂-symm  (left a b) ~> right b a
-∂-symm (right a b) ~> left  b a
- ∂-symm (∂-symm H) ~> H
-
-∂-apd f p a (left a b) ~> left (coe (apd β p) (f a (left a b))) (f b (right a b))
-∂-apd f p b (right a b) ~> right (coe (apd β p) (f a (left a b))) (f b (right a b))
-
-“∂-comp u v, ∂-left H p, ∂-right right : ∂ a b x” should evaluate to “left a b”
-when a ≡ x and to “right a b” when b ≡ x.
-
-singl {α : U} (a : α) := Σ (b : α), a = b
-
-  coe : Π {α β : U} : α = β → α → β
-cong′ : Π {α β : U} {a b : α} (f : Π (x : α), ∂ a b x → β), a = b → f a left = f b right
- meet : Π {α : U} {a b : α} (p : a = b) (x : α), ∂ a b x → singl a
-
-cong f p := cong′ (λ x _, f x) p
-
-M¹) meet p a left  ~> (a, idp a)
-M²) meet p b right ~> (b, p)
-
-There is clash between M¹ and M² when a ≡ b (e.g. for loop : base = base).
-Probably, one of M¹, M² must take priority in this case, otherwise we will get K.
-
-(meet p x H).1 ~> x
-
-coe (p ⬝ q) x ~> coe q (coe p x)
-coe (idp α) x ~> x
-
-coe (cong (λ x, Π (a : α[x]), β[x] a) p) φ x ~>
-  coe (cong′ (λ y H, β[x/(meet p⁻¹ y (∂-symm H)).1] (coe (cong (λ y′, α[x/y′]) (meet p⁻¹ y (∂-symm H)).2) x)) p)
-    (φ (coe (cong (λ y, α[x/y]) p⁻¹) x))
-
-coe (cong (λ x, Σ (a : α[x]), β[x] a) p) z ~>
-  (coe (cong′ (λ y, α[x/y]) p) z.1,
-   coe (cong′ (λ y H, β[x/(meet p y H).1] (coe (cong (λ y′, α[x/y′]) (meet p y H).2) z.1)) p) z.2)
-
-apd (f : Π (x : α), β x) p := cong′ (λ y H, coe (cong β ((meet p⁻¹ y (∂-symm H)).2)⁻¹) (f (meet p⁻¹ y (∂-symm H)).1)) p
-  : coe (cong β ((meet p⁻¹ a (∂-symm left)).2)⁻¹)  (f (meet p⁻¹ a (∂-symm left)).1) =
-    coe (cong β ((meet p⁻¹ b (∂-symm right)).2)⁻¹) (f (meet p⁻¹ b (∂-symm right)).1)
- ~> coe (cong β (p⁻¹)⁻¹) (f a) = coe (cong β (idp b)⁻¹) (f b)
- ~>       coe (cong β p) (f a) = coe (cong β (idp b)) (f b)
- ~>       coe (cong β p) (f a) = coe (idp (β b)) (f b)
- ~>       coe (cong β p) (f a) = f b
-
-coe (cong (λ x, f[x] = g[x]) p) q ~> (apd (λ y, f[x/y]) p)⁻¹ ⬝ cong (coe (cong β p)) q ⬝ apd (λ y, g[x/y]) p
-
-Similar rules should be applied in cases like coe (cong (λ x, Π (a : α[x]), β[x] a) p)⁻¹ φ
+coe : Π {A B : U} : A = B → A → B
+apd : Π {A : U} {B : A → U} {a b : A} (f : Π (x : A), B x) (p : a = b), coe (apd B p) (f a) = f b
 
        cong f p⁻¹ ~> (cong f p)⁻¹
    cong f (p ⬝ q) ~> cong f p ⬝ cong f q
@@ -86,13 +23,6 @@ cong g (cong f p) ~> cong (g ∘ f) p
         cong id p ~> p
   cong (λ _, x) p ~> idp x
    cong f (idp x) ~> idp (f x)
-
-ua : α ≃ β → α = β
-
-     (ua e)⁻¹ ~> ua e⁻¹
-ua e₁ ⬝ ua e₂ ~> ua (e₂ ∘ e₁)
- ua (ideqv α) ~> idp α
- coe (ua e) x ~> e.1 x
 
     N : U
  zero : N
@@ -131,7 +61,7 @@ S¹-ind : Π (A : S¹ → U) (b : A base), Path (A base) (coe (cong A loop) b) b
 
                 S¹-ind A b ℓ base ~> b
 ???
-cong (λ x H, S¹-ind A b ℓ x) loop ~> ℓ[x/base, H/left base base] ⬝ cong (λ x′ H′, b[x/x′, H/H′]) loop
+cong (λ x, S¹-ind A b ℓ x) loop ~> ℓ[x/base] ⬝ cong (λ x′ H′, b[x/x′]) loop
 
      R : U
   elem : Z → R

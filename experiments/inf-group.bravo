@@ -1,11 +1,27 @@
 module inf-group where
 
+def is-assoc (A : U) (φ : A → A → A) :=
+Π (x y z : A), Path A (φ x (φ y z)) (φ (φ x y) z)
+
+def is-right-unital (A : U) (φ : A → A → A) (ε : A) :=
+Π (x : A), Path A (φ x ε) x
+
+def has-inv (A : U) (φ : A → A → A) (ι : A → A) (ε : A) :=
+Π (x : A), Path A (φ x (ι x)) ε
+
+def forms-group (A : U) (φ : A → A → A) (ι : A → A) (ε : A) :=
+is-assoc A φ × is-right-unital A φ ε × has-inv A φ ι ε
+
 def is-∞-group (A : U) :=
-Σ (φ : A → A → A) (ι : A → A) (ε : A),
-  (Π (x y z : A), Path A (φ x (φ y z)) (φ (φ x y) z)) ×
-  (Π (x : A), Path A (φ x ε) x) × (Π (x : A), Path A (φ x (ι x)) ε)
+Σ (φ : A → A → A) (ι : A → A) (ε : A), forms-group A φ ι ε
 
 def ∞-group := Σ (A : U), is-∞-group A
+
+def mk-∞-group (A : U) (φ : A → A → A) (ι : A → A) (ε : A)
+  (α : is-assoc A φ) (β : is-right-unital A φ ε) (γ : has-inv A φ ι ε) :=
+Σ-mk is-∞-group A (Σ-mk (λ (φ : A → A → A), Σ (ι : A → A) (ε : A), forms-group A φ ι ε) φ
+  (Σ-mk (λ (ι : A → A), Σ (ε : A), forms-group A φ ι ε) ι
+    (Σ-mk (forms-group A φ ι) ε (α, β, γ))))
 
 def op∞ (G : ∞-group) : G.1 → G.1 → G.1 := G.2.1
 def inv∞ (G : ∞-group) : G.1 → G.1 := G.2.2.1

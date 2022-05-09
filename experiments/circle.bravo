@@ -5,9 +5,6 @@ import experiments/inf-group
 
 def Ω¹S¹ := Path S¹ base base
 
---def S¹-∂-connected : Π (x : S¹), ∂ base base x :=
---S¹-ind (λ (x : S¹), ∂ base base x) (left base base) (idp (left base base))
-
 def S¹-rec (β : U) : Π (b : β), Path β b b → S¹ → β :=
 S¹-ind (λ (x : S¹), β)
 
@@ -19,23 +16,21 @@ S¹-ind (λ (x : S¹), Path S¹ (triv x) x) (idp base) (idp (idp base))
 def rot (x : S¹) : Path S¹ x x :=
 S¹-ind (λ (y : S¹), Path S¹ y y) loop (idp loop) x
 
-def S¹-apd (β : Π (x : S¹), ∂ base base x → S¹ → U) (b : Π (x : S¹) (H : ∂ base base x), β x H base)
-  (ℓ : Π (x : S¹) (H : ∂ base base x), Path (β x H base) (coe (apd (λ (x′ : S¹) (H′ : ∂ base base x′), β x H x′) loop) (b x H)) (b x H))
-  (f : Π (x : S¹), ∂ base base x → S¹) :
-   Path (β base (right base base) (f base (right base base)))
-        (coe (apd (λ (x : S¹), λ (H : ∂ base base x), β x H (f x H)) loop)
-               (S¹-ind (β base (left base base)) (b base (left base base)) (ℓ base (left base base)) (f base (left base base))))
-             (S¹-ind (β base (right base base)) (b base (right base base)) (ℓ base (right base base)) (f base (right base base))) :=
+def S¹-apd (β : Π (x : S¹), S¹ → U) (b : Π (x : S¹), β x base)
+  (ℓ : Π (x : S¹), Path (β x base) (coe (apd (β x) loop) (b x)) (b x)) (f : S¹ → S¹) :
+   Path (β base (f base))
+        (coe (apd (λ (x : S¹), β x (f x)) loop)
+                  (S¹-ind (β base) (b base) (ℓ base) (f base)))
+        (S¹-ind (β base) (b base) (ℓ base) (f base)) :=
 ?
 
-def S¹-apd′ (β : Π (x : S¹), ∂ base base x → S¹ → U) (b : Π (x : S¹) (H : ∂ base base x), β x H base)
-  (ℓ : Π (x : S¹) (H : ∂ base base x), Path (β x H base) (coe (apd (λ (x′ : S¹) (H′ : ∂ base base x′), β x H x′) loop) (b x H)) (b x H))
-  (f : Π (x : S¹), ∂ base base x → S¹) :
-   Path (β base (right base base) (f base (right base base)))
-        (coe (apd (λ (x : S¹), λ (H : ∂ base base x), β x H (f x H)) loop)
-               (S¹-ind (β base (left base base)) (b base (left base base)) (ℓ base (left base base)) (f base (left base base))))
-             (S¹-ind (β base (right base base)) (b base (right base base)) (ℓ base (right base base)) (f base (right base base))) :=
-apd (λ (x : S¹) (H : ∂ base base x), S¹-ind (β x H) (b x H) (ℓ x H) (f x H)) loop
+def S¹-apd′ (β : Π (x : S¹), S¹ → U) (b : Π (x : S¹), β x base)
+  (ℓ : Π (x : S¹), Path (β x base) (coe (apd (β x) loop) (b x)) (b x)) (f : S¹ → S¹) :
+   Path (β base (f base))
+        (coe (apd (λ (x : S¹), β x (f x)) loop)
+                  (S¹-ind (β base) (b base) (ℓ base) (f base)))
+        (S¹-ind (β base) (b base) (ℓ base) (f base)) :=
+apd (λ (x : S¹), S¹-ind (β x) (b x) (ℓ x) (f x)) loop
 
 def μ (x : S¹) : S¹ → S¹ := S¹-rec S¹ x (rot x)
 def σ (x : S¹) := μ x x
@@ -89,19 +84,19 @@ Z-ind encode-decodeᵀ
   (N-ind (λ (m : N), encode-decodeᵀ (neg m)) (idp (neg zero))
          (λ (m : N), ap Z Z Z-pred (encode base (decode base (neg m))) (neg m)))
 
-def fundamental-group : Ω¹S¹ ≃ Z :=
-mkeqv Ω¹S¹ Z (encode base) ((decode base, decode-encode base), (decode base, encode-decode))
+def fundamental-group : equiv Ω¹S¹ Z :=
+mkeqv Ω¹S¹ Z (encode base) (decode base) (decode-encode base) (decode base) (encode-decode)
 
 def π₁S¹ : ∞-group :=
-(Ω¹S¹, λ (x y : Ω¹S¹), x ⬝ y, λ (x : Ω¹S¹), x⁻¹, idp base,
- λ (x y z : Ω¹S¹), idp (x ⬝ y ⬝ z), λ (x : Ω¹S¹), idp x, λ (x : Ω¹S¹), idp (idp base))
+mk-∞-group Ω¹S¹ (λ (x y : Ω¹S¹), x ⬝ y) (λ (x : Ω¹S¹), x⁻¹) (idp base)
+ (λ (x y z : Ω¹S¹), idp (x ⬝ y ⬝ z)) (λ (x : Ω¹S¹), idp x) (λ (x : Ω¹S¹), idp (idp base))
 
 def integer : ∞-group :=
-(Z, coe (apd (λ (X : U) (H : ∂ Ω¹S¹ Z X), is-∞-group X) (ua Ω¹S¹ Z fundamental-group)) π₁S¹.2)
+Σ-mk is-∞-group Z (coe (apd is-∞-group (ua Ω¹S¹ Z fundamental-group)) π₁S¹.2)
 
 def Z-add : Z → Z → Z := op∞ integer
 def Z-assoc : Π (x y z : Z), Path Z (Z-add x (Z-add y z)) (Z-add (Z-add x y) z) := assoc∞ integer
 
 -- :-(
-def Z-zero-eq-zero : Path Z (pos zero) (pos zero) :=
-Z-assoc (pos zero) (pos zero) (pos zero)
+--def Z-zero-eq-zero : Path Z (pos zero) (pos zero) :=
+--Z-assoc (pos zero) (pos zero) (pos zero)

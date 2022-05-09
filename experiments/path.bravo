@@ -7,7 +7,10 @@ def idfun (A : U) (a : A) : A := a
 
 def ∘ (A B C : U) (f : B → C) (g : A → B) : A → C := λ (x : A), f (g x)
 
-def is-contr (A: U) : U := Σ (x : A), Π (y : A), Path A x y
+def Path′ (A : U) (a b : A) := Path A a b
+
+def contr (A : U) (x : A) := Π (y : A), Path A x y
+def is-contr (A : U) : U := Σ (x : A), contr A x
 def is-prop (A : U) : U := Π (a b : A), Path A a b
 def is-set (A : U) : U := Π (a b : A), is-prop (Path A a b)
 def is-groupoid (A : U) : U := Π (a b : A), is-set (Path A a b)
@@ -17,14 +20,18 @@ def contr-impl-prop (A : U) (z : is-contr A) : is-prop A :=
 λ (a b : A), (z.2 a)⁻¹ ⬝ z.2 b
 
 def subst (A : U) (P : A → U) (a b : A) (p : Path A a b) (x : P a) : P b :=
-coe (apd (λ (x : A) (H : ∂ a b x), P x) p) x
+coe (apd P p) x
 
 def ap (A B : U) (f : A → B) (a b : A) (p : Path A a b) : Path B (f a) (f b) :=
-apd (λ (x : A) (H : ∂ a b x), f x) p
+apd f p
+
+def meet (A : U) (a b : A) (p : Path A a b) :
+  Path (Σ (x : A), Path A a x) (Σ-mk (Path′ A a) a (idp a)) (Σ-mk (Path′ A a) b p) :=
+Σ-prod p (λ (x : A), Path A a x) (idp a) p (idp p)
 
 def J (A : U) (P : Π (a b : A), Path A a b → U)
   (a : A) (d : P a a (idp a)) (b : A) (p : Path A a b) : P a b p :=
-coe (apd (λ (x : A) (H : ∂ a b x), P a x (meet p x H).2) p) d
+coe (apd (λ (w : Σ (x : A), Path A a x), P a w.1 w.2) (meet A a b p)) d
 
 def ap′ (A B : U) (f : A → B) (a b : A) (p : Path A a b) : Path B (f a) (f b) :=
 J A (λ (a b : A) (p : Path A a b), Path B (f a) (f b)) a (idp (f a)) b p
@@ -53,22 +60,19 @@ J A (λ (a b : A) (p : Path A a b), Path (Path B (f a a) (f b b)) (bimap A A B a
 
 def J′ (A : U) (a : A) (P : Π (b : A), Path A a b → U)
   (d : P a (idp a)) (b : A) (p : Path A a b) : P b p :=
-coe (apd (λ (x : A) (H : ∂ a b x), P x (meet p x H).2) p) d
+coe (apd (λ (w : Σ (x : A), Path A a x), P w.1 w.2) (meet A a b p)) d
 
 def singl (A : U) (a : A) := Σ (b : A), Path A a b
 def contr-singl (A : U) (a : A) : is-contr (singl A a) :=
-((a, idp a), λ (z : singl A a),
-  J A (λ (a b : A) (p : Path A a b), Path (singl A a) (a, idp a) (b, p))
-    a (idp (a, idp a)) z.1 z.2)
+Σ-mk (contr (singl A a)) (Σ-mk (Path′ A a) a (idp a))
+  (λ (w : Σ (x : A), Path A a x), meet A a w.1 w.2)
 
 def PathP (A : U) (B : A → U) (a b : A) (p : Path A a b) (u : B a) (v : B b) :=
 Path (B b) (subst A B a b p u) v
 
-def Σ-mk (A : U) (B : A → U) (a : A) (b : B a) : Σ (x : A), B x := (a, b)
-
 def Σ-eq (A : U) (B : A → U) (a b : A) (p : Path A a b) (u : B a) (v : B b)
-  (q : PathP A B a b p u v) : Path (Σ (x : A), B x) (a, u) (b, v) :=
+  (q : PathP A B a b p u v) : Path (Σ (x : A), B x) (Σ-mk B a u) (Σ-mk B b v) :=
 J A (λ (a b : A) (p : Path A a b), Π (u : B a) (v : B b)
-  (q : PathP A B a b p u v), Path (Σ (x : A), B x) (a, u) (b, v)) a
-  (λ (u v : B a) (q : Path (B a) u v), apd (λ (x : B a) (H : ∂ u v x), Σ-mk A B a x) q)
+  (q : PathP A B a b p u v), Path (Σ (x : A), B x) (Σ-mk B a u) (Σ-mk B b v)) a
+  (λ (u v : B a) (q : Path (B a) u v), apd (λ (x : B a), Σ-mk B a x) q)
   b p u v q

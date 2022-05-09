@@ -45,21 +45,15 @@ let arrow   = "->"     | "\xE2\x86\x92" (* → *)
 let prod    = "*"      | "\xC3\x97"     (* × *)
 let lam     = "\\"     | "\xCE\xBB"     (* λ *)
 let pi      = "forall" | "\xCE\xA0"     (* Π *)
-let sigma   = "sigma"  | "\xCE\xA3"     (* Σ *)
 let def     = "definition" | "def" | "theorem" | "lemma" | "corollary" | "proposition"
 let axiom   = "axiom"|"postulate"
 
+let sigma   = "sigma" | "\xCE\xA3" (* Σ *)
+let sigmk   = sigma "-mk"
+let sigprod = sigma "-prod"
+
 let rev      = "\xE2\x81\xBB\xC2\xB9" (*  ⁻¹ *)
 let trans    = "\xE2\xAC\x9D"         (*  ⬝  *)
-
-let equiv    = "\xE2\x89\x83"         (*  ≃  *)
-
-let boundary = "\xE2\x88\x82"         (*  ∂  *)
-let symm     = boundary "-symm"
-let comp     = boundary "-comp"
-let bleft    = boundary "-left"
-let bright   = boundary "-right"
-let bapd     = boundary "-apd"
 
 let subscript = '\xE2' '\x82' ['\x80'-'\x89']
 let kan       = 'U' subscript*
@@ -95,15 +89,10 @@ rule main = parse
 | "refl"     { REFL }        | "idJ"      { IDJ }
 | rev        { REV }         | trans      { TRANS }
 | "idp"      { IDP }         | pre as s   { PRE (getLevel s) }
-| "?"        { HOLE }        | boundary   { BOUNDARY }
-| "left"     { LEFT }        | "right"    { RIGHT }
-| "meet"     { MEET }        | "coe"      { COE }
-| "apd"      { APD }         | symm       { SYMM }
-| bleft      { BLEFT }       | bright     { BRIGHT }
-| bapd       { BAPD }        | comp       { COMP }
-| "ua-weak"  { UAWEAK }      | equiv      { EQUIV }
+| "coe"      { COE }         | "apd"      { APD }
+| "ua-weak"  { UAWEAK }      | botrec     { BOTREC }
 | nind       { NIND }        | zind       { ZIND }
-| s1ind      { S1IND }       | s1inds     { S1INDS }
-| rind       { RIND }        | rinds      { RINDS }
-| botrec     { BOTREC }      | "mkeqv"    { MKEQV }
-| ident as s { IDENT s }     | eof        { EOF }
+| s1ind      { S1IND }       | rind       { RIND }
+| sigmk      { SIGMK }       | sigprod    { SIGPROD }
+| "?"        { HOLE }        | ident as s { IDENT s }
+| eof        { EOF }

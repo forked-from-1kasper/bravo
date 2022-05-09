@@ -12,25 +12,26 @@ def symm-symm (A : U) (a b : A) (p : Path A a b) :
   Path (Path A a b) (symm A b a (symm A a b p)) p :=
 idp p
 
-def ∂-irrel (A : U) (a b x : A) (p q : ∂ a b x) : Path (∂ a b x) p q := idp p
-
 def subst (A : U) (P : A → U) (a b : A) (p : Path A a b) (x : P a) : P b :=
-coe (apd (λ (x : A) (H : ∂ a b x), P x) p) x
+coe (apd P p) x
 
 def ap (A B : U) (f : A → B) (a b : A) (p : Path A a b) : Path B (f a) (f b) :=
-apd (λ (x : A) (H : ∂ a b x), f x) p
+apd f p
 
--- “apd′ A (λ (x : A), B)” evaluates to plain “apd”
-def apd′ (A : U) (a b : A) (B : Π (x : A), ∂ a b x → U)
-  (f : Π (x : A) (H : ∂ a b x), B x H) (p : Path A a b) :
-  Path (B b (right a b)) (coe (apd B p) (f a (left a b))) (f b (right a b)) :=
-apd (λ (x : A) (H : ∂ a b x),
-  coe (apd (λ (y : A) (H′ : ∂ x b y), B y (∂-comp H H′))
-    ((meet p⁻¹ x (∂-symm H)).2)⁻¹) (f x H)) p
+def Path′ (A : U) (a b : A) := Path A a b
+
+def Σ-prod-fst (A : U) (B : A → U) (a b : A) (p : Path A a b) (u : B a) (v : B b)
+  (q : Path (B b) (coe (apd B p) u) v) (C : A → U) (f : Π (x : A), C x) :
+  Path (C b) (coe (apd (λ (w : Σ (x : A), B x), C w.1) (Σ-prod p B u v q)) (f a)) (f b) :=
+apd (λ (w : Σ (x : A), B x), f w.1) (Σ-prod p B u v q)
+
+def meet (A : U) (a b : A) (p : Path A a b) :
+  Path (Σ (x : A), Path A a x) (Σ-mk (Path′ A a) a (idp a)) (Σ-mk (Path′ A a) b p) :=
+Σ-prod p (λ (x : A), Path A a x) (idp a) p (idp p)
 
 def J (A : U) (P : Π (a b : A), Path A a b → U)
   (a : A) (d : P a a (idp a)) (b : A) (p : Path A a b) : P a b p :=
-coe (apd (λ (x : A) (H : ∂ a b x), P a (meet p x H).1 (meet p x H).2) p) d
+coe (apd (λ (w : Σ (x : A), Path A a x), P a w.1 w.2) (meet A a b p)) d
 
 def revsubst (A : U) (P : A → U) (a b : A) (p : Path A a b) : P b → P a :=
 J A (λ (a b : A) (p : Path A a b), P b → P a) a (idfun (P a)) b p
@@ -40,86 +41,64 @@ def J-β (A : U) (P : Π (a b : A), Path A a b → U) (a : A)
   (d : P a a (idp a)) : Path (P a a (idp a)) d (J A P a d a (idp a)) :=
 idp d
 
-def coe-apd-Π (Δ : U) (α β : Δ) (A : Π (x : Δ), ∂ α β x → U)
-  (B : Π (x : Δ) (H : ∂ α β x), A x H → U) (p : Path Δ α β)
-  (φ : Π (a : A α (left α β)),  B α (left α β)  a) :
-       Π (b : A β (right α β)), B β (right α β) b :=
-λ (x : A β (right α β)),
-  coe (apd (λ (y : Δ) (H : ∂ α β y),
-    B y H (coe (apd (λ (z : Δ) (H′ : ∂ β y z), A z (∂-comp H (∂-symm H′)))
-      (meet p⁻¹ y (∂-symm H)).2) x)) p)
-  (φ (coe (apd (λ (x : Δ) (H : ∂ β α x), A x (∂-symm H)) p⁻¹) x))
+def coe-apd-Path (Δ : U) (α β : Δ) (p : Path Δ α β) (A : Δ → U)
+  (f g : Π (x : Δ), A x) (q : Path (A α) (f α) (g α)) : Path (A β) (f β) (g β) :=
+(apd f p)⁻¹ ⬝ (apd (λ (x : A α), coe (apd A p) x) q) ⬝ (apd g p)
 
-def coe-apd-Σ (Δ : U) (α β : Δ) (A : Π (x : Δ), ∂ α β x → U)
-  (B : Π (x : Δ) (H : ∂ α β x), A x H → U) (p : Path Δ α β)
-  (z : Σ (a : A α (left α β)),  B α (left α β)  a) :
-       Σ (b : A β (right α β)), B β (right α β) b :=
-(coe (apd A p) z.1,
- coe (apd (λ (y : Δ) (H : ∂ α β y),
-   B y H (coe (apd (λ (y′ : Δ) (H′ : ∂ α y y′),
-     A y′ (∂-symm (∂-comp (∂-symm H) (∂-symm H′)))) (meet p y H).2) z.1)) p) z.2)
+def coe-apd-Path′ (Δ : U) (α β : Δ) (p : Path Δ α β) (A : Δ → U)
+  (f g : Π (x : Δ), A x) (q : Path (A α) (f α) (g α)) : Path (A β) (f β) (g β) :=
+coe (apd (λ (x : Δ), Path (A x) (f x) (g x)) p) q
 
-def coe-apd-Path (Δ : U) (α β : Δ) (A : Π (x : Δ), ∂ α β x → U)
-  (f g : Π (x : Δ) (H : ∂ α β x), A x H) (p : Path Δ α β)
-  (q : Path (A α (left α β))  (f α (left α β))  (g α (left α β))) :
-       Path (A β (right α β)) (f β (right α β)) (g β (right α β)) :=
-  (apd f p)⁻¹
-⬝ (ap (A α (left α β)) (A β (right α β))
-    (λ (x : A α (left α β)), coe (apd A p) x)
-    (f α (left α β)) (g α (left α β)) q)
-⬝ (apd g p)
+def coe-apd-Path-is-correct (Δ : U) (α β : Δ) (p : Path Δ α β) (A : Δ → U)
+  (f g : Π (x : Δ), A x) (q : Path (A α) (f α) (g α)) :
+  Path (Path (A β) (f β) (g β)) (coe-apd-Path Δ α β p A f g q)
+                                (coe-apd-Path′ Δ α β p A f g q) :=
+idp (coe-apd-Path Δ α β p A f g q)
 
-def coe-apd-Π′ (Δ : U) (α β : Δ) (A : Π (x : Δ), ∂ α β x → U)
-  (B : Π (x : Δ) (H : ∂ α β x), A x H → U) (p : Path Δ α β)
-  (φ : Π (a : A α (left α β)),  B α (left α β)  a) :
-       Π (b : A β (right α β)), B β (right α β) b :=
-coe (apd (λ (x : Δ) (H : ∂ α β x), Π (a : A x H), B x H a) p) φ
+def coe-apd-Π′ (Δ : U) (α β : Δ) (p : Path Δ α β)
+  (A : Δ → U) (B : Π (x : Δ), A x → U)
+  (φ : Π (a : A α), B α a) : Π (b : A β), B β b :=
+coe (apd (λ (x : Δ), Π (a : A x), B x a) p) φ
 
-def coe-apd-Π-is-correct (Δ : U) (α β : Δ) (A : Π (x : Δ), ∂ α β x → U)
-  (B : Π (x : Δ) (H : ∂ α β x), A x H → U) (p : Path Δ α β)
-  (φ : Π (a : A α (left α β)),  B α (left α β)  a) :
-  Path (Π (b : A β (right α β)), B β (right α β) b)
-       (coe-apd-Π Δ α β A B p φ) (coe-apd-Π′ Δ α β A B p φ) :=
-idp (coe-apd-Π Δ α β A B p φ)
+def coe-apd-Π (Δ : U) (α β : Δ) (p : Path Δ α β)
+  (A : Δ → U) (B : Π (x : Δ), A x → U)
+  (φ : Π (a : A α), B α a) : Π (b : A β), B β b :=
+λ (x : A β), coe (apd (λ (w : Σ (x : Δ), Path Δ β x), B w.1 (coe (apd A w.2) x))
+                      (meet Δ β α p⁻¹)⁻¹) (φ (coe (apd A p⁻¹) x))
 
-def coe-apd-Σ′ (Δ : U) (α β : Δ) (A : Π (x : Δ), ∂ α β x → U)
-  (B : Π (x : Δ) (H : ∂ α β x), A x H → U) (p : Path Δ α β)
-  (z : Σ (a : A α (left α β)),  B α (left α β)  a) :
-       Σ (b : A β (right α β)), B β (right α β) b :=
-coe (apd (λ (x : Δ) (H : ∂ α β x), Σ (a : A x H), B x H a) p) z
+def coe-apd-Π-is-correct (Δ : U) (α β : Δ) (p : Path Δ α β)
+  (A : Δ → U) (B : Π (x : Δ), A x → U) (φ : Π (a : A α), B α a) :
+  Path (Π (b : A β), B β b) (coe-apd-Π Δ α β p A B φ) (coe-apd-Π′ Δ α β p A B φ) :=
+idp (coe-apd-Π Δ α β p A B φ)
 
-def coe-apd-Σ-is-correct (Δ : U) (α β : Δ) (A : Π (x : Δ), ∂ α β x → U)
-  (B : Π (x : Δ) (H : ∂ α β x), A x H → U) (p : Path Δ α β)
-  (z : Σ (a : A α (left α β)),  B α (left α β)  a) :
-  Path (Σ (b : A β (right α β)), B β (right α β) b)
-       (coe-apd-Σ Δ α β A B p z) (coe-apd-Σ′ Δ α β A B p z) :=
-idp (coe-apd-Σ Δ α β A B p z)
+def coe-apd-Σ (Δ : U) (α β : Δ) (p : Path Δ α β)
+  (A : Δ → U) (B : Π (x : Δ), A x → U)
+  (z : Σ (a : A α), B α a) : Σ (b : A β), B β b :=
+Σ-mk (B β) (coe (apd A p) z.1)
+  (coe (apd (λ (w : Σ (x : Δ), Path Δ α x), B w.1 (coe (apd A w.2) z.1))
+            (meet Δ α β p)) z.2)
 
-def coe-apd-Path′ (Δ : U) (α β : Δ) (A : Π (x : Δ), ∂ α β x → U)
-  (f g : Π (x : Δ) (H : ∂ α β x), A x H) (p : Path Δ α β)
-  (q : Path (A α (left α β))  (f α (left α β))  (g α (left α β))) :
-       Path (A β (right α β)) (f β (right α β)) (g β (right α β)) :=
-coe (apd (λ (x : Δ) (H : ∂ α β x), Path (A x H) (f x H) (g x H)) p) q
+def coe-apd-Σ′ (Δ : U) (α β : Δ) (p : Path Δ α β)
+  (A : Δ → U) (B : Π (x : Δ), A x → U)
+  (z : Σ (a : A α), B α a) : Σ (b : A β), B β b :=
+coe (apd (λ (x : Δ), Σ (a : A x), B x a) p) z
 
-def coe-apd-Path-is-correct (Δ : U) (α β : Δ) (A : Π (x : Δ), ∂ α β x → U)
-  (f g : Π (x : Δ) (H : ∂ α β x), A x H) (p : Path Δ α β)
-  (q : Path (A α (left α β))  (f α (left α β))  (g α (left α β))) :
-  Path (Path (A β (right α β)) (f β (right α β)) (g β (right α β)))
-       (coe-apd-Path Δ α β A f g p q) (coe-apd-Path′ Δ α β A f g p q) :=
-idp (coe-apd-Path Δ α β A f g p q)
+def coe-apd-Σ-is-correct (Δ : U) (α β : Δ) (p : Path Δ α β)
+  (A : Δ → U) (B : Π (x : Δ), A x → U) (z : Σ (a : A α), B α a) :
+  Path (Σ (b : A β), B β b) (coe-apd-Σ Δ α β p A B z) (coe-apd-Σ′ Δ α β p A B z) :=
+idp (coe-apd-Σ Δ α β p A B z)
 
 def symm′ (A : U) (a b : A) (p : Path A a b) : Path A b a :=
-coe (apd (λ (x : A) (H : ∂ a b x), Path A x a) p) (idp a)
+coe (apd (λ (x : A), Path A x a) p) (idp a)
 
 def symm″ (A : U) (a b : A) (p : Path A a b) : Path A b a :=
 J A (λ (a b : A) (p : Path A a b), Path A b a) a (idp a) b p
 
 def symm‴ (A : U) (a b : A) (p : Path A a b) : Path A b a :=
-coe-apd-Path A a b (λ (x : A) (H : ∂ a b x), A)
-  (λ (x : A) (H : ∂ a b x), x) (λ (x : A) (H : ∂ a b x), a) p (idp a)
+coe-apd-Path A a b p (λ (x : A), A) (λ (x : A), x) (λ (x : A), a) (idp a)
 
 def trans′ (A : U) (a b c : A) (p : Path A a b) (q : Path A b c) : Path A a c :=
-coe (apd (λ (x : A) (H : ∂ b c x), Path A a x) q) p
+coe (apd (λ (x : A), Path A a x) q) p
 
 -- looks like that if subst A P a b p (subst A P b a p⁻¹ u) ≡ u,
 -- then typechecker can generate ill-typed terms
@@ -129,71 +108,47 @@ J A (λ (a b : A) (p : Path A a b),
   Π (u : P b), Path (P b) (subst A P a b p (subst A P b a p⁻¹ u)) u) a
   (λ (u : P a), idp u) b p u
 
-def apd-trans (A : U) (a b c : A) (B : Π (x : A), ∂ a c x → U)
-  (p : Path A a b) (q : Path A b c) (f : Π (x : A) (H : ∂ a c x), B x H) :
-  Path (B c (right a c)) (coe (apd B (p ⬝ q)) (f a (left a c))) (f c (right a c)) :=
-apd (λ (x : B b (∂-right (right a b) q))
-       (H : ∂ (coe (apd (λ (x : A) (H : ∂ a b x), B x (∂-right H q)) p)
-                (f a (∂-right (left a b) q)))
-              (f b (∂-right (right a b) q)) x),
-        coe (apd (λ (x : A) (H : ∂ b c x), B x (∂-left H p⁻¹)) q) x)
-  (apd (λ (x : A) (H : ∂ a b x), f x (∂-right H q)) p) ⬝
-(apd (λ (x : A) (H : ∂ b c x), f x (∂-left H p⁻¹)) q)
+def path-idfun (A : U) (a b : A) (p : Path A a b) :=
+J A (λ (a b : A) (p : Path A a b), Path A a b) a (idp a) b p
 
-def apd-trans′ (A : U) (a b c : A) (B : Π (x : A), ∂ a c x → U)
-  (p : Path A a b) (q : Path A b c) (f : Π (x : A) (H : ∂ a c x), B x H) :
-  Path (B c (right a c)) (coe (apd B (p ⬝ q)) (f a (left a c))) (f c (right a c)) :=
+def apd-trans (A : U) (a b c : A) (B : A → U)
+  (p : Path A a b) (q : Path A b c) (f : Π (x : A), B x) :
+  Path (B c) (coe (apd B (p ⬝ q)) (f a)) (f c) :=
+apd (λ (x : B b), coe (apd B q) x) (apd f p) ⬝ (apd f q)
+
+def apd-trans′ (A : U) (a b c : A) (B : A → U)
+  (p : Path A a b) (q : Path A b c) (f : Π (x : A), B x) :
+  Path (B c) (coe (apd B (p ⬝ q)) (f a)) (f c) :=
 apd f (p ⬝ q)
 
-def apd-trans-is-correct (A : U) (a b c : A) (B : Π (x : A), ∂ a c x → U)
-  (p : Path A a b) (q : Path A b c) (f : Π (x : A) (H : ∂ a c x), B x H) :
-  Path (Path (B c (right a c)) (coe (apd B (p ⬝ q)) (f a (left a c))) (f c (right a c)))
+def apd-trans-is-correct (A : U) (a b c : A) (B : A → U)
+  (p : Path A a b) (q : Path A b c) (f : Π (x : A), B x) :
+  Path (Path (B c) (coe (apd B (p ⬝ q)) (f a)) (f c))
        (apd-trans A a b c B p q f) (apd-trans′ A a b c B p q f) :=
 idp (apd-trans A a b c B p q f)
 
-def apd-symm (A : U) (a b : A) (B : Π (x : A), ∂ b a x → U)
-  (f : Π (x : A) (H : ∂ b a x), B x H) (p : Path A a b) :
-  Path (B a (right b a)) (coe (apd B p⁻¹) (f b (left b a))) (f a (right b a)) :=
-(apd (λ (x : A) (H : ∂ a b x),
-  coe (apd (λ (x′ : A) (H′ : ∂ x a x′), B x′ (∂-comp (∂-symm H) H′)) (meet p x H).2⁻¹)
-    (f x (∂-symm H))) p)⁻¹
+def apd-symm (A : U) (a b : A) (B : A → U) (f : Π (x : A), B x)
+  (p : Path A a b) : Path (B a) (coe (apd B p⁻¹) (f b)) (f a) :=
+(apd (λ (w : Σ (x : A), Path A a x), coe (apd B w.2⁻¹) (f w.1)) (meet A a b p))⁻¹
 
-def apd-symm′ (A : U) (a b : A) (B : Π (x : A), ∂ b a x → U)
-  (f : Π (x : A) (H : ∂ b a x), B x H) (p : Path A a b) :
-  Path (B a (right b a)) (coe (apd B p⁻¹) (f b (left b a))) (f a (right b a)) :=
+def apd-symm′ (A : U) (a b : A) (B : A → U) (f : Π (x : A), B x)
+  (p : Path A a b) : Path (B a) (coe (apd B p⁻¹) (f b)) (f a) :=
 apd f p⁻¹
 
-def apd-symm-is-correct (A : U) (a b : A) (B : Π (x : A), ∂ b a x → U)
-  (f : Π (x : A) (H : ∂ b a x), B x H) (p : Path A a b) :
-  Path (Path (B a (right b a)) (coe (apd B p⁻¹) (f b (left b a))) (f a (right b a)))
-       (apd-symm A a b B f p) (apd-symm′ A a b B f p) :=
+def apd-symm-is-correct (A : U) (a b : A) (B : A → U) (f : Π (x : A), B x) (p : Path A a b) :
+  Path (Path (B a) (coe (apd B p⁻¹) (f b)) (f a)) (apd-symm A a b B f p) (apd-symm′ A a b B f p) :=
 idp (apd-symm A a b B f p)
 
-def apd-comp (A : U) (a b : A) (p : Path A a b) (B : Π (x : A), ∂ a b x → U) (g : Π (x : A) (H : ∂ a b x), B x H)
-  (C : Π (y : B b (right a b)), ∂ (coe (apd B p) (g a (left a b))) (g b (right a b)) y → U)
-  (f : Π (y : B b (right a b)) (H : ∂ (coe (apd B p) (g a (left a b))) (g b (right a b)) y), C y H) :
-  Path (C (g b (right a b)) (right (coe (apd B p) (g a (left a b))) (g b (right a b))))
-       (coe (apd C (apd g p)) (f (coe (apd B p) (g a (left a b))) (left (coe (apd B p) (g a (left a b))) (g b (right a b)))))
-       (f (g b (right a b)) (right (coe (apd B p) (g a (left a b))) (g b (right a b)))) :=
-apd (λ (x : A) (H : ∂ a b x),
-  f (coe (apd (λ (x′ : A) (H′ : ∂ x b x′), B x′ (∂-comp H H′))
-              (meet p⁻¹ x (∂-symm H)).2⁻¹) (g x H))
-    (∂-apd g p x H)) p
+def apd-comp (A : U) (a b : A) (p : Path A a b) (B : A → U) (g : Π (x : A), B x) (C : B b → U) (f : Π (y : B b), C y) :
+  Path (C (g b)) (coe (apd C (apd g p)) (f (coe (apd B p) (g a)))) (f (g b)) :=
+apd (λ (w : Σ (x : A), Path A b x), f (coe (apd B w.2⁻¹) (g w.1))) (meet A b a p⁻¹)⁻¹
 
-def apd-comp′ (A : U) (a b : A) (p : Path A a b) (B : Π (x : A), ∂ a b x → U) (g : Π (x : A) (H : ∂ a b x), B x H)
-  (C : Π (y : B b (right a b)), ∂ (coe (apd B p) (g a (left a b))) (g b (right a b)) y → U)
-  (f : Π (y : B b (right a b)) (H : ∂ (coe (apd B p) (g a (left a b))) (g b (right a b)) y), C y H) :
-  Path (C (g b (right a b)) (right (coe (apd B p) (g a (left a b))) (g b (right a b))))
-       (coe (apd C (apd g p)) (f (coe (apd B p) (g a (left a b))) (left (coe (apd B p) (g a (left a b))) (g b (right a b)))))
-       (f (g b (right a b)) (right (coe (apd B p) (g a (left a b))) (g b (right a b)))) :=
+def apd-comp′ (A : U) (a b : A) (p : Path A a b) (B : A → U) (g : Π (x : A), B x) (C : B b → U) (f : Π (y : B b), C y) :
+  Path (C (g b)) (coe (apd C (apd g p)) (f (coe (apd B p) (g a)))) (f (g b)) :=
 apd f (apd g p)
 
-def apd-comp-is-correct (A : U) (a b : A) (p : Path A a b) (B : Π (x : A), ∂ a b x → U) (g : Π (x : A) (H : ∂ a b x), B x H)
-  (C : Π (y : B b (right a b)), ∂ (coe (apd B p) (g a (left a b))) (g b (right a b)) y → U)
-  (f : Π (y : B b (right a b)) (H : ∂ (coe (apd B p) (g a (left a b))) (g b (right a b)) y), C y H) :
-  Path (Path (C (g b (right a b)) (right (coe (apd B p) (g a (left a b))) (g b (right a b))))
-             (coe (apd C (apd g p)) (f (coe (apd B p) (g a (left a b))) (left (coe (apd B p) (g a (left a b))) (g b (right a b)))))
-             (f (g b (right a b)) (right (coe (apd B p) (g a (left a b))) (g b (right a b)))))
+def apd-comp-is-correct (A : U) (a b : A) (p : Path A a b) (B : A → U) (g : Π (x : A), B x) (C : B b → U) (f : Π (y : B b), C y) :
+  Path (Path (C (g b)) (coe (apd C (apd g p)) (f (coe (apd B p) (g a)))) (f (g b))) 
        (apd-comp A a b p B g C f) (apd-comp′ A a b p B g C f) :=
 idp (apd-comp A a b p B g C f)
 
@@ -207,28 +162,22 @@ def subst-trans (A : U) (P : A → U) (a b c : A)
 idp (subst A P a c (p ⬝ q) x)
 
 def ap-comp (A B C : U) (f : A → B) (g : B → C) (a b : A) (p : Path A a b) :
-  Path (Path C (g (f a)) (g (f b))) (ap B C g (f a) (f b) (ap A B f a b p))
-    (ap A C (λ (x : A), g (f x)) a b p) :=
+  Path (Path C (g (f a)) (g (f b)))
+       (ap B C g (f a) (f b) (ap A B f a b p))
+       (ap A C (λ (x : A), g (f x)) a b p) :=
 idp (ap A C (λ (x : A), g (f x)) a b p)
 
-def path-idfun (A : U) (a b : A) (p : Path A a b) :=
-J A (λ (a b : A) (p : Path A a b), Path A a b) a (idp a) b p
+def coe-apd-Π-rev′ (Δ : U) (α β : Δ) (p : Path Δ α β)
+  (A : Δ → U) (B : Π (x : Δ), A x → U)
+  (φ : Π (b : A β), B β b) : Π (a : A α), B α a :=
+coe (apd (λ (x : Δ), Π (b : A x), B x b) p⁻¹) φ
 
-def coe-apd-Π-rev′ (Δ : U) (α β : Δ) (A : Π (x : Δ), ∂ β α x → U)
-  (B : Π (x : Δ) (H : ∂ β α x), A x H → U) (p : Path Δ α β)
-  (φ : Π (b : A β (left β α)),  B β (left β α) b) :
-       Π (a : A α (right β α)), B α (right β α) a :=
-coe (apd (λ (x : Δ) (H : ∂ β α x), Π (a : A x H), B x H a) p⁻¹) φ
+def coe-apd-Π-rev (Δ : U) (α β : Δ) (p : Path Δ α β)
+  (A : Δ → U) (B : Π (x : Δ), A x → U)
+  (φ : Π (b : A β), B β b) : Π (a : A α), B α a :=
+coe-apd-Π Δ β α p⁻¹ A B φ
 
-def coe-apd-Π-rev (Δ : U) (α β : Δ) (A : Π (x : Δ), ∂ β α x → U)
-  (B : Π (x : Δ) (H : ∂ β α x), A x H → U) (p : Path Δ α β)
-  (φ : Π (b : A β (left β α)),  B β (left β α) b) :
-       Π (a : A α (right β α)), B α (right β α) a :=
-coe-apd-Π Δ β α A B p⁻¹ φ
-
-def coe-apd-Π-rev-is-correct (Δ : U) (α β : Δ) (A : Π (x : Δ), ∂ β α x → U)
-  (B : Π (x : Δ) (H : ∂ β α x), A x H → U) (p : Path Δ α β)
-  (φ : Π (b : A β (left β α)),  B β (left β α) b) :
-  Path (Π (a : A α (right β α)), B α (right β α) a)
-       (coe-apd-Π-rev Δ α β A B p φ) (coe-apd-Π-rev′ Δ α β A B p φ) :=
-idp (coe-apd-Π-rev Δ α β A B p φ)
+def coe-apd-Π-rev-is-correct (Δ : U) (α β : Δ) (p : Path Δ α β)
+  (A : Δ → U) (B : Π (x : Δ), A x → U) (φ : Π (b : A β), B β b) :
+  Path (Π (a : A α), B α a) (coe-apd-Π-rev Δ α β p A B φ) (coe-apd-Π-rev′ Δ α β p A B φ) :=
+idp (coe-apd-Π-rev Δ α β p A B φ)

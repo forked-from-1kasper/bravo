@@ -30,7 +30,6 @@
     | "glue"   -> EGlue
     | "_|_"    -> EBot
     | "⊥"      -> EBot
-    | "R-inj"  -> ERInj
     | x        -> decl x
 
   let rec getVar x =
@@ -47,13 +46,12 @@
 %token COMMA COLON IRREF EOF HOLE
 %token DEFEQ PROD ARROW FST SND LAM DEF
 %token MODULE WHERE IMPORT AXIOM
-%token SIGMA PI OPTION
+%token SIGMA SIGMK SIGPROD
+%token PI OPTION
 %token ID REFL IDJ
 %token PATH IDP REV TRANS
-%token BOUNDARY LEFT RIGHT SYMM COMP BLEFT BRIGHT BAPD
-%token MEET COE APD
-%token UAWEAK EQUIV MKEQV
-%token NIND ZIND S1IND S1INDS RIND RINDS BOTREC
+%token COE APD UAWEAK
+%token NIND ZIND S1IND RIND BOTREC
 
 %right ARROW PROD
 %left TRANS
@@ -98,26 +96,15 @@ exp5 :
   | REFL exp6 { ERefl $2 }
   | IDJ exp6 { EJ $2 }
   | PATH exp6 exp6 exp6 { EPath ($2, $3, $4) }
-  | BOUNDARY exp6 exp6 exp6 { EBoundary ($2, $3, $4) }
-  | LEFT exp6 exp6 { ELeft ($2, $3) }
-  | RIGHT exp6 exp6 { ERight ($2, $3) }
-  | SYMM exp6 { ESymm $2 }
-  | BLEFT exp6 exp6 { EBLeft ($2, $3) }
-  | BRIGHT exp6 exp6 { EBRight ($2, $3) }
-  | COMP exp6 exp6 { EComp ($2, $3) }
-  | MEET exp6 exp6 exp6 { EMeet ($2, $3, $4) }
-  | BAPD exp6 exp6 exp6 exp6 { EBApd ($2, $3, $4, $5) }
   | COE exp6 exp6 { ECoe ($2, $3) }
   | APD exp6 exp6 { EApd ($2, $3) }
+  | SIGMK exp6 exp6 exp6 { ESigMk ($2, $3, $4) }
+  | SIGPROD exp6 exp6 exp6 exp6 exp6 { ESigProd ($2, $3, $4, $5, $6) }
   | UAWEAK exp6 exp6 exp6 exp6 exp6 exp6 { EUAWeak ($2, $3, $4, $5, $6, $7) }
-  | MKEQV exp6 exp6 exp6 exp6 { EMkEquiv ($2, $3, $4, $5) }
-  | exp6 EQUIV exp6 { Equiv ($1, $3) }
   | NIND exp6 { ENInd $2 }
   | ZIND exp6 { EZInd $2 }
   | S1IND exp6 { ES1Ind $2 }
-  | S1INDS exp6 { ES1IndS $2 }
   | RIND exp6 { ERInd $2 }
-  | RINDS exp6 { ERIndS $2 }
   | BOTREC exp6 { EBotRec $2 }
   | exp6 { $1 }
 

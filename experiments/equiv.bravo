@@ -4,27 +4,35 @@ import experiments/path
 def ~ (A : U) (B : A → U) (f g : Π (x : A), B x) :=
 Π (x : A), Path (B x) (f x) (g x)
 
-def linv (A B : U) (f : A → B) :=
-Σ (g : B → A), Π (x : A), Path A (g (f x)) x
+def ret (A B : U) (f : A → B) (g : B → A) := Π (x : A), Path A (g (f x)) x
+def sec (A B : U) (f : A → B) (g : B → A) := Π (x : B), Path B (f (g x)) x
 
-def rinv (A B : U) (f : A → B) :=
-Σ (h : B → A), Π (x : B), Path B (f (h x)) x
+def linv (A B : U) (f : A → B) := Σ (g : B → A), ret A B f g
+def rinv (A B : U) (f : A → B) := Σ (h : B → A), sec A B f h
+
+def biinv (A B : U) (f : A → B) :=
+linv A B f × rinv A B f
 
 def qinv (A B : U) (f : A → B) :=
-Σ (g : B → A), (Π (x : A), Path A (g (f x)) x) × (Π (x : B), Path B (f (g x)) x)
+Σ (g : B → A), ret A B f g × sec A B f g
 
 def iso (A B : U) := Σ (f : A → B), qinv A B f
 
+def mkiso (A B : U) (f : A → B) (g : B → A)
+  (α : ret A B f g) (β : sec A B f g) : iso A B :=
+Σ-mk (qinv A B) f (Σ-mk (λ (g : B → A), ret A B f g × sec A B f g) g
+  (Σ-mk (λ (_ : ret A B f g), sec A B f g) α β))
+
 def iso-id (A : U) : iso A A :=
-(idfun A, idfun A, λ (x : A), idp x, λ (x : A), idp x)
+mkiso A A (idfun A) (idfun A) (λ (x : A), idp x) (λ (x : A), idp x)
 
 def iso-inv (A B : U) (e : iso A B) : iso B A :=
-(e.2.1, e.1, e.2.2.2, e.2.2.1)
+mkiso B A e.2.1 e.1 e.2.2.2 e.2.2.1
 
 def iso-trans (A B C : U) (e₁ : iso A B) (e₂ : iso B C) : iso A C :=
-(∘ A B C e₂.1 e₁.1, ∘ C B A e₁.2.1 e₂.2.1,
-  λ (a : A), ap B A e₁.2.1 (e₂.2.1 (e₂.1 (e₁.1 a))) (e₁.1 a) (e₂.2.2.1 (e₁.1 a)) ⬝ e₁.2.2.1 a,
-  λ (c : C), ap B C e₂.1 (e₁.1 (e₁.2.1 (e₂.2.1 c))) (e₂.2.1 c) (e₁.2.2.2 (e₂.2.1 c)) ⬝ e₂.2.2.2 c)
+mkiso A C (∘ A B C e₂.1 e₁.1) (∘ C B A e₁.2.1 e₂.2.1)
+  (λ (a : A), ap B A e₁.2.1 (e₂.2.1 (e₂.1 (e₁.1 a))) (e₁.1 a) (e₂.2.2.1 (e₁.1 a)) ⬝ e₁.2.2.1 a)
+  (λ (c : C), ap B C e₂.1 (e₁.1 (e₁.2.1 (e₂.2.1 c))) (e₂.2.1 c) (e₁.2.2.2 (e₂.2.1 c)) ⬝ e₂.2.2.2 c)
 
 def linv-inv (A B : U) (f : A → B) (g h : B → A)
   (G : Π (x : A), Path A (g (f x)) x) (H : Π (x : B), Path B (f (h x)) x) :
@@ -36,17 +44,24 @@ def rinv-inv (A B : U) (f : A → B) (g h : B → A)
   Π (x : B), Path B (f (g x)) x :=
 λ (x : B), (ap B B (∘ B A B f g) (f (h x)) x (H x))⁻¹ ⬝ (ap A B f (g (f (h x))) (h x) (G (h x))) ⬝ (H x)
 
-def equiv-id (A : U) : A ≃ A :=
-mkeqv A A (idfun A) ((idfun A, λ (x : A), idp x), (idfun A, λ (x : A), idp x))
+def equiv (A B : U) := Σ (f : A → B), biinv A B f
 
-def equiv-symm (A B : U) (e : A ≃ B) : B ≃ A :=
-mkeqv B A e.2.2.1 ((e.1, e.2.2.2), (e.1, linv-inv A B e.1 e.2.1.1 e.2.2.1 e.2.1.2 e.2.2.2))
+def mkeqv (A B : U) (f : A → B) (g : B → A) (α : ret A B f g)
+  (h : B → A) (β : sec A B f h) : equiv A B :=
+Σ-mk (biinv A B) f (Σ-mk (λ (_ : linv A B f), rinv A B f)
+  (Σ-mk (ret A B f) g α) (Σ-mk (sec A B f) h β))
 
-def equiv-trans (A B C : U) (e₁ : A ≃ B) (e₂ : B ≃ C) : A ≃ C :=
+def equiv-id (A : U) : equiv A A :=
+mkeqv A A (idfun A) (idfun A) (λ (x : A), idp x) (idfun A) (λ (x : A), idp x)
+
+def equiv-symm (A B : U) (e : equiv A B) : equiv B A :=
+mkeqv B A e.2.2.1 e.1 e.2.2.2 e.1 (linv-inv A B e.1 e.2.1.1 e.2.2.1 e.2.1.2 e.2.2.2)
+
+def equiv-trans (A B C : U) (e₁ : equiv A B) (e₂ : equiv B C) : equiv A C :=
 mkeqv A C (∘ A B C e₂.1 e₁.1)
-  ((∘ C B A e₁.2.1.1 e₂.2.1.1, λ (x : A),
-    (ap B A e₁.2.1.1 (e₂.2.1.1 (e₂.1 (e₁.1 x))) (e₁.1 x)
-      (e₂.2.1.2 (e₁.1 x))) ⬝ (e₁.2.1.2 x)),
-   (∘ C B A e₁.2.2.1 e₂.2.2.1, λ (x : C),
-    (ap B C e₂.1 (e₁.1 (e₁.2.2.1 (e₂.2.2.1 x))) (e₂.2.2.1 x)
-      (e₁.2.2.2 (e₂.2.2.1 x))) ⬝ (e₂.2.2.2 x)))
+  (∘ C B A e₁.2.1.1 e₂.2.1.1)
+  (λ (x : A), (ap B A e₁.2.1.1 (e₂.2.1.1 (e₂.1 (e₁.1 x)))
+    (e₁.1 x) (e₂.2.1.2 (e₁.1 x))) ⬝ (e₁.2.1.2 x))
+  (∘ C B A e₁.2.2.1 e₂.2.2.1)
+  (λ (x : C), (ap B C e₂.1 (e₁.1 (e₁.2.2.1 (e₂.2.2.1 x)))
+    (e₂.2.2.1 x) (e₁.2.2.2 (e₂.2.2.1 x))) ⬝ (e₂.2.2.2 x))

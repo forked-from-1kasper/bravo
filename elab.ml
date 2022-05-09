@@ -2,10 +2,6 @@ open Ident
 open Error
 open Expr
 
-let extPair : value -> value * value = function
-  | VPair (u, v) -> (u, v)
-  | v            -> raise (ExpectedPair v)
-
 let extPi : value -> value * clos = function
   | VPi (t, g) -> (t, g)
   | u -> raise (ExpectedPi u)
@@ -13,10 +9,6 @@ let extPi : value -> value * clos = function
 let extSig : value -> value * clos = function
   | VSig (t, g) -> (t, g)
   | u -> raise (ExpectedSig u)
-
-let extEquiv : value -> value * value = function
-  | VEquiv (a, b) -> (a, b)
-  | u -> raise (ExpectedEquiv u)
 
 let extSet : value -> Z.t = function
   | VPre n | VKan n -> n
@@ -29,10 +21,6 @@ let extKan : value -> Z.t = function
 let extPath = function
   | VPath (v, a, b) -> (v, a, b)
   | v -> raise (ExpectedPath v)
-
-let extBoundary = function
-  | VBoundary (a, b, x) -> (a, b, x)
-  | v -> raise (ExpectedBoundary v)
 
 let extVar ctx x = match Env.find_opt x ctx with
   | Some (_, _, Value (Var (y, _))) -> y
@@ -66,6 +54,7 @@ let rec salt (ns : name Env.t) : exp -> exp = function
   | EPi (a, (p, b))              -> saltTele ePi ns p a b
   | ESig (a, (p, b))             -> saltTele eSig ns p a b
   | EPair (a, b)                 -> EPair (salt ns a, salt ns b)
+  | ESigMk (g, a, b)             -> ESigMk (salt ns g, salt ns a, salt ns b)
   | EFst e                       -> EFst (salt ns e)
   | ESnd e                       -> ESnd (salt ns e)
   | EApp (f, x)                  -> EApp (salt ns f, salt ns x)
@@ -79,20 +68,10 @@ let rec salt (ns : name Env.t) : exp -> exp = function
   | EIdp e                       -> EIdp (salt ns e)
   | ERev p                       -> ERev (salt ns p)
   | ETrans (p, q)                -> ETrans (salt ns p, salt ns q)
-  | EBoundary (a, b, x)          -> EBoundary (salt ns a, salt ns b, salt ns x)
-  | ELeft (a, b)                 -> ELeft (salt ns a, salt ns b)
-  | ERight (a, b)                -> ERight (salt ns a, salt ns b)
-  | ESymm e                      -> ESymm (salt ns e)
-  | EBLeft (e, p)                -> EBLeft (salt ns e, salt ns p)
-  | EBRight (e, p)               -> EBRight (salt ns e, salt ns p)
-  | EBApd (f, p, x, e)           -> EBApd (salt ns f, salt ns p, salt ns x, salt ns e)
-  | EComp (a, b)                 -> EComp (salt ns a, salt ns b)
-  | EMeet (p, x, e)              -> EMeet (salt ns p, salt ns x, salt ns e)
   | ECoe (p, x)                  -> ECoe (salt ns p, salt ns x)
   | EApd (a, b)                  -> EApd (salt ns a, salt ns b)
+  | ESigProd (p, b, u, v, q)     -> ESigProd (salt ns p, salt ns b, salt ns u, salt ns v, salt ns q)
   | EUAWeak (a, b, f, g, mu, nu) -> EUAWeak (salt ns a, salt ns b, salt ns f, salt ns g, salt ns mu, salt ns nu)
-  | Equiv (a, b)                 -> Equiv (salt ns a, salt ns b)
-  | EMkEquiv (a, b, f, e)        -> EMkEquiv (salt ns a, salt ns b, salt ns f, salt ns e)
   | EN                           -> EN
   | EZero                        -> EZero
   | ESucc                        -> ESucc
@@ -107,13 +86,10 @@ let rec salt (ns : name Env.t) : exp -> exp = function
   | EBase                        -> EBase
   | ELoop                        -> ELoop
   | ES1Ind e                     -> ES1Ind (salt ns e)
-  | ES1IndS e                    -> ES1IndS (salt ns e)
   | ER                           -> ER
   | Elem                         -> Elem
   | EGlue                        -> EGlue
   | ERInd e                      -> ERInd (salt ns e)
-  | ERIndS e                     -> ERIndS (salt ns e)
-  | ERInj                        -> ERInj
   | EBot                         -> EBot
   | EBotRec e                    -> EBotRec (salt ns e)
 

@@ -7,8 +7,8 @@ def Z-rec (A : U) := Z-ind (λ (x : Z), A)
 def Z-zero := pos zero
 def Z-one  := pos (succ zero)
 
-def Z-succ-equiv : Z ≃ Z :=
-mkeqv Z Z Z-succ ((Z-pred, λ (x : Z), idp x), (Z-pred, λ (x : Z), idp x))
+def Z-succ-equiv : equiv Z Z :=
+mkeqv Z Z Z-succ Z-pred (λ (x : Z), idp x) Z-pred (λ (x : Z), idp x)
 
 def Z-succ-path : Path U Z Z := ua Z Z Z-succ-equiv
 
@@ -18,15 +18,15 @@ def Z-minus-three := coe (Z-succ-path ⬝ Z-succ-path ⬝ Z-succ-path)⁻¹ Z-ze
 def Z-neg′ : Z → Z := Z-rec Z (N-rec Z Z-zero (λ (n : N) (_ : Z), neg n)) (λ (n : N), pos (succ n))
 
 def is-succ-pred-alg (A : U) :=
-Σ (f g : A → A), Π (x : A), Path A (f (g x)) x
+Σ (f : A → A), rinv A A f
 
 def succ-pred-alg := Σ (A : U), is-succ-pred-alg A
 
 def Z-succ-pred : succ-pred-alg :=
-(Z, Z-succ, Z-pred, λ (x : Z), idp x)
+Σ-mk is-succ-pred-alg Z (Σ-mk (rinv Z Z) Z-succ (Σ-mk (sec Z Z Z-succ) Z-pred (λ (x : Z), idp x)))
 
 def Z-succ-pred′ : succ-pred-alg :=
-(Z, coe (apd (λ (X : U) (H : ∂ Z Z X), is-succ-pred-alg X) Z-succ-path) Z-succ-pred.2)
+Σ-mk is-succ-pred-alg Z (coe (apd is-succ-pred-alg Z-succ-path) Z-succ-pred.2)
 
 def bad-refl : Path Z (pos zero) (pos zero) :=
 Z-succ-pred′.2.2.2 (pos zero)
