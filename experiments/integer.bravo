@@ -30,3 +30,15 @@ def Z-succ-pred′ : succ-pred-alg :=
 
 def bad-refl : Path Z (pos zero) (pos zero) :=
 Z-succ-pred′.2.2.2 (pos zero)
+
+def loops (A : U) := Σ (a : A), Path A a a
+def loop-struct := Σ (A : U), loops A
+
+def Z-loop-struct : loop-struct :=
+Σ-mk loops Z (Σ-mk (λ (z : Z), Path Z z z) (pos zero) (idp (pos zero)))
+
+def Z-loop-struct′ : loop-struct :=
+Σ-mk loops Z (coe (apd loops Z-succ-path) Z-loop-struct.2)
+
+def good-refl : Path Z (pos (succ zero)) (pos (succ zero)) :=
+Z-loop-struct′.2.2
