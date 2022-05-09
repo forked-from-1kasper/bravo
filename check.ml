@@ -205,7 +205,6 @@ and congr t a b x g p =
 
     trans (p2, p3)
 
-
   (* apd f (apd g p) ~> apd (f ∘ g) p *)
   | _, VApd (h, p) ->
     let g' x' = subst (Env.add x x' Env.empty) g in
@@ -230,6 +229,7 @@ and congr t a b x g p =
 
   | _, VSigProd (r, _, _, _, _) when checkDecom x g ->
     let (t, a, b) = extPath (inferV r) in congr t a b x (decom x g) r
+
   | _, _ -> VApd (VLam (t, (x, fun x' -> subst (Env.add x x' Env.empty) g)), p)
 
 and ap t f a b p = let x = freshName "x" in

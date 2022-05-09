@@ -2,8 +2,7 @@
 (ocamllex lexer)
 (menhir (modules parser))
 (executable (name bravo) (libraries zarith) (package bravo) (public_name bravo))
-(install (files experiments/N3000.bravo    experiments/cat.bravo
+(install (files experiments/N3000.bravo    experiments/path.bravo
                 experiments/circle.bravo   experiments/equiv.bravo
-                experiments/fiber.bravo    experiments/path.bravo
                 experiments/test.bravo     experiments/univalence.bravo
                 experiments/inf-group.bravo) (section share) (package bravo))

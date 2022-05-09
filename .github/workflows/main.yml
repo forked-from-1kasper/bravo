@@ -32,10 +32,8 @@ jobs:
       - run: opam install .
 
       - run: opam exec -- dune exec bravo silent check experiments/N3000.bravo
-      - run: opam exec -- dune exec bravo silent check experiments/cat.bravo
       - run: opam exec -- dune exec bravo silent check experiments/circle.bravo
       - run: opam exec -- dune exec bravo silent check experiments/equiv.bravo
-      - run: opam exec -- dune exec bravo silent check experiments/fiber.bravo
       - run: opam exec -- dune exec bravo silent check experiments/inf-group.bravo
       - run: opam exec -- dune exec bravo silent check experiments/path.bravo
       - run: opam exec -- dune exec bravo silent check experiments/test.bravo
