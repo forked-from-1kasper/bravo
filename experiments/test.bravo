@@ -181,3 +181,29 @@ def coe-apd-Π-rev-is-correct (Δ : U) (α β : Δ) (p : Path Δ α β)
   (A : Δ → U) (B : Π (x : Δ), A x → U) (φ : Π (b : A β), B β b) :
   Path (Π (a : A α), B α a) (coe-apd-Π-rev Δ α β p A B φ) (coe-apd-Π-rev′ Δ α β p A B φ) :=
 idp (coe-apd-Π-rev Δ α β p A B φ)
+
+def Σ-mk-rev (A : U) (B : A → U) (a b : A) (u : B a) (v : B b)
+  (p : Path A a b) (q : Path (B b) (coe (apd B p) u) v) :
+  Path (Σ (x : A), B x) (Σ-mk B b v) (Σ-mk B a u) :=
+Σ-prod p⁻¹ B v u
+  ((apd (λ (w : B b), coe (apd B p⁻¹) w) q)⁻¹ ⬝
+    apd (λ (w : Σ (x : A), Path A a x),
+     coe (apd B w.2⁻¹) (coe (apd B w.2) u))
+       (meet A a b p)⁻¹)
+
+def Σ-mk-rev′ (A : U) (B : A → U) (a b : A) (u : B a) (v : B b)
+  (p : Path A a b) (q : Path (B b) (coe (apd B p) u) v) :
+  Path (Σ (x : A), B x) (Σ-mk B b v) (Σ-mk B a u) :=
+(Σ-prod p B u v q)⁻¹
+
+def Σ-mk-trans (A : U) (B : A → U) (a b c : A) (u : B a) (v : B b) (w : B c)
+  (p₁ : Path A a b) (q₁ : Path (B b) (coe (apd B p₁) u) v)
+  (p₂ : Path A b c) (q₂ : Path (B c) (coe (apd B p₂) v) w) :
+  Path (Σ (x : A), B x) (Σ-mk B a u) (Σ-mk B c w) :=
+Σ-prod (p₁ ⬝ p₂) B u w (apd (λ (x : B b), coe (apd B p₂) x) q₁ ⬝ q₂)
+
+def Σ-mk-trans′ (A : U) (B : A → U) (a b c : A) (u : B a) (v : B b) (w : B c)
+  (p₁ : Path A a b) (q₁ : Path (B b) (coe (apd B p₁) u) v)
+  (p₂ : Path A b c) (q₂ : Path (B c) (coe (apd B p₂) v) w) :
+  Path (Σ (x : A), B x) (Σ-mk B a u) (Σ-mk B c w) :=
+Σ-prod p₁ B u v q₁ ⬝ Σ-prod p₂ B v w q₂
