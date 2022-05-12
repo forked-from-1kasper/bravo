@@ -89,10 +89,29 @@ and trans = function
           (app (nu1, app (g2, x))), app (nu2, x)))) in
 
     VUAWeak (a, c, f, g, mu, nu)
+  | VSigProd (p1, g, u, _, q1), VSigProd (p2, _, _, w, q2) ->
+    let (t, x, y) = extPath (inferV q1) in let i = freshName "x" in
+    let q = trans (congr t x y i (coe (apd g p2) (Var (i, t))) q1, q2) in
+
+    VSigProd (trans (p1, p2), g, u, w, q)
   | p, q -> VTrans (p, q)
 
 and rev : value -> value = function
   | VUAWeak (a, b, f, g, mu, nu) -> VUAWeak (b, a, g, f, nu, mu)
+(*  | VSigProd (p, g, u, v, q) ->
+    let (t1, a, b) = extPath (inferV p) in
+    let (t2, x, y) = extPath (inferV q) in
+
+    let w1 = freshName "ω" in let w2 = freshName "ω" in let ts' = singl t1 a in
+    let ts = VLam (t1, (freshName "x", fun x -> VPath (t1, a, x))) in
+    let w2' = Var (w2, ts') in let p' = rev p in
+
+    let q1 = congr t2 x y w1 (coe (rev (apd g p)) (Var (w1, t2))) q in
+    let q2 = congr ts' (VSigMk (ts, a, VIdp a)) (VSigMk (ts, b, p)) w2
+      (coe (apd g (VRev (VSnd w2'))) (coe (apd g (VSnd w2')) u)) (meet t1 a p) in
+
+    VSigProd (p', g, v, u, trans (rev q1, rev q2))*)
+
   | VRev p        -> p
   | VIdp v        -> VIdp v
   | VTrans (p, q) -> trans (rev q, rev p)

@@ -186,15 +186,22 @@ def Σ-mk-rev (A : U) (B : A → U) (a b : A) (u : B a) (v : B b)
   (p : Path A a b) (q : Path (B b) (coe (apd B p) u) v) :
   Path (Σ (x : A), B x) (Σ-mk B b v) (Σ-mk B a u) :=
 Σ-prod p⁻¹ B v u
-  ((apd (λ (w : B b), coe (apd B p⁻¹) w) q)⁻¹ ⬝
-    apd (λ (w : Σ (x : A), Path A a x),
-     coe (apd B w.2⁻¹) (coe (apd B w.2) u))
-       (meet A a b p)⁻¹)
+  ((apd (λ (w : B b), coe (apd B p)⁻¹ w) q)⁻¹ ⬝
+   (apd (λ (w : Σ (x : A), Path A a x), coe (apd B w.2⁻¹) (coe (apd B w.2) u))
+        (meet A a b p))⁻¹)
 
 def Σ-mk-rev′ (A : U) (B : A → U) (a b : A) (u : B a) (v : B b)
   (p : Path A a b) (q : Path (B b) (coe (apd B p) u) v) :
   Path (Σ (x : A), B x) (Σ-mk B b v) (Σ-mk B a u) :=
 (Σ-prod p B u v q)⁻¹
+
+{-
+def Σ-mk-rev-is-correct (A : U) (B : A → U) (a b : A) (u : B a) (v : B b)
+  (p : Path A a b) (q : Path (B b) (coe (apd B p) u) v) :
+  Path (Path (Σ (x : A), B x) (Σ-mk B b v) (Σ-mk B a u))
+       (Σ-mk-rev A B a b u v p q) (Σ-mk-rev′ A B a b u v p q) :=
+idp (Σ-mk-rev A B a b u v p q)
+-}
 
 def Σ-mk-trans (A : U) (B : A → U) (a b c : A) (u : B a) (v : B b) (w : B c)
   (p₁ : Path A a b) (q₁ : Path (B b) (coe (apd B p₁) u) v)
@@ -207,3 +214,11 @@ def Σ-mk-trans′ (A : U) (B : A → U) (a b c : A) (u : B a) (v : B b) (w : B 
   (p₂ : Path A b c) (q₂ : Path (B c) (coe (apd B p₂) v) w) :
   Path (Σ (x : A), B x) (Σ-mk B a u) (Σ-mk B c w) :=
 Σ-prod p₁ B u v q₁ ⬝ Σ-prod p₂ B v w q₂
+
+def Σ-mk-trans-is-correct (A : U) (B : A → U) (a b c : A) (u : B a) (v : B b) (w : B c)
+  (p₁ : Path A a b) (q₁ : Path (B b) (coe (apd B p₁) u) v)
+  (p₂ : Path A b c) (q₂ : Path (B c) (coe (apd B p₂) v) w) :
+  Path (Path (Σ (x : A), B x) (Σ-mk B a u) (Σ-mk B c w))
+       (Σ-mk-trans A B a b c u v w p₁ q₁ p₂ q₂)
+       (Σ-mk-trans′ A B a b c u v w p₁ q₁ p₂ q₂) :=
+idp (Σ-mk-trans A B a b c u v w p₁ q₁ p₂ q₂)
