@@ -7,6 +7,9 @@ ua-weak A B e.1 e.2.2.1 (linv-inv A B e.1 e.2.1.1 e.2.2.1 e.2.1.2 e.2.2.2) e.2.2
 def ideqv (A B : U) (p : Path U A B) : equiv A B :=
 coe (apd (equiv A) p) (equiv-id A)
 
+def idiso (A B : U) (p : Path U A B) : iso A B :=
+coe (apd (iso A) p) (iso-id A)
+
 def uaβ (A B : U) (e : equiv A B) (x : A) : Path B (coe (ua A B e) x) (e.1 x) :=
 idp (e.1 x)
 
@@ -22,9 +25,6 @@ coe (apd (λ (w : Σ (X : U), Path U A X), Path (Path U A w.1) (ua A w.1 (ideqv 
 
 def ideqv-ua₁ (A B : U) (e : equiv A B) : Path (A → B) (ideqv A B (ua A B e)).1 e.1 := idp e.1
 def ideqv-ua₂ (A B : U) (e : equiv A B) : Path (B → A) (ideqv A B (ua A B e)).2.2.1 e.2.2.1 := idp e.2.2.1
-
-def idiso (A B : U) (p : Path U A B) : iso A B :=
-coe (apd (iso A) p) (iso-id A)
 
 def ua-weak-symm (A B : U) (e : iso A B) : iso B A :=
 idiso B A (ua-weak A B e.1 e.2.1 e.2.2.1 e.2.2.2)⁻¹

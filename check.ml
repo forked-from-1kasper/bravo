@@ -138,6 +138,7 @@ and coe p x = match p, x with
   | _, _ -> VCoe (p, x)
 
 and meet t a p = sigProd p (VLam (t, (freshName "x", fun x -> VPath (t, a, x)))) (VIdp a) p (VIdp p)
+and revmeet t a p = sigProd (rev p) (VLam (t, (freshName "x", fun x -> VPath (t, a, x)))) p (VIdp a) (VIdp (VIdp a))
 
 and transport p t a b x g v = match p, g with
   | VIdp _, _ -> v
@@ -159,7 +160,7 @@ and transport p t a b x g v = match p, g with
     let y1' = Var (y1, ts') in let y2' = Var (y2, t) in let y3' = Var (y3, t) in
 
     VLam (k' b, (freshName "x", fun x ->
-      transport (rev (meet t b (rev p))) ts'
+      transport (revmeet t b (rev p)) ts'
         (VSigMk (ts, a, rev p)) (VSigMk (ts, b, VIdp b)) y1
         (f' (vfst y1') (transport (vsnd y1') t b y1' y2 (k' y2') x))
         (app (v, transport (rev p) t b a y3 (k' y3') x))))

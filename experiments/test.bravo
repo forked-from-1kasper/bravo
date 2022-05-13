@@ -29,6 +29,10 @@ def meet (A : U) (a b : A) (p : Path A a b) :
   Path (Σ (x : A), Path A a x) (Σ-mk (Path′ A a) a (idp a)) (Σ-mk (Path′ A a) b p) :=
 Σ-prod p (λ (x : A), Path A a x) (idp a) p (idp p)
 
+def rev-meet (A : U) (a b : A) (p : Path A a b) :
+  Path (Σ (x : A), Path A a x) (Σ-mk (Path′ A a) b p) (Σ-mk (Path′ A a) a (idp a)) :=
+Σ-prod p⁻¹ (λ (x : A), Path A a x) p (idp a) (idp (idp a))
+
 def J (A : U) (P : Π (a b : A), Path A a b → U)
   (a : A) (d : P a a (idp a)) (b : A) (p : Path A a b) : P a b p :=
 coe (apd (λ (w : Σ (x : A), Path A a x), P a w.1 w.2) (meet A a b p)) d
@@ -64,7 +68,7 @@ def coe-apd-Π (Δ : U) (α β : Δ) (p : Path Δ α β)
   (A : Δ → U) (B : Π (x : Δ), A x → U)
   (φ : Π (a : A α), B α a) : Π (b : A β), B β b :=
 λ (x : A β), coe (apd (λ (w : Σ (x : Δ), Path Δ β x), B w.1 (coe (apd A w.2) x))
-                      (meet Δ β α p⁻¹)⁻¹) (φ (coe (apd A p⁻¹) x))
+                      (rev-meet Δ β α p⁻¹)) (φ (coe (apd A p⁻¹) x))
 
 def coe-apd-Π-is-correct (Δ : U) (α β : Δ) (p : Path Δ α β)
   (A : Δ → U) (B : Π (x : Δ), A x → U) (φ : Π (a : A α), B α a) :
