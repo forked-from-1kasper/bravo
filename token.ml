@@ -21,5 +21,6 @@ let tokenToString : token -> string = function
   | IMPORT     -> "IMPORT"      | UAWEAK     -> "UAWEAK"
   | NIND       -> "NIND"        | ZIND       -> "ZIND"
   | S1IND      -> "S1IND"       | RIND       -> "RIND"
-  | BOTREC     -> "BOTREC"      | ID         -> "ID"
+  | INDEMPTY   -> "INDEMPTY"    | INDUNIT    -> "INDUNIT"
+  | INDBOOL    -> "INDBOOL"     | ID         -> "ID"
   | SIGMK      -> "SIGMK"       | SIGPROD    -> "SIGPROD"

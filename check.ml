@@ -63,8 +63,15 @@ let rec eval (e0 : exp) (ctx : ctx) = traceEval e0; match e0 with
   | Elem                         -> VElem
   | EGlue                        -> VGlue
   | ERInd e                      -> VRInd (eval e ctx)
-  | EBot                         -> VBot
-  | EBotRec e                    -> VBotRec (eval e ctx)
+  | EEmpty                       -> VEmpty
+  | EIndEmpty e                  -> VIndEmpty (eval e ctx)
+  | EUnit                        -> VUnit
+  | EStar                        -> VStar
+  | EIndUnit e                   -> VIndUnit (eval e ctx)
+  | EBool                        -> VBool
+  | EFalse                       -> VFalse
+  | ETrue                        -> VTrue
+  | EIndBool e                   -> VIndBool (eval e ctx)
 
 and trans = function
   | VTrans (p, q), r       -> trans (p, trans (q, r))
@@ -276,11 +283,12 @@ and uaweak a b f g mu nu =
 and app (f, x) = match f, x with
   (* (λ (x : t), f) v ~> f[x/v] *)
   | VLam (_, (_, f)), v -> f v
+
   (* N-ind A z s zero ~> z *)
   | VApp (VApp (VNInd _, z), _), VZero -> z
-
   (* N-ind A z s (succ n) ~> s (N-ind A z s n) *)
   | VApp (VApp (VNInd _, _), s), VApp (VSucc, n) -> app (app (s, n), app (f, n))
+
   (* Z-ind A p n (pos x) ~> p x *)
   | VApp (VApp (VZInd _, p), _), VApp (VPos, x) -> app (p, x)
   (* Z-ind A p n (neg x) ~> n x *)
@@ -302,6 +310,13 @@ and app (f, x) = match f, x with
   | VZSucc, VApp (VZPred, z) -> z
   (* Z-pred (Z-succ z) ~> z *)
   | VZPred, VApp (VZSucc, z) -> z
+
+  (* ind₁ C x ★ ~> x *)
+  | VApp (VIndUnit _, x), VStar -> x
+  (* ind₂ C a b 0₂ ~> a *)
+  | VApp (VApp (VIndBool _, a), _), VFalse -> a
+  (* ind₂ C a b 1₂ ~> b *)
+  | VApp (VApp (VIndBool _, _), b), VTrue -> b
 
   (* S¹-ind β b ℓ base ~> b *)
   | VApp (VApp (VS1Ind _, b), _), VBase -> b
@@ -346,8 +361,19 @@ and inferV v = traceInferV v; match v with
   | VZSucc -> implv VZ VZ | VZPred -> implv VZ VZ | VZInd v -> inferZInd v
   | VS1 -> VKan Z.zero | VBase -> VS1 | VLoop -> VPath (VS1, VBase, VBase) | VS1Ind v -> inferS1Ind v
   | VR -> VKan Z.zero | VElem -> implv VZ VR | VGlue -> inferGlue () | VRInd v -> inferRInd v
-  | VBot -> VKan Z.zero | VBotRec v -> implv VBot v
+  | VEmpty | VUnit | VBool -> VKan Z.zero
+  | VStar -> VUnit | VFalse | VTrue -> VBool
+  | VIndEmpty t -> implv VEmpty t
+  | VIndUnit t -> recUnit t
+  | VIndBool t -> recBool t
   | VHole -> raise (InferVError v)
+
+and recUnit t = let x = freshName "x" in
+  implv (app (t, VStar)) (VPi (VUnit, (x, fun x -> app (t, x))))
+
+and recBool t = let x = freshName "x" in
+  implv (app (t, VFalse)) (implv (app (t, VTrue))
+    (VPi (VBool, (x, fun x -> app (t, x)))))
 
 and inferSigProd t g a b u v = let x = freshName "x" in
   VPath (VSig (t, (x, fun x -> app (g, x))), VSigMk (g, a, u), VSigMk (g, b, v))
@@ -456,8 +482,15 @@ and conv v1 v2 : bool = traceConv v1 v2;
     | VElem, VElem -> true
     | VGlue, VGlue -> true
     | VRInd u, VRInd v -> conv u v
-    | VBot, VBot -> true
-    | VBotRec u, VBotRec v -> conv u v
+    | VEmpty, VEmpty -> true
+    | VIndEmpty u, VIndEmpty v -> conv u v
+    | VUnit, VUnit -> true
+    | VStar, VStar -> true
+    | VIndUnit u, VIndUnit v -> conv u v
+    | VBool, VBool -> true
+    | VFalse, VFalse -> true
+    | VTrue, VTrue -> true
+    | VIndBool u, VIndBool v -> conv u v
     | _, _ -> false
   end || convProofIrrel v1 v2
 
@@ -548,7 +581,11 @@ and infer ctx e : value = traceInfer e; try match e with
   | ES1Ind e -> inferInd true ctx VS1 e inferS1Ind
   | ER -> VKan Z.zero | Elem -> implv VZ VR | EGlue -> inferGlue ()
   | ERInd e -> inferInd true ctx VR e inferRInd
-  | EBot -> VKan Z.zero | EBotRec e -> ignore (extSet (infer ctx e)); implv VBot (eval e ctx)
+  | EEmpty | EUnit | EBool -> VKan Z.zero
+  | EStar -> VUnit | EFalse | ETrue -> VBool
+  | EIndEmpty e -> ignore (extSet (infer ctx e)); implv VEmpty (eval e ctx)
+  | EIndUnit e -> inferInd false ctx VUnit e recUnit
+  | EIndBool e -> inferInd false ctx VBool e recBool
   | EHole -> raise (InferError e)
   with ex -> Printf.printf "When trying to infer type of\n  %s\n" (showExp e); raise ex
 
@@ -592,16 +629,19 @@ and mem x = function
   | Var (y, _) -> x = y
   | VSig (t, (p, f)) | VPi (t, (p, f)) | VLam (t, (p, f)) ->
     mem x t || mem x (f (Var (p, t)))
-  | VBot   | VKan _ | VPre _
+  | VEmpty | VKan _ | VPre _
   | VS1    | VBase  | VLoop
   | VR     | VElem  | VGlue
   | VN     | VZero  | VSucc
   | VZ     | VPos   | VNeg
-  | VZSucc | VZPred | VHole -> false
+  | VZSucc | VZPred | VHole
+  | VUnit  | VBool  | VStar
+  | VTrue  | VFalse -> false
 
-  | VFst e    | VSnd e    | VId e   | VRefl e
-  | VJ e      | VIdp e    | VRev e  | VNInd e
-  | VZInd e   | VS1Ind e  | VRInd e | VBotRec e -> mem x e
+  | VFst a     | VSnd a    | VId a   | VRefl a
+  | VJ a       | VIdp a    | VRev a  | VNInd a
+  | VZInd a    | VS1Ind a  | VRInd a | VIndEmpty a
+  | VIndUnit a | VIndBool a -> mem x a
 
   | VApp (a, b) | VCoe (a, b) | VApd (a, b) | VTrans (a, b) -> mem x a || mem x b
 
@@ -651,8 +691,15 @@ and subst rho = function
   | VElem                        -> VElem
   | VGlue                        -> VGlue
   | VRInd v                      -> VRInd (subst rho v)
-  | VBot                         -> VBot
-  | VBotRec v                    -> VBotRec (subst rho v)
+  | VEmpty                       -> VEmpty
+  | VIndEmpty v                  -> VIndEmpty (subst rho v)
+  | VUnit                        -> VUnit
+  | VStar                        -> VStar
+  | VIndUnit v                   -> VIndUnit (subst rho v)
+  | VBool                        -> VBool
+  | VFalse                       -> VFalse
+  | VTrue                        -> VTrue
+  | VIndBool v                   -> VIndBool (subst rho v)
   | Var (x, t)                   -> begin match Env.find_opt x rho with
     | Some v -> v
     | None   -> Var (x, t)
@@ -694,6 +741,9 @@ and decom x = function
   | VZInd v                      -> VZInd (decom x v)
   | VS1Ind v                     -> VS1Ind (decom x v)
   | VRInd v                      -> VRInd (decom x v)
+  | VIndEmpty v                  -> VIndEmpty (decom x v)
+  | VIndUnit v                   -> VIndUnit (decom x v)
+  | VIndBool v                   -> VIndBool (decom x v)
   | v                            -> v
 
 and singl t x = let f = fun y -> VPath (t, x, y) in

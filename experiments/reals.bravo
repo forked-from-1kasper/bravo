@@ -24,13 +24,16 @@ Path (Path R R-zero (elem (Z-succ z)))
   (subst R (λ (y : R), Path R R-zero y) (elem z) (elem (Z-succ z)) (glue z) (center z))
   (center (Z-succ z))
 
-def R-contr : is-contr R :=
-(elem Z-zero, R-ind (λ (y : R), Path R R-zero y) center
+def R-zero-contr :=
+R-ind (λ (y : R), Path R R-zero y) center
   (Z-ind R-contr-glueᵀ
     (N-ind (λ (n : N), R-contr-glueᵀ (pos n)) (idp (glue Z-zero))
       (λ (n : N) (p : R-contr-glueᵀ (pos n)), idp (center-pos (succ (succ n)))))
     (N-ind (λ (n : N), R-contr-glueᵀ (neg n)) (idp (idp R-zero))
-      (λ (n : N) (p : R-contr-glueᵀ (neg n)), idp (center-neg n)))))
+      (λ (n : N) (p : R-contr-glueᵀ (neg n)), idp (center-neg n))))
+
+def R-contr : is-contr R :=
+Σ-mk (contr R) (elem Z-zero) R-zero-contr
 
 def dist : is-prop R := contr-impl-prop R R-contr
 
@@ -46,6 +49,7 @@ def R-succ := Z-lift Z-succ
 def R-neg  := Z-lift Z-neg′
 def R-add  := Z-lift² Z-add
 
+{-
 def reflect (A : U) (a b : A) : Id A a b → Path A a b :=
 idJ A (λ (a b : A) (_ : Id A a b), Path A a b) a (idp a) b
 
@@ -76,3 +80,4 @@ def cis-respects-unit : Id S¹ (cis R-zero) base := refl base
 
 --def cis-respects-inverse : Π (x : R), Id S¹ (cis (R-neg x)) (ι (cis x)) := ?
 --def cis-respects-add (x y : R) : Id S¹ (cis (R-add x y)) (μ (cis x) (cis y)) := ?
+-}

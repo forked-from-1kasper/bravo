@@ -13,7 +13,9 @@ type exp =
   | EZ | EPos | ENeg | EZInd of exp | EZSucc | EZPred                              (* Z *)
   | ES1 | EBase | ELoop | ES1Ind of exp                                           (* S¹ *)
   | ER | Elem | EGlue | ERInd of exp                                               (* R *)
-  | EBot | EBotRec of exp                                                          (* ⊥ *)
+  | EEmpty | EIndEmpty of exp                                                      (* 𝟎 *)
+  | EUnit | EStar | EIndUnit of exp                                                (* 𝟏 *)
+  | EBool | EFalse | ETrue | EIndBool of exp                                       (* 𝟐 *)
   | EId of exp | ERefl of exp | EJ of exp                            (* strict equality *)
 
 type tele = name * exp
@@ -34,7 +36,9 @@ type value =
   | VZ | VPos | VNeg | VZInd of value | VZSucc | VZPred
   | VS1 | VBase | VLoop | VS1Ind of value
   | VR | VElem | VGlue | VRInd of value
-  | VBot | VBotRec of value
+  | VEmpty | VIndEmpty of value
+  | VUnit | VStar | VIndUnit of value
+  | VBool | VFalse | VTrue | VIndBool of value
 
 and clos = name * (value -> value)
 
@@ -94,15 +98,21 @@ let rec ppExp paren e = let x = match e with
   | ES1Ind e -> Printf.sprintf "S¹-ind %s" (ppExp true e)
   | ER -> "R" | Elem -> "elem" | EGlue -> "glue"
   | ERInd e -> Printf.sprintf "R-ind %s" (ppExp true e)
-  | EBot -> "⊥" | EBotRec e -> Printf.sprintf "⊥-ind %s" (ppExp true e)
+  | EEmpty -> "𝟎" | EUnit -> "𝟏" | EBool -> "𝟐"
+  | EStar -> "★" | EFalse -> "0₂" | ETrue -> "1₂"
+  | EIndEmpty e -> Printf.sprintf "ind₀ %s" (ppExp true e)
+  | EIndUnit e  -> Printf.sprintf "ind₁ %s" (ppExp true e)
+  | EIndBool e  -> Printf.sprintf "ind₂ %s" (ppExp true e)
   in match e with
   | EKan _ | EPre _  | EVar _
   | EFst _ | ESnd _  | ERev _
-  | EHole  | EBot    | EN
-  | EZ     | EPos    | ENeg
   | ES1    | EBase   | ELoop
   | ER     | Elem    | EGlue
-  | EZero  | ESucc   | EPair _ -> x
+  | EZero  | ESucc   | EPair _
+  | EEmpty | EUnit   | EBool
+  | EStar  | EFalse  | ETrue
+  | EHole  | EN      | EZ
+  | EPos   | ENeg -> x
   | _ -> parens paren x
 
 and showExp e = ppExp false e
@@ -143,15 +153,21 @@ let rec ppValue paren v = let x = match v with
   | VS1Ind e -> Printf.sprintf "S¹-ind %s" (ppValue true e)
   | VR -> "R" | VElem -> "elem" | VGlue -> "glue"
   | VRInd e -> Printf.sprintf "R-ind %s" (ppValue true e)
-  | VBot -> "⊥" | VBotRec e -> Printf.sprintf "⊥-ind %s" (ppValue true e)
+  | VEmpty -> "𝟎" | VUnit -> "𝟏" | VBool -> "𝟐"
+  | VStar -> "★" | VFalse -> "0₂" | VTrue -> "1₂"
+  | VIndEmpty v -> Printf.sprintf "ind₀ %s" (ppValue true v)
+  | VIndUnit v  -> Printf.sprintf "ind₁ %s" (ppValue true v)
+  | VIndBool v  -> Printf.sprintf "ind₂ %s" (ppValue true v)
   in match v with
   | VKan _ | VPre _  | Var _
   | VFst _ | VSnd _  | VRev _
-  | VHole  | VBot    | VN
-  | VZ     | VPos    | VNeg
   | VS1    | VBase   | VLoop
   | VR     | VElem   | VGlue
-  | VZero  | VSucc -> x
+  | VZero  | VSucc
+  | VEmpty | VUnit   | VBool
+  | VStar  | VFalse  | VTrue
+  | VHole  | VN      | VZ
+  | VPos   | VNeg -> x
   | _ -> parens paren x
 
 and showValue v = ppValue false v

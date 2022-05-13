@@ -68,8 +68,9 @@ let strict = "^s" | "\xCB\xA2" (* ˢ *)
 let s1inds = s1ind strict
 let rinds  = rind strict
 
-let bot    = "_|_" | "\xE2\x8A\xA5" (* ⊥ *)
-let botrec = bot "-rec"
+let indempty = "ind-empty" | "ind\xE2\x82\x80" (* ind₀ *)
+let indunit  = "ind-unit"  | "ind\xE2\x82\x81" (* ind₁ *)
+let indbool  = "ind-bool"  | "ind\xE2\x82\x82" (* ind₂ *)
 
 rule main = parse
 | nl         { nextLine lexbuf; main lexbuf }
@@ -90,7 +91,8 @@ rule main = parse
 | rev        { REV }         | trans      { TRANS }
 | "idp"      { IDP }         | pre as s   { PRE (getLevel s) }
 | "coe"      { COE }         | "apd"      { APD }
-| "ua-weak"  { UAWEAK }      | botrec     { BOTREC }
+| "ua-weak"  { UAWEAK }      | indempty   { INDEMPTY }
+| indunit    { INDUNIT }     | indbool    { INDBOOL }
 | nind       { NIND }        | zind       { ZIND }
 | s1ind      { S1IND }       | rind       { RIND }
 | sigmk      { SIGMK }       | sigprod    { SIGPROD }

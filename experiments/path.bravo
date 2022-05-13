@@ -1,6 +1,6 @@
 module path where
 
-def ¬ (A : V) := A → ⊥
+def ¬ (A : V) := A → 𝟎
 
 def id (A : U) : U := A
 def idfun (A : U) (a : A) : A := a

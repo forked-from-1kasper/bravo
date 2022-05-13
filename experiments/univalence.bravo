@@ -32,3 +32,15 @@ idiso B A (ua-weak A B e.1 e.2.1 e.2.2.1 e.2.2.2)⁻¹
 def ua-weak-trans (A B C : U) (e₁ : iso A B) (e₂ : iso B C) : iso A C :=
 idiso A C (ua-weak A B e₁.1 e₁.2.1 e₁.2.2.1 e₁.2.2.2 ⬝
            ua-weak B C e₂.1 e₂.2.1 e₂.2.2.1 e₂.2.2.2)
+
+def negate : 𝟐 → 𝟐 :=
+ind₂ (λ (_ : 𝟐), 𝟐) 1₂ 0₂
+
+def negate-negate :=
+ind₂ (λ (x : 𝟐), Path 𝟐 (negate (negate x)) x) (idp 0₂) (idp 1₂)
+
+def bool-neg-path : Path U 𝟐 𝟐 :=
+ua-weak 𝟐 𝟐 negate negate negate-negate negate-negate
+
+def 0₂-eq-0₂-bad-way : Path 𝟐 0₂ 0₂ :=
+(ideqv 𝟐 𝟐 bool-neg-path).2.2.2 0₂

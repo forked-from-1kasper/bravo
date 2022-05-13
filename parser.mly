@@ -14,22 +14,26 @@
     end
 
   let global = function
-    | "N"      -> EN
-    | "zero"   -> EZero
-    | "succ"   -> ESucc
-    | "Z"      -> EZ
-    | "pos"    -> EPos
-    | "neg"    -> ENeg
-    | "Z-succ" -> EZSucc
-    | "Z-pred" -> EZPred
-    | "S¹"     -> ES1
-    | "loop"   -> ELoop
-    | "base"   -> EBase
-    | "R"      -> ER
-    | "elem"   -> Elem
-    | "glue"   -> EGlue
-    | "_|_"    -> EBot
-    | "⊥"      -> EBot
+    | "N"            -> EN
+    | "zero"         -> EZero
+    | "succ"         -> ESucc
+    | "Z"            -> EZ
+    | "pos"          -> EPos
+    | "neg"          -> ENeg
+    | "Z-succ"       -> EZSucc
+    | "Z-pred"       -> EZPred
+    | "S¹"           -> ES1
+    | "loop"         -> ELoop
+    | "base"         -> EBase
+    | "R"            -> ER
+    | "elem"         -> Elem
+    | "glue"         -> EGlue
+    | "𝟎"  | "empty" -> EEmpty
+    | "𝟏"  | "unit"  -> EUnit
+    | "𝟐"  | "bool"  -> EBool
+    | "★"  | "star"  -> EStar
+    | "0₂" | "false" -> EFalse
+    | "1₂" | "true"  -> ETrue
     | x        -> decl x
 
   let rec getVar x =
@@ -51,7 +55,8 @@
 %token ID REFL IDJ
 %token PATH IDP REV TRANS
 %token COE APD UAWEAK
-%token NIND ZIND S1IND RIND BOTREC
+%token NIND ZIND S1IND RIND
+%token INDEMPTY INDUNIT INDBOOL
 
 %right ARROW PROD
 %left TRANS
@@ -105,7 +110,9 @@ exp5 :
   | ZIND exp6 { EZInd $2 }
   | S1IND exp6 { ES1Ind $2 }
   | RIND exp6 { ERInd $2 }
-  | BOTREC exp6 { EBotRec $2 }
+  | INDEMPTY exp6 { EIndEmpty $2 }
+  | INDUNIT exp6 { EIndUnit $2 }
+  | INDBOOL exp6 { EIndBool $2 }
   | exp6 { $1 }
 
 exp6:

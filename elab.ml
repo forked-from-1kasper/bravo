@@ -90,8 +90,15 @@ let rec salt (ns : name Env.t) : exp -> exp = function
   | Elem                         -> Elem
   | EGlue                        -> EGlue
   | ERInd e                      -> ERInd (salt ns e)
-  | EBot                         -> EBot
-  | EBotRec e                    -> EBotRec (salt ns e)
+  | EEmpty                       -> EEmpty
+  | EIndEmpty e                  -> EIndEmpty (salt ns e)
+  | EUnit                        -> EUnit
+  | EStar                        -> EStar
+  | EIndUnit e                   -> EIndUnit (salt ns e)
+  | EBool                        -> EBool
+  | EFalse                       -> EFalse
+  | ETrue                        -> ETrue
+  | EIndBool e                   -> EIndBool (salt ns e)
 
 and saltTele ctor ns p a b =
   let x = fresh p in ctor x (salt ns a) (salt (Env.add p x ns) b)
