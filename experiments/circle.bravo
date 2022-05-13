@@ -48,13 +48,17 @@ def ι : S¹ → S¹ := S¹-rec S¹ base loop⁻¹
 def ι-test := ap S¹ S¹ ι base base (loop ⬝ loop ⬝ loop)
 
 def helix : S¹ → U :=
-S¹-ind (λ (x : S¹), U) Z Z-succ-path
+S¹-ind (λ (_ : S¹), U) Z Z-succ-path
+
+def Möbius : S¹ → U :=
+S¹-ind (λ (_ : S¹), U) 𝟐 bool-neg-path
 
 def encode (x : S¹) (p : Path S¹ base x) : helix x :=
 subst S¹ helix base x p Z-zero
 
 -- it computes!
 def winding := encode base
+def oddity (l : Ω¹S¹) := subst S¹ Möbius base base l 0₂
 
 def turn (l : Ω¹S¹) := l ⬝ loop
 def back-turn (l : Ω¹S¹) := l ⬝ loop⁻¹
