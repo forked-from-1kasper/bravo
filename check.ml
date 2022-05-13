@@ -102,11 +102,11 @@ and rev : value -> value = function
     let (t1, a, b) = extPath (inferV p) in
     let (t2, x, y) = extPath (inferV q) in
 
-    let w1 = freshName "ω" in let w2 = freshName "ω" in let ts' = singl t1 a in
-    let ts = VLam (t1, (freshName "x", fun x -> VPath (t1, a, x))) in
-    let w2' = Var (w2, ts') in let p' = rev p in
+    let w1 = freshName "ω" in let w2 = freshName "ω" in
+    let (ts, ts') = singl t1 a in let p' = rev p in
+    let w1' = Var (w1, t2) in let w2' = Var (w2, ts') in
 
-    let q1 = congr t2 x y w1 (coe (rev (apd g p)) (Var (w1, t2))) q in
+    let q1 = congr t2 x y w1 (coe (rev (apd g p)) w1') q in
     let q2 = congr ts' (VSigMk (ts, a, VIdp a)) (VSigMk (ts, b, p)) w2
       (coe (apd g (VRev (VSnd w2'))) (coe (apd g (VSnd w2')) u)) (meet t1 a p) in
 
@@ -155,28 +155,28 @@ and transport p t a b x g v = match p, g with
     let k' x' = subst (Env.add x x' Env.empty) k in
     let f' x' = subst (Env.add x x' Env.empty) << f in
 
-    let ts' = singl t b in let ts = VLam (t, (freshName "x", fun x -> VPath (t, b, x))) in
-    let y1 = freshName "y" in let y2 = freshName "y′" in let y3 = freshName "y″" in
-    let y1' = Var (y1, ts') in let y2' = Var (y2, t) in let y3' = Var (y3, t) in
+    let (ts, ts') = singl t b in
+    let w = freshName "ω" in let y1 = freshName "y" in let y2 = freshName "y′" in
+    let w' = Var (w, ts') in let y1' = Var (y1, t) in let y2' = Var (y2, t) in
 
     VLam (k' b, (freshName "x", fun x ->
       transport (revmeet t b (rev p)) ts'
-        (VSigMk (ts, a, rev p)) (VSigMk (ts, b, VIdp b)) y1
-        (f' (vfst y1') (transport (vsnd y1') t b y1' y2 (k' y2') x))
-        (app (v, transport (rev p) t b a y3 (k' y3') x))))
+        (VSigMk (ts, a, rev p)) (VSigMk (ts, b, VIdp b)) w
+        (f' (vfst w') (transport (vsnd w') t b w' y1 (k' y1') x))
+        (app (v, transport (rev p) t b a y2 (k' y2') x))))
 
   | _, VSig (k, (_, f)) ->
     let k' x' = subst (Env.add x x' Env.empty) k in
     let f' x' = subst (Env.add x x' Env.empty) << f in
 
-    let ts' = singl t a in let ts = VLam (t, (freshName "x", fun x -> VPath (t, a, x))) in
-    let y1 = freshName "y" in let y2 = freshName "y′" in
-    let y1' = Var (y1, ts') in let y2' = Var (y2, t) in
+    let (ts, ts') = singl t a in
+    let w = freshName "ω" in let y = freshName "y" in
+    let w' = Var (w, ts') in let y' = Var (y, t) in
 
     let fst = transport p t a b x k (vfst v) in
 
-    let snd = transport (meet t a p) ts' (VSigMk (ts, a, VIdp a)) (VSigMk (ts, b, p)) y1
-      (f' (vfst y1') (transport (vsnd y1') t a y1' y2 (k' y2') (vfst v))) (vsnd v) in
+    let snd = transport (meet t a p) ts' (VSigMk (ts, a, VIdp a)) (VSigMk (ts, b, p)) w
+      (f' (vfst w') (transport (vsnd w') t a w' y (k' y') (vfst v))) (vsnd v) in
 
     VSigMk (VLam (k' b, (freshName "x", f' b)), fst, snd)
   | _, _ -> let r = congr t a b x g p in
@@ -200,15 +200,13 @@ and congr t a b x g p =
 
   (* apd f p⁻¹ ~> (apd f p)⁻¹ *)
   | _, VRev p -> let k x' = inferV (subst (Env.add x x' Env.empty) g) in
-    let x1 = freshName "y" in let x2 = freshName "y′" in
+    let (ts, ts') = singl t b in
+    let w = freshName "ω" in let y = freshName "y" in
+    let w' = Var (w, ts') in let y' = Var (y, t) in
 
-    let ts' = singl t b in let ts = VLam (t, (freshName "x", fun x -> VPath (t, b, x))) in
-
-    let x1' = Var (x1, ts') in let x2' = Var (x2, t) in
-
-    rev (congr ts' (VSigMk (ts, b, VIdp b)) (VSigMk (ts, a, p)) x1
-      (transport (rev (vsnd x1')) t (vfst x1') b x2 (k x2')
-        (subst (Env.add x (vfst x1') Env.empty) g)) (meet t b p))
+    rev (congr ts' (VSigMk (ts, b, VIdp b)) (VSigMk (ts, a, p)) w
+      (transport (rev (vsnd w')) t (vfst w') b y (k y')
+        (subst (Env.add x (vfst w') Env.empty) g)) (meet t b p))
 
   (* apd f (p ⬝ q) ~> apd f p ⬝ apd f q *)
   | _, VTrans (p, q) ->
@@ -231,7 +229,7 @@ and congr t a b x g p =
     let (_, (_, k)) = extPi (inferV h) in
     let (t, a, b) = extPath (inferV p) in
 
-    let ts' = singl t b in let ts = VLam (t, (freshName "x", fun x -> VPath (t, b, x))) in
+    let (ts, ts') = singl t b in
     let w = freshName "ω" in let w' = Var (w, ts') in
     let y = freshName "y" in let y' = Var (y, t) in
 
@@ -698,4 +696,5 @@ and decom x = function
   | VRInd v                      -> VRInd (decom x v)
   | v                            -> v
 
-and singl t x = let y = freshName "y" in VSig (t, (y, fun y -> VPath (t, x, y)))
+and singl t x = let f = fun y -> VPath (t, x, y) in
+  let y = freshName "y" in (VLam (t, (y, f)), VSig (t, (y, f)))
