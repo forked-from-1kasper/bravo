@@ -222,3 +222,8 @@ def Σ-mk-trans-is-correct (A : U) (B : A → U) (a b c : A) (u : B a) (v : B b)
        (Σ-mk-trans A B a b c u v w p₁ q₁ p₂ q₂)
        (Σ-mk-trans′ A B a b c u v w p₁ q₁ p₂ q₂) :=
 idp (Σ-mk-trans A B a b c u v w p₁ q₁ p₂ q₂)
+
+def apd-Σ-ctor (Δ : U) (a b : Δ) (p : Path Δ a b)
+  (A : Δ → U) (B : Π (x : Δ), A x → U)
+  (f : Π (x : Δ), A x) (g : Π (x : Δ), B x (f x)) :=
+apd (λ (x : Δ), Σ-mk (B x) (f x) (g x)) p

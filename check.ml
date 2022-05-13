@@ -328,7 +328,7 @@ and inferV v = traceInferV v; match v with
   | VSnd e -> inferSnd (vfst e) (inferV e)
   | VCoe (p, _) -> let (_, _, t) = extPath (inferV p) in t
   | VApd (f, p) -> inferVApd f p (inferV p) (inferV f)
-  | VSigMk (g, _, _) -> let (t, (x, _)) = extPi (inferV g) in VSig (t, (x, fun x -> app (g, x)))
+  | VSigMk (g, u, _) -> VSig (inferV u, (freshName "w", fun x -> app (g, x)))
   | VSigProd (p, g, u, v, _) -> let (t, a, b) = extPath (inferV p) in inferSigProd t g a b u v
   | VId t -> let n = extSet (inferV t) in implv t (implv t (VPre n))
   | VJ t -> inferJ (inferV t)
@@ -511,7 +511,7 @@ and infer ctx e : value = traceInfer e; try match e with
     VSig (t1, (Irrefutable, fun _ -> t2))
   | ESigMk (g, a, b) -> let (t, (x, f)) = extPi (infer ctx g) in
     ignore (extSet (f (Var (x, t)))); check ctx a t; let g' = eval g ctx in
-    check ctx b (app (g', eval a ctx)); VSig (t, (fresh x, fun x -> app (g', x)))
+    check ctx b (app (g', eval a ctx)); VSig (t, (freshName "w", fun x -> app (g', x)))
   | EApp (f, x) -> begin match infer ctx f with
     | VPi (t, (_, g)) -> check ctx x t; g (eval x ctx)
     | v -> raise (ExpectedPi v)
