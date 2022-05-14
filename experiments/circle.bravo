@@ -13,6 +13,11 @@ def triv : S¹ → S¹ := S¹-rec S¹ base loop
 def triv-eq-id : Π (x : S¹), Path S¹ (triv x) x :=
 S¹-ind (λ (x : S¹), Path S¹ (triv x) x) (idp base) (idp (idp base))
 
+def const-S¹ : S¹ → S¹ := S¹-rec S¹ base (idp base)
+
+def const-eq-const : Π (x : S¹), Path S¹ (const-S¹ x) base :=
+S¹-ind (λ (x : S¹), Path S¹ (const-S¹ x) base) (idp base) (idp (idp base))
+
 def rot (x : S¹) : Path S¹ x x :=
 S¹-ind (λ (y : S¹), Path S¹ y y) loop (idp loop) x
 
