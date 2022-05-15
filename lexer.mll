@@ -50,7 +50,7 @@ let axiom   = "axiom"|"postulate"
 
 let sigma   = "sigma" | "\xCE\xA3" (* Σ *)
 let sigmk   = sigma "-mk"
-let sigprod = sigma "-prod"
+let sigprod = "sigma-prod" | sigma "\xE2\x81\xBC" (* Σ⁼ *)
 
 let rev      = "\xE2\x81\xBB\xC2\xB9" (*  ⁻¹ *)
 let trans    = "\xE2\xAC\x9D"         (*  ⬝  *)

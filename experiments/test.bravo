@@ -20,18 +20,18 @@ apd f p
 
 def Path′ (A : U) (a b : A) := Path A a b
 
-def Σ-prod-fst (A : U) (B : A → U) (a b : A) (p : Path A a b) (u : B a) (v : B b)
+def Σ⁼-fst (A : U) (B : A → U) (a b : A) (p : Path A a b) (u : B a) (v : B b)
   (q : Path (B b) (coe (apd B p) u) v) (C : A → U) (f : Π (x : A), C x) :
-  Path (C b) (coe (apd (λ (w : Σ (x : A), B x), C w.1) (Σ-prod p B u v q)) (f a)) (f b) :=
-apd (λ (w : Σ (x : A), B x), f w.1) (Σ-prod p B u v q)
+  Path (C b) (coe (apd (λ (w : Σ (x : A), B x), C w.1) (Σ⁼ p B u v q)) (f a)) (f b) :=
+apd (λ (w : Σ (x : A), B x), f w.1) (Σ⁼ p B u v q)
 
 def meet (A : U) (a b : A) (p : Path A a b) :
   Path (Σ (x : A), Path A a x) (Σ-mk (Path′ A a) a (idp a)) (Σ-mk (Path′ A a) b p) :=
-Σ-prod p (λ (x : A), Path A a x) (idp a) p (idp p)
+Σ⁼ p (λ (x : A), Path A a x) (idp a) p (idp p)
 
 def rev-meet (A : U) (a b : A) (p : Path A a b) :
   Path (Σ (x : A), Path A a x) (Σ-mk (Path′ A a) b p) (Σ-mk (Path′ A a) a (idp a)) :=
-Σ-prod p⁻¹ (λ (x : A), Path A a x) p (idp a) (idp (idp a))
+Σ⁼ p⁻¹ (λ (x : A), Path A a x) p (idp a) (idp (idp a))
 
 def J (A : U) (P : Π (a b : A), Path A a b → U)
   (a : A) (d : P a a (idp a)) (b : A) (p : Path A a b) : P a b p :=
@@ -189,7 +189,7 @@ idp (coe-apd-Π-rev Δ α β p A B φ)
 def Σ-mk-rev (A : U) (B : A → U) (a b : A) (u : B a) (v : B b)
   (p : Path A a b) (q : Path (B b) (coe (apd B p) u) v) :
   Path (Σ (x : A), B x) (Σ-mk B b v) (Σ-mk B a u) :=
-Σ-prod p⁻¹ B v u
+Σ⁼ p⁻¹ B v u
   ((apd (λ (w : B b), coe (apd B p)⁻¹ w) q)⁻¹ ⬝
    (apd (λ (w : Σ (x : A), Path A a x), coe (apd B w.2⁻¹) (coe (apd B w.2) u))
         (meet A a b p))⁻¹)
@@ -197,7 +197,7 @@ def Σ-mk-rev (A : U) (B : A → U) (a b : A) (u : B a) (v : B b)
 def Σ-mk-rev′ (A : U) (B : A → U) (a b : A) (u : B a) (v : B b)
   (p : Path A a b) (q : Path (B b) (coe (apd B p) u) v) :
   Path (Σ (x : A), B x) (Σ-mk B b v) (Σ-mk B a u) :=
-(Σ-prod p B u v q)⁻¹
+(Σ⁼ p B u v q)⁻¹
 
 {-
 def Σ-mk-rev-is-correct (A : U) (B : A → U) (a b : A) (u : B a) (v : B b)
@@ -211,13 +211,13 @@ def Σ-mk-trans (A : U) (B : A → U) (a b c : A) (u : B a) (v : B b) (w : B c)
   (p₁ : Path A a b) (q₁ : Path (B b) (coe (apd B p₁) u) v)
   (p₂ : Path A b c) (q₂ : Path (B c) (coe (apd B p₂) v) w) :
   Path (Σ (x : A), B x) (Σ-mk B a u) (Σ-mk B c w) :=
-Σ-prod (p₁ ⬝ p₂) B u w (apd (λ (x : B b), coe (apd B p₂) x) q₁ ⬝ q₂)
+Σ⁼ (p₁ ⬝ p₂) B u w (apd (λ (x : B b), coe (apd B p₂) x) q₁ ⬝ q₂)
 
 def Σ-mk-trans′ (A : U) (B : A → U) (a b c : A) (u : B a) (v : B b) (w : B c)
   (p₁ : Path A a b) (q₁ : Path (B b) (coe (apd B p₁) u) v)
   (p₂ : Path A b c) (q₂ : Path (B c) (coe (apd B p₂) v) w) :
   Path (Σ (x : A), B x) (Σ-mk B a u) (Σ-mk B c w) :=
-Σ-prod p₁ B u v q₁ ⬝ Σ-prod p₂ B v w q₂
+Σ⁼ p₁ B u v q₁ ⬝ Σ⁼ p₂ B v w q₂
 
 def Σ-mk-trans-is-correct (A : U) (B : A → U) (a b c : A) (u : B a) (v : B b) (w : B c)
   (p₁ : Path A a b) (q₁ : Path (B b) (coe (apd B p₁) u) v)

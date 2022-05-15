@@ -21,7 +21,7 @@ ideqv A C (ua A B e₁ ⬝ ua B C e₂)
 
 def ua-ideqv (A B : U) (p : Path U A B) : Path (Path U A B) (ua A B (ideqv A B p)) p :=
 coe (apd (λ (w : Σ (X : U), Path U A X), Path (Path U A w.1) (ua A w.1 (ideqv A w.1 w.2)) w.2)
-  (Σ-prod p (λ (X : U), Path U A X) (idp A) p (idp p))) (idp (idp A))
+  (Σ⁼ p (λ (X : U), Path U A X) (idp A) p (idp p))) (idp (idp A))
 
 def ideqv-ua₁ (A B : U) (e : equiv A B) : Path (A → B) (ideqv A B (ua A B e)).1 e.1 := idp e.1
 def ideqv-ua₂ (A B : U) (e : equiv A B) : Path (B → A) (ideqv A B (ua A B e)).2.2.1 e.2.2.1 := idp e.2.2.1

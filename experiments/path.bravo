@@ -27,7 +27,7 @@ apd f p
 
 def meet (A : U) (a b : A) (p : Path A a b) :
   Path (Σ (x : A), Path A a x) (Σ-mk (Path′ A a) a (idp a)) (Σ-mk (Path′ A a) b p) :=
-Σ-prod p (λ (x : A), Path A a x) (idp a) p (idp p)
+Σ⁼ p (λ (x : A), Path A a x) (idp a) p (idp p)
 
 def J (A : U) (P : Π (a b : A), Path A a b → U)
   (a : A) (d : P a a (idp a)) (b : A) (p : Path A a b) : P a b p :=

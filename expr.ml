@@ -88,7 +88,7 @@ let rec ppExp paren e = let x = match e with
   | ETrans (p, q) -> ppExp true p ^ " ⬝ " ^ ppExp true q
   | ECoe (p, x) -> Printf.sprintf "coe %s %s" (ppExp true p) (ppExp true x)
   | EApd (a, b) -> Printf.sprintf "apd %s %s" (ppExp true a) (ppExp true b)
-  | ESigProd (p, b, u, v, q) -> Printf.sprintf "Σ-prod %s %s %s %s %s" (ppExp true p) (ppExp true b) (ppExp true u) (ppExp true v) (ppExp true q)
+  | ESigProd (p, b, u, v, q) -> Printf.sprintf "Σ⁼ %s %s %s %s %s" (ppExp true p) (ppExp true b) (ppExp true u) (ppExp true v) (ppExp true q)
   | EUAWeak (a, b, f, g, mu, nu) -> Printf.sprintf "ua-weak %s %s %s %s %s %s" (ppExp true a) (ppExp true b) (ppExp true f) (ppExp true g) (ppExp true mu) (ppExp true nu)
   | EN -> "N" | EZero -> "zero" | ESucc -> "succ"
   | ENInd e -> Printf.sprintf "N-ind %s" (ppExp true e)
@@ -143,7 +143,7 @@ let rec ppValue paren v = let x = match v with
   | VTrans (p, q) -> ppValue true p ^ " ⬝ " ^ ppValue true q
   | VCoe (p, x) -> Printf.sprintf "coe %s %s" (ppValue true p) (ppValue true x)
   | VApd (a, b) -> Printf.sprintf "apd %s %s" (ppValue true a) (ppValue true b)
-  | VSigProd (p, b, u, v, q) -> Printf.sprintf "Σ-prod %s %s %s %s %s" (ppValue true p) (ppValue true b) (ppValue true u) (ppValue true v) (ppValue true q)
+  | VSigProd (p, b, u, v, q) -> Printf.sprintf "Σ⁼ %s %s %s %s %s" (ppValue true p) (ppValue true b) (ppValue true u) (ppValue true v) (ppValue true q)
   | VUAWeak (a, b, f, g, mu, nu) -> Printf.sprintf "ua-weak %s %s %s %s %s %s" (ppValue true a) (ppValue true b) (ppValue true f) (ppValue true g) (ppValue true mu) (ppValue true nu)
   | VN -> "N" | VZero -> "zero" | VSucc -> "succ"
   | VNInd e -> Printf.sprintf "N-ind %s" (ppValue true e)
