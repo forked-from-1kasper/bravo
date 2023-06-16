@@ -49,36 +49,5 @@ def R-succ := Z-lift Z-succ
 def R-neg  := Z-lift Z-neg′
 def R-add  := Z-lift² Z-add
 
---def reflect (A : U) (a b : A) : Id A a b → Path A a b :=
-def reflect (A : U) (a b : A) :=
+def reflect (A : U) (a b : A) : Id A a b → Path A a b :=
 idJ A (λ (a b : A) (_ : Id A a b), Path A a b) a (idp a) b
-
-{-
-def minus-1-ineq-0 (p : Path Z (neg zero) Z-zero) : ⊥ :=
-coe (apd (λ (z : Z) (p : ∂ (neg zero) Z-zero z), Z-ind (λ (_ : Z), U) (λ (_ : N), ⊥) (λ (_ : N), N) z) p) zero
-
-def 0-ineq-1 (p : Path Z Z-zero Z-one) : ⊥ :=
-minus-1-ineq-0 (ap Z Z Z-pred Z-zero Z-one p)
-
-def z-ineq-succ-zᵀ (z : Z) := Path Z z (Z-succ z) → ⊥
-
-def z-ineq-succ-z : Π (z : Z), Path Z z (Z-succ z) → ⊥ :=
-Z-ind z-ineq-succ-zᵀ
-  (N-ind (λ (n : N), z-ineq-succ-zᵀ (pos n)) 0-ineq-1
-    (λ (n : N) (f : z-ineq-succ-zᵀ (pos n)) (p : Path Z (pos (succ n)) (pos (succ (succ n)))),
-       f (ap Z Z Z-pred (pos (succ n)) (pos (succ (succ n))) p)))
-  (N-ind (λ (n : N), z-ineq-succ-zᵀ (neg n)) minus-1-ineq-0
-    (λ (n : N) (f : z-ineq-succ-zᵀ (neg n)) (p : Path Z (neg (succ n)) (neg n)),
-       f (ap Z Z Z-succ (neg (succ n)) (neg n) p)))
-
-def z-strict-ineq-succ-z (z : Z) (p : Id Z z (Z-succ z)) : ⊥ :=
-z-ineq-succ-z z (reflect Z z (Z-succ z) p)
-
-def unglue (z : Z) (p : Id R (elem z) (elem (Z-succ z))) : ⊥ :=
-z-strict-ineq-succ-z z (R-inj z (Z-succ z) p)
-
-def cis-respects-unit : Id S¹ (cis R-zero) base := refl base
-
---def cis-respects-inverse : Π (x : R), Id S¹ (cis (R-neg x)) (ι (cis x)) := ?
---def cis-respects-add (x y : R) : Id S¹ (cis (R-add x y)) (μ (cis x) (cis y)) := ?
--}
