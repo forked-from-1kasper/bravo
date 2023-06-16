@@ -189,12 +189,7 @@ and transport p t a b x g v = match p, g with
   | _, _ -> let r = congr t a b x g p in
     if isCoeNeut r then VCoe (r, v) else coe r v
 
-and closByVal ctx p t e v = traceClos e p v;
-  (* dirty hack to handle free variables introduced by type checker *)
-  let ctx' = match v with
-  | Var (x, t) -> if Env.mem x ctx then ctx else upLocal ctx x t v
-  | _          -> ctx in
-  eval e (upLocal ctx' p t v)
+and closByVal ctx p t e v = traceClos e p v; eval e (upLocal ctx p t v)
 
 and congr t a b x g p =
 (* apd id p ~> p *)
