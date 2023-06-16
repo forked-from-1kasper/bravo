@@ -49,10 +49,11 @@ def R-succ := Z-lift Z-succ
 def R-neg  := Z-lift Z-neg′
 def R-add  := Z-lift² Z-add
 
-{-
-def reflect (A : U) (a b : A) : Id A a b → Path A a b :=
+--def reflect (A : U) (a b : A) : Id A a b → Path A a b :=
+def reflect (A : U) (a b : A) :=
 idJ A (λ (a b : A) (_ : Id A a b), Path A a b) a (idp a) b
 
+{-
 def minus-1-ineq-0 (p : Path Z (neg zero) Z-zero) : ⊥ :=
 coe (apd (λ (z : Z) (p : ∂ (neg zero) Z-zero z), Z-ind (λ (_ : Z), U) (λ (_ : N), ⊥) (λ (_ : N), N) z) p) zero
 

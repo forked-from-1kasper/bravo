@@ -340,7 +340,7 @@ and inferV v = traceInferV v; match v with
   | VSigMk (g, u, _) -> VSig (inferV u, (freshName "w", fun x -> app (g, x)))
   | VSigProd (p, g, u, v, _) -> let (t, a, b) = extPath (inferV p) in inferSigProd t g a b u v
   | VId t -> let n = extSet (inferV t) in implv t (implv t (VPre n))
-  | VJ t -> inferJ (inferV t)
+  | VJ t -> inferJ t (inferV t)
   | VApp (f, x) -> let (_, (_, g)) = extPi (inferV f) in g x
   | VRefl v -> idv (inferV v) v v
   | VIdp v -> VPath (inferV v, v, v)
@@ -373,7 +373,7 @@ and recBool t = let x = freshName "x" in
 and inferSigProd t g a b u v = let x = freshName "x" in
   VPath (VSig (t, (x, fun x -> app (g, x))), VSigMk (g, a, u), VSigMk (g, b, v))
 
-and inferJ v = let n = extSet v in
+and inferJ v t = let n = extSet t in
   let x = freshName "x" in let y = freshName "y" in
   let pi = freshName "P" in let p = freshName "p" in
 
@@ -549,7 +549,7 @@ and infer ctx e : value = traceInfer e; try match e with
   | EPath (e, a, b) -> let t = eval e ctx in check ctx a t; check ctx b t; infer ctx e
   | EId e -> let v = eval e ctx in let n = extSet (infer ctx e) in implv v (implv v (VPre n))
   | ERefl e -> let v = eval e ctx in idv (infer ctx e) v v
-  | EJ e -> inferJ (infer ctx e)
+  | EJ e -> inferJ (eval e ctx) (infer ctx e)
   | EIdp e -> let v = eval e ctx in let t = infer ctx e in VPath (t, v, v)
   | ERev p -> let (v, a, b) = extPath (infer ctx p) in VPath (v, b, a)
   | ETrans (p, q) ->
